@@ -100,6 +100,13 @@ CREATE TABLE IF NOT EXISTS permission_groups (
     others BOOLEAN DEFAULT FALSE NOT NULL
 );
 
+-- 消息 ID 与语录 ID 映射表
+CREATE TABLE IF NOT EXISTS msgid_quoteid_map (
+    msg_id TEXT PRIMARY KEY,
+    quote_id TEXT NOT NULL,
+    FOREIGN KEY (quote_id) REFERENCES quotes(quote_id) ON DELETE CASCADE
+);
+
 -- 添加权限组
 BEGIN TRANSACTION;
 WITH new_permissions (
