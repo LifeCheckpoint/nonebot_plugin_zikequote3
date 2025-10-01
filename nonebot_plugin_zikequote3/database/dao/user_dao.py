@@ -87,7 +87,6 @@ class UserDAO(BaseDAO[User]):
             cursor.execute(sql, (user_update.avatar, qq_id))
             return cursor.rowcount > 0
     
-    
     def delete_user(self, qq_id: str) -> bool:
         """
         删除用户

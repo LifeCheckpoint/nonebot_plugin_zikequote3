@@ -3,7 +3,6 @@ import logging
 
 from ..connection_manager import ConnectionManager
 
-# 定义泛型类型
 T = TypeVar('T')
 
 class BaseDAO(Generic[T]):

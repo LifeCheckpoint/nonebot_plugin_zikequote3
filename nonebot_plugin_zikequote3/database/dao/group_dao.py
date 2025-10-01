@@ -87,7 +87,6 @@ class GroupDAO(BaseDAO[Group]):
             cursor.execute(sql, (group_update.name, group_id))
             return cursor.rowcount > 0
     
-    
     def delete_group(self, group_id: str) -> bool:
         """
         删除群组
