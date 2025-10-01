@@ -8,6 +8,7 @@ from nonebot.params import CommandArg, ArgPlainText
 from nonebot.plugin import PluginMetadata
 from nonebot.typing import T_State
 from pathlib import Path
+import tomlkit
 from typing import Optional, Union, Literal, Callable, Any, Dict, List, Tuple
 import asyncio
 import colorsys
@@ -22,7 +23,15 @@ from .external.json_data_manager import ChatHistoryManager, ChatMessageV3, JsonI
 from .external.json_data_manager.utils import get_json_ver_info, set_json_ver_info
 from .external.msg_text import msend, mfinish
 
+# 加载配置
 from .config import Config
-cfg = get_plugin_config(Config)
+cfg_file = get_plugin_config(Config).config_toml
+if not Path(cfg_file).is_file():
+    logger.error(f"配置文件 {cfg_file} 不存在")
+    raise FileNotFoundError(f"配置文件 {cfg_file} 不存在")
+cfg = tomlkit.parse(Path(cfg_file).read_text(encoding="utf-8"))
+
+# 其它信息
+_plugin_root: Path = Path(__file__).parent
 
 from .message_text import *
