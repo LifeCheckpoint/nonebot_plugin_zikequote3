@@ -21,6 +21,7 @@ hitokoto_url = "https://v1.hitokoto.cn" # 获取名人名言 Hitokoto API
 
 [permission]
 static_root = [] # 不可变最高权限列表
+enable_groups = [] # 启用插件的群列表
 
 [llm]
 # 模型配置较为复杂，其它端点调整工作需到对应文件进行修改

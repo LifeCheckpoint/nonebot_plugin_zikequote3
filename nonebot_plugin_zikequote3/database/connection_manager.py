@@ -53,12 +53,13 @@ class ConnectionManager:
             self._conn = None
             logging.info("Database connection closed.")
 
-    def initialize_db(self, schema_file: Optional[Path]):
+    def initialize_db(self, schema_file: Optional[Path] = None):
         """
         根据 schema 文件初始化数据库（创建表等）。
         """
         if schema_file is None or not schema_file.exists():
-            schema_file = Path(__file__).parent / "schema.sql"
+            from ..imports import _plugin_root
+            schema_file = _plugin_root / "database" / "schema.sql"
             if not schema_file.exists():
                 raise FileNotFoundError("无法找到数据库 schema 文件")            
 

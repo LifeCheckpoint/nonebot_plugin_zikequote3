@@ -7,6 +7,7 @@ from nonebot.matcher import Matcher
 from nonebot.params import CommandArg, ArgPlainText
 from nonebot.plugin import PluginMetadata
 from nonebot.typing import T_State
+import nonebot_plugin_localstore as store
 from pathlib import Path
 import tomlkit
 from typing import Optional, Union, Literal, Callable, Any, Dict, List, Tuple
@@ -16,12 +17,19 @@ import json
 import random
 import requests
 
-from .interface.permission import quote_permission, is_quote_manager
+# 插件根目录
+_plugin_root: Path = Path(__file__).parent
+
+# 载入全局数据库对象
+from .database.connection_manager import ConnectionManager
+db = ConnectionManager(store.get_data_dir("ZikeQuote3") / "zikequote3.db")
+db.initialize_db() # 初始化，保证完整性
+
 from .utils.async_tools import serial_execution, async_modify_lock
 from .external.html_render import full_render_html, template, full_render_markdown
 from .external.msg_text import msend, mfinish
 
-# 加载配置
+# 加载 toml 配置并注入 BaseModel
 from .config import ConfigPath, load_config_from_toml
 cfg_file = get_plugin_config(ConfigPath).config_toml
 if not Path(cfg_file).is_file():
@@ -30,7 +38,5 @@ if not Path(cfg_file).is_file():
 _cfg_toml = tomlkit.parse(Path(cfg_file).read_text(encoding="utf-8"))
 cfg = load_config_from_toml(_cfg_toml)
 
-# 其它信息
-_plugin_root: Path = Path(__file__).parent
-
+# 加载消息导入
 from .message_text import *

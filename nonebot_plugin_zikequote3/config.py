@@ -35,6 +35,7 @@ class ShowcaseConfig(BaseModel):
 
 class PermissionConfig(BaseModel):
     static_root: List[str] = Field(default_factory=list)
+    enable_groups: List[int] = Field(default_factory=list)
 
 class LLMConfig(BaseModel):
     base_url: str = "https://openrouter.ai/api/v1"
