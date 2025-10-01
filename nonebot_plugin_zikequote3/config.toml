@@ -1,0 +1,31 @@
+[general]
+enable_zikequote3 = true # 总开关
+check_intergrity = true # 启动时检查 Node.js 依赖完整性
+
+[collecting]
+enable_auto_collect = true # 启用自动收集，需要配置 LLM
+pickup_interval = 80 # 自动收集触发的消息数量阈值
+msg_max_length = 35 # 最大可被处理的消息长度
+enable_duplicate = false # 允许群内个人重复语录
+
+[fetching]
+enable_cross_group_fetching = false # 允许跨群抓取调用者个人语录
+algorithm = "freq" # 语录推荐算法: freq | diversity (TODO)
+
+[showcase]
+max_rank_user_num = 40 # 语录榜单展示最大用户数
+quote_num_per_page = 20 # 语录展示每页数量
+page_num_limit = 5 # 语录展示最大页数
+comment_show_method = "noai" # 语录评论展示方式: no | noai | all
+hitokoto_url = "https://v1.hitokoto.cn" # 获取名人名言 Hitokoto API
+
+[permission]
+static_root = [] # 不可变最高权限列表
+
+[llm]
+# 模型配置较为复杂，其它端点调整工作需到对应文件进行修改
+base_url = "https://openrouter.ai/api/v1"
+api_key_path = "utils/api_key" # API Key 文件路径，相对插件根目录
+model = "deepseek/deepseek-v3.2-exp"
+temperature = 0.2
+max_retries = 3 # 请求失败重试次数
