@@ -1,0 +1,418 @@
+from typing import List, Dict, Any, Optional
+from sqlite3 import Row
+import sqlite3
+from datetime import datetime
+
+from .base_dao import BaseDAO
+from ..models.msgs_queue import MsgQueue, MsgQueueCreate, MsgQueueUpdate
+from ..models.queue_group_message_counts import QueueGroupMessageCount, QueueGroupMessageCountCreate
+
+
+class MsgQueueDAO(BaseDAO[MsgQueue]):
+    """
+    消息队列数据访问对象，处理暂存消息相关的数据库操作
+    """
+    
+    @property
+    def table_name(self) -> str:
+        return "msgs_queue"
+    
+    
+    def _row_to_model(self, row: Row) -> MsgQueue:
+        """将数据库行转换为MsgQueue模型对象"""
+        return MsgQueue(
+            msg_id=row["msg_id"],
+            group_id=row["group_id"],
+            qq_id=row["qq_id"],
+            time_stamp=row["time_stamp"],
+            content=row["content"]
+        )
+    
+    def _model_to_dict(self, model: MsgQueue) -> Dict[str, Any]:
+        """将MsgQueue模型对象转换为字典"""
+        return {
+            "msg_id": model.msg_id,
+            "group_id": model.group_id,
+            "qq_id": model.qq_id,
+            "time_stamp": model.time_stamp,
+            "content": model.content
+        }
+    
+    def create_msg(self, msg_create: MsgQueueCreate) -> bool:
+        """
+        创建新的队列消息
+        
+        Args:
+            msg_create: 消息创建模型
+            
+        Returns:
+            bool: 创建是否成功
+        """
+        sql = "INSERT INTO msgs_queue (msg_id, group_id, qq_id, time_stamp, content) VALUES (?, ?, ?, ?, ?)"
+        current_time = datetime.now()
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (
+                msg_create.msg_id,
+                msg_create.group_id,
+                msg_create.qq_id,
+                current_time.isoformat(),
+                msg_create.content
+            ))
+            return cursor.rowcount > 0
+    
+    def get_msg_by_id(self, msg_id: str) -> Optional[MsgQueue]:
+        """
+        根据消息ID获取消息
+        
+        Args:
+            msg_id: 消息ID
+            
+        Returns:
+            Optional[MsgQueue]: 消息对象或None
+        """
+        try:
+            sql = "SELECT * FROM msgs_queue WHERE msg_id = ?"
+            
+            with self.connection_manager.cursor() as cursor:
+                cursor.execute(sql, (msg_id,))
+                row = cursor.fetchone()
+                
+                return self._row_to_model(row) if row else None
+        except sqlite3.Error as e:
+            self.logger.error(f"根据ID获取消息失败: {e}")
+            return None
+    
+    def get_msgs_by_group(self, group_id: str, limit: Optional[int] = None, offset: int = 0) -> List[MsgQueue]:
+        """
+        根据群组获取消息列表
+        
+        Args:
+            group_id: 群号
+            limit: 限制返回数量
+            offset: 偏移量
+            
+        Returns:
+            List[MsgQueue]: 消息列表
+        """
+        try:
+            sql = "SELECT * FROM msgs_queue WHERE group_id = ? ORDER BY time_stamp"
+            
+            if limit is not None:
+                sql += f" LIMIT {limit} OFFSET {offset}"
+            
+            with self.connection_manager.cursor() as cursor:
+                cursor.execute(sql, (group_id,))
+                rows = cursor.fetchall()
+                
+                return [self._row_to_model(row) for row in rows]
+        except sqlite3.Error as e:
+            self.logger.error(f"根据群组获取消息失败: {e}")
+            return []
+    
+    def get_msgs_by_user(self, qq_id: str, limit: Optional[int] = None, offset: int = 0) -> List[MsgQueue]:
+        """
+        根据用户获取消息列表
+        
+        Args:
+            qq_id: QQ号
+            limit: 限制返回数量
+            offset: 偏移量
+            
+        Returns:
+            List[MsgQueue]: 消息列表
+        """
+        try:
+            sql = "SELECT * FROM msgs_queue WHERE qq_id = ? ORDER BY time_stamp"
+            
+            if limit is not None:
+                sql += f" LIMIT {limit} OFFSET {offset}"
+            
+            with self.connection_manager.cursor() as cursor:
+                cursor.execute(sql, (qq_id,))
+                rows = cursor.fetchall()
+                
+                return [self._row_to_model(row) for row in rows]
+        except sqlite3.Error as e:
+            self.logger.error(f"根据用户获取消息失败: {e}")
+            return []
+    
+    def get_recent_msgs_by_group(self, group_id: str, limit: int = 100) -> List[MsgQueue]:
+        """
+        获取群组最近的消息
+        
+        Args:
+            group_id: 群号
+            limit: 限制返回数量
+            
+        Returns:
+            List[MsgQueue]: 最近消息列表
+        """
+        try:
+            sql = f"SELECT * FROM {self.table_name} WHERE group_id = ? ORDER BY time_stamp DESC LIMIT ?"
+            
+            with self.connection_manager.cursor() as cursor:
+                cursor.execute(sql, (group_id, limit))
+                rows = cursor.fetchall()
+                
+                return [self._row_to_model(row) for row in rows]
+                
+        except sqlite3.Error as e:
+            self.logger.error(f"获取群组最近消息失败: {e}")
+            return []
+    
+    def clear_group_queue(self, group_id: str) -> bool:
+        """
+        清空群组的消息队列
+        
+        Args:
+            group_id: 群号
+            
+        Returns:
+            bool: 清空是否成功
+        """
+        try:
+            sql = f"DELETE FROM {self.table_name} WHERE group_id = ?"
+            
+            with self.connection_manager.cursor() as cursor:
+                cursor.execute(sql, (group_id,))
+                return True
+                
+        except sqlite3.Error as e:
+            self.logger.error(f"清空群组消息队列失败: {e}")
+            return False
+    
+    def count_msgs_by_group(self, group_id: str) -> int:
+        """
+        统计群组消息数量
+        
+        Args:
+            group_id: 群号
+            
+        Returns:
+            int: 消息数量
+        """
+        try:
+            sql = "SELECT COUNT(*) as count FROM msgs_queue WHERE group_id = ?"
+            
+            with self.connection_manager.cursor() as cursor:
+                cursor.execute(sql, (group_id,))
+                row = cursor.fetchone()
+                
+                return row["count"] if row else 0
+        except sqlite3.Error as e:
+            self.logger.error(f"统计群组消息数量失败: {e}")
+            return 0
+    
+    def delete_old_msgs(self, days: int = 30) -> bool:
+        """
+        删除超过指定天数的旧消息
+        
+        Args:
+            days: 保留天数
+            
+        Returns:
+            bool: 删除是否成功
+        """
+        try:
+            sql = f"DELETE FROM {self.table_name} WHERE time_stamp < datetime('now', '-{days} days')"
+            
+            with self.connection_manager.cursor() as cursor:
+                cursor.execute(sql)
+                return True
+                
+        except sqlite3.Error as e:
+            self.logger.error(f"删除旧消息失败: {e}")
+            return False
+
+
+class QueueGroupMessageCountDAO(BaseDAO[QueueGroupMessageCount]):
+    """
+    群消息计数数据访问对象，处理群消息计数相关的数据库操作
+    """
+    
+    @property
+    def table_name(self) -> str:
+        return "queue_group_message_counts"
+    
+    
+    def _row_to_model(self, row: Row) -> QueueGroupMessageCount:
+        """将数据库行转换为QueueGroupMessageCount模型对象"""
+        return QueueGroupMessageCount(
+            group_id=row["group_id"],
+            message_count=row["message_count"]
+        )
+    
+    def _model_to_dict(self, model: QueueGroupMessageCount) -> Dict[str, Any]:
+        """将QueueGroupMessageCount模型对象转换为字典"""
+        return {
+            "group_id": model.group_id,
+            "message_count": model.message_count
+        }
+    
+    def get_group_count(self, group_id: str) -> QueueGroupMessageCount:
+        """
+        获取群组消息计数（如果不存在则创建）
+        
+        Args:
+            group_id: 群号
+            
+        Returns:
+            QueueGroupMessageCount: 群组消息计数对象
+        """
+        try:
+            # 先尝试获取现有记录
+            sql = "SELECT * FROM queue_group_message_counts WHERE group_id = ?"
+            
+            with self.connection_manager.cursor() as cursor:
+                cursor.execute(sql, (group_id,))
+                row = cursor.fetchone()
+                
+                if row:
+                    return self._row_to_model(row)
+                
+                # 如果不存在，创建新记录
+                insert_sql = "INSERT INTO queue_group_message_counts (group_id, message_count) VALUES (?, ?)"
+                cursor.execute(insert_sql, (group_id, 0))
+                
+                return QueueGroupMessageCount(group_id=group_id, message_count=0)
+                
+        except sqlite3.Error as e:
+            self.logger.error(f"获取群组消息计数失败: {e}")
+            return QueueGroupMessageCount(group_id=group_id, message_count=0)
+    
+    def increment_count(self, group_id: str) -> int:
+        """
+        增加群组消息计数
+        
+        Args:
+            group_id: 群号
+            
+        Returns:
+            int: 增加后的计数
+        """
+        try:
+            # 使用 INSERT OR REPLACE 确保记录存在
+            sql = f"""
+            INSERT OR REPLACE INTO {self.table_name} (group_id, message_count)
+            VALUES (?, COALESCE((SELECT message_count FROM {self.table_name} WHERE group_id = ?), 0) + 1)
+            """
+            
+            with self.connection_manager.cursor() as cursor:
+                cursor.execute(sql, (group_id, group_id))
+                
+                # 获取更新后的计数
+                cursor.execute(f"SELECT message_count FROM {self.table_name} WHERE group_id = ?", (group_id,))
+                row = cursor.fetchone()
+                return row["message_count"] if row else 1
+                
+        except sqlite3.Error as e:
+            self.logger.error(f"增加群组消息计数失败: {e}")
+            return 0
+    
+    def reset_count(self, group_id: str) -> bool:
+        """
+        重置群组消息计数
+        
+        Args:
+            group_id: 群号
+            
+        Returns:
+            bool: 重置是否成功
+        """
+        try:
+            sql = "UPDATE queue_group_message_counts SET message_count = 0 WHERE group_id = ?"
+            
+            with self.connection_manager.cursor() as cursor:
+                cursor.execute(sql, (group_id,))
+                return cursor.rowcount > 0
+                
+        except sqlite3.Error as e:
+            self.logger.error(f"重置群组消息计数失败: {e}")
+            return False
+    
+    def set_count(self, group_id: str, count: int) -> bool:
+        """
+        设置群组消息计数
+        
+        Args:
+            group_id: 群号
+            count: 计数值
+            
+        Returns:
+            bool: 设置是否成功
+        """
+        try:
+            sql = f"INSERT OR REPLACE INTO {self.table_name} (group_id, message_count) VALUES (?, ?)"
+            
+            with self.connection_manager.cursor() as cursor:
+                cursor.execute(sql, (group_id, count))
+                return cursor.rowcount > 0
+                
+        except sqlite3.Error as e:
+            self.logger.error(f"设置群组消息计数失败: {e}")
+            return False
+    
+    def get_all_counts(self) -> List[QueueGroupMessageCount]:
+        """
+        获取所有群组的消息计数
+        
+        Returns:
+            List[QueueGroupMessageCount]: 所有群组计数列表
+        """
+        try:
+            sql = "SELECT * FROM queue_group_message_counts"
+            
+            with self.connection_manager.cursor() as cursor:
+                cursor.execute(sql)
+                rows = cursor.fetchall()
+                
+                return [self._row_to_model(row) for row in rows]
+                
+        except sqlite3.Error as e:
+            self.logger.error(f"获取所有群组计数失败: {e}")
+            return []
+    
+    def get_groups_over_threshold(self, threshold: int) -> List[QueueGroupMessageCount]:
+        """
+        获取消息计数超过阈值的群组
+        
+        Args:
+            threshold: 阈值
+            
+        Returns:
+            List[QueueGroupMessageCount]: 超过阈值的群组列表
+        """
+        try:
+            sql = f"SELECT * FROM {self.table_name} WHERE message_count >= ?"
+            
+            with self.connection_manager.cursor() as cursor:
+                cursor.execute(sql, (threshold,))
+                rows = cursor.fetchall()
+                
+                return [self._row_to_model(row) for row in rows]
+                
+        except sqlite3.Error as e:
+            self.logger.error(f"获取超过阈值的群组失败: {e}")
+            return []
+    
+    def delete_group_count(self, group_id: str) -> bool:
+        """
+        删除群组消息计数记录
+        
+        Args:
+            group_id: 群号
+            
+        Returns:
+            bool: 删除是否成功
+        """
+        try:
+            sql = "DELETE FROM queue_group_message_counts WHERE group_id = ?"
+            
+            with self.connection_manager.cursor() as cursor:
+                cursor.execute(sql, (group_id,))
+                return cursor.rowcount > 0
+                
+        except sqlite3.Error as e:
+            self.logger.error(f"删除群组消息计数失败: {e}")
+            return False
