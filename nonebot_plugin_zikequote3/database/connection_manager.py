@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Optional
 import logging
 import sqlite3
+from .dao import DAOFactory # 导入 DAOFactory
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -13,10 +16,13 @@ class ConnectionManager:
     """
     db_path: Path
     _conn: Optional[sqlite3.Connection]
+    dao: DAOFactory
     
     def __init__(self, db_path: Path):
+        from .dao import DAOFactory
         self.db_path = db_path
         self._conn = None
+        self.dao = DAOFactory(self)
 
     def _get_connection(self):
         """获取或创建数据库连接"""

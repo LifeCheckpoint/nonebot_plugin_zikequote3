@@ -329,6 +329,20 @@ class GroupMemberDAO(BaseDAO[GroupMember]):
             cursor.execute(sql, (group_id,))
             return True  # 即使没有删除任何行也返回True
     
+    def get_member_permission_group(self, group_id: str, qq_id: str) -> Optional[str]:
+        """
+        获取指定成员的权限组名称
+        
+        Args:
+            group_id: 群号
+            qq_id: QQ号
+            
+        Returns:
+            Optional[str]: 权限组名称，如果不存在则返回None
+        """
+        member = self.get_group_member(group_id, qq_id)
+        return member.permission_group if member else None
+
     def delete_all_groups_by_user(self, qq_id: str) -> bool:
         """
         删除用户的所有群组关系
