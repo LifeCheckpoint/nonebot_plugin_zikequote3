@@ -116,38 +116,3 @@ class CommandParser:
         """收集默认参数"""
         self.result.default_arg = self.input[self.index:]
         self.index = self.len_input  # 跳到结尾，结束解析
-
-if __name__ == "__main__":
-    known_commands = ['查语录', '加语录']
-    known_flags = {
-        '-t': {'has_arg': True, 'long': '--test'},
-        '--test': {'has_arg': True, 'short': '-t'},
-        '-g': {'has_arg': False, 'long': '--GLOBAL'},
-        '--GLOBAL': {'has_arg': False, 'short': '-g'},
-        '-a': {'has_arg': False, 'long': None}
-    }
-
-    parser = CommandParser(known_commands, known_flags)
-    
-    # 测试用例 - 重点测试贪心匹配
-    test_cases = [
-        '/查语录-t你知道吗a-b等于-1！-g-a你好我好大家好\n\n"test"',
-        '/查语录-t-g-a',
-        '/查语录-t-hi-g-a',
-        '/查语录-t--help-g-a',
-    ]
-    
-    for i, test_input in enumerate(test_cases, 1):
-        print(f"\n测试用例 {i}:")
-        print(f"输入: {test_input}")
-        
-        result = parser.parse(test_input)
-        print("解析结果:")
-        print(f"命令头: {result.command}")
-        for flag, arg in result.flags.items():
-            if arg is None:
-                print(f"{flag}")
-            else:
-                print(f"{flag} | {arg}")
-        if result.default_arg:
-            print(f"默认参数 | {result.default_arg}")
