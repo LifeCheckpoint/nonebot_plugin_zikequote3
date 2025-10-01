@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from nonebot.adapters.onebot.v11 import GroupMessageEvent as GroupME
+from nonebot.permission import Permission as NBPermission
 from ..imports import db
 import logging
 
@@ -20,13 +21,13 @@ class PMS:
     BANOP_OTHERS = "banop_others"
     OTHERS = "others"
 
-async def permission_type(operator_type: str) -> QuotePermissionChecker:
+def permission_check(operator_type: str) -> QuotePermissionChecker:
     return QuotePermissionChecker(operator_type)
 
-class QuotePermissionChecker:
+class QuotePermissionChecker(NBPermission):
     operator_type: str
 
-    async def __init__(self, operator_type: str):
+    def __init__(self, operator_type: str):
         self.operator_type = operator_type
 
     async def __call__(self, event: GroupME) -> bool:
