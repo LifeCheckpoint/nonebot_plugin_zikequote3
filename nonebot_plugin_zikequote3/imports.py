@@ -22,12 +22,13 @@ from .external.html_render import full_render_html, template, full_render_markdo
 from .external.msg_text import msend, mfinish
 
 # 加载配置
-from .config import Config
-cfg_file = get_plugin_config(Config).config_toml
+from .config import ConfigPath, load_config_from_toml
+cfg_file = get_plugin_config(ConfigPath).config_toml
 if not Path(cfg_file).is_file():
     logger.error(f"配置文件 {cfg_file} 不存在")
     raise FileNotFoundError(f"配置文件 {cfg_file} 不存在")
-cfg = tomlkit.parse(Path(cfg_file).read_text(encoding="utf-8"))
+_cfg_toml = tomlkit.parse(Path(cfg_file).read_text(encoding="utf-8"))
+cfg = load_config_from_toml(_cfg_toml)
 
 # 其它信息
 _plugin_root: Path = Path(__file__).parent

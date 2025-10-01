@@ -8,7 +8,7 @@ ZikeQuote3 基于 NoneBot 开发，便于群聊语录自动收集与管理，支
     """,
     type="application",
     homepage="https://github.com/LifeCheckpoint/ZikeQuote3",
-    config=Config,
+    config=ConfigPath,
     supported_adapters={"~onebot.v11"},
     extra={
         "author": "LifeCheckpoint",

@@ -1,26 +1,13 @@
 from .. import __plugin_meta__
 from ..imports import *
+from ..imports import cfg
 from ..utils.llm_solo import llm_solo
-from .quote_type import QuoteInfoV2, QuoteV2Comment, QuoteManager
-from .quote_type import ID_AI as COMMENT_AUTHOR_AI
 from ..utils.states import HistoryQuoteState
-
-def get_msg_file_name(group_id: int) -> str:
-    """根据群组 ID 获取消息记录文件名"""
-    return f"{group_id}.json"
-
-def get_quote_file(group_id: int) -> str:
-    """根据群组 ID 获取语录文件名"""
-    return f"{group_id}.json"
-
-def get_mapping_file(group_id: int) -> str:
-    """根据群组 ID 获取消息记录映射文件名"""
-    return f"{group_id}.json"
 
 def validate_msg(event: GroupME) -> bool:
     """验证事件中的消息是否符合一般收录条件"""
     message = event.get_plaintext().strip()
-    if not message or message == "" or len(message) > cfg.msg_max_length:
+    if not message or message == "" or len(message) > cfg.get("collecting")["msg_max_length"]:
         return False
     return True
 

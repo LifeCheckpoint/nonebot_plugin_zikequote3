@@ -1,9 +1,7 @@
 from nonebot.adapters.onebot.v11 import GroupMessageEvent as GroupME
 from nonebot import get_plugin_config
 from typing import Optional
-
-from ..config import Config
-cfg = get_plugin_config(Config)
+from ..imports import cfg
 
 def is_quote_manager(user_id: Optional[int]) -> bool:
     """
