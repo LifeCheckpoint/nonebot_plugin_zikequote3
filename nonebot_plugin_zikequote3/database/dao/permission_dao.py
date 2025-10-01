@@ -47,39 +47,34 @@ class PermissionGroupDAO(BaseDAO[PermissionGroup]):
         Returns:
             bool: 创建是否成功
         """
-        try:
-            data = {
-                "group_name": permission_create.group_name,
-                "be_collected": permission_create.be_collected,
-                "get_quote": permission_create.get_quote,
-                "add_quote": permission_create.add_quote,
-                "search_quote": permission_create.search_quote,
-                "review_quote": permission_create.review_quote,
-                "update_quote_self": permission_create.update_quote_self,
-                "update_quote_group": permission_create.update_quote_group,
-                "delete_review_self": permission_create.delete_review_self,
-                "delete_review_group": permission_create.delete_review_group,
-                "delete_quote_self": permission_create.delete_quote_self,
-                "delete_quote_group": permission_create.delete_quote_group,
-                "ban_others": permission_create.ban_others,
-                "op_others": permission_create.op_others,
-                "banop_others": permission_create.banop_others,
-                "others": permission_create.others
-            }
-            
-            columns = ', '.join(data.keys())
-            placeholders = ', '.join(['?' for _ in data])
-            values = tuple(data.values())
-            
-            sql = f"INSERT INTO {self.table_name} ({columns}) VALUES ({placeholders})"
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, values)
-                return cursor.rowcount > 0
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"创建权限组失败: {e}")
-            return False
+        data = {
+            "group_name": permission_create.group_name,
+            "be_collected": permission_create.be_collected,
+            "get_quote": permission_create.get_quote,
+            "add_quote": permission_create.add_quote,
+            "search_quote": permission_create.search_quote,
+            "review_quote": permission_create.review_quote,
+            "update_quote_self": permission_create.update_quote_self,
+            "update_quote_group": permission_create.update_quote_group,
+            "delete_review_self": permission_create.delete_review_self,
+            "delete_review_group": permission_create.delete_review_group,
+            "delete_quote_self": permission_create.delete_quote_self,
+            "delete_quote_group": permission_create.delete_quote_group,
+            "ban_others": permission_create.ban_others,
+            "op_others": permission_create.op_others,
+            "banop_others": permission_create.banop_others,
+            "others": permission_create.others
+        }
+        
+        columns = ', '.join(data.keys())
+        placeholders = ', '.join(['?' for _ in data])
+        values = tuple(data.values())
+        
+        sql = f"INSERT INTO {self.table_name} ({columns}) VALUES ({placeholders})"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, values)
+            return cursor.rowcount > 0
     
     def get_permission_group(self, group_name: str) -> Optional[Dict[str, Any]]:
         """
@@ -91,19 +86,14 @@ class PermissionGroupDAO(BaseDAO[PermissionGroup]):
         Returns:
             Optional[Dict[str, Any]]: 权限组信息或None
         """
-        try:
-            sql = f"SELECT * FROM {self.table_name} WHERE group_name = ?"
+        sql = f"SELECT * FROM {self.table_name} WHERE group_name = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (group_name,))
+            row = cursor.fetchone()
             
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (group_name,))
-                row = cursor.fetchone()
-                
-                if row:
-                    return dict(row)
-                return None
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"获取权限组失败: {e}")
+            if row:
+                return dict(row)
             return None
     
     def update_permission_group(self, group_name: str, permission_update: PermissionGroupUpdate) -> bool:
@@ -154,17 +144,13 @@ class PermissionGroupDAO(BaseDAO[PermissionGroup]):
         if not update_data:
             return True
         
-        try:
-            set_clauses = ', '.join([f"{field} = ?" for field in update_data.keys()])
-            values = list(update_data.values()) + [group_name]
-            sql = f"UPDATE permission_groups SET {set_clauses} WHERE group_name = ?"
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, values)
-                return cursor.rowcount > 0
-        except sqlite3.Error as e:
-            self.logger.error(f"更新权限组失败: {e}")
-            return False
+        set_clauses = ', '.join([f"{field} = ?" for field in update_data.keys()])
+        values = list(update_data.values()) + [group_name]
+        sql = f"UPDATE permission_groups SET {set_clauses} WHERE group_name = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, values)
+            return cursor.rowcount > 0
     
     def delete_permission_group(self, group_name: str) -> bool:
         """
@@ -176,14 +162,10 @@ class PermissionGroupDAO(BaseDAO[PermissionGroup]):
         Returns:
             bool: 删除是否成功
         """
-        try:
-            sql = "DELETE FROM permission_groups WHERE group_name = ?"
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (group_name,))
-                return cursor.rowcount > 0
-        except sqlite3.Error as e:
-            self.logger.error(f"删除权限组失败: {e}")
-            return False
+        sql = "DELETE FROM permission_groups WHERE group_name = ?"
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (group_name,))
+            return cursor.rowcount > 0
     
     def get_all_permission_groups(self) -> List[Dict[str, Any]]:
         """
@@ -192,18 +174,13 @@ class PermissionGroupDAO(BaseDAO[PermissionGroup]):
         Returns:
             List[Dict[str, Any]]: 权限组列表
         """
-        try:
-            sql = f"SELECT * FROM {self.table_name} ORDER BY group_name"
+        sql = f"SELECT * FROM {self.table_name} ORDER BY group_name"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql)
+            rows = cursor.fetchall()
             
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql)
-                rows = cursor.fetchall()
-                
-                return [dict(row) for row in rows]
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"获取所有权限组失败: {e}")
-            return []
+            return [dict(row) for row in rows]
     
     def check_permission(self, group_name: str, permission_name: str) -> bool:
         """
@@ -216,21 +193,16 @@ class PermissionGroupDAO(BaseDAO[PermissionGroup]):
         Returns:
             bool: 是否具有权限
         """
-        try:
-            if not self._validate_field_name(permission_name):
-                return False
-            
-            sql = f"SELECT {permission_name} FROM {self.table_name} WHERE group_name = ?"
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (group_name,))
-                row = cursor.fetchone()
-                
-                return bool(row[permission_name]) if row else False
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"检查权限失败: {e}")
+        if not self._validate_field_name(permission_name):
             return False
+        
+        sql = f"SELECT {permission_name} FROM {self.table_name} WHERE group_name = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (group_name,))
+            row = cursor.fetchone()
+            
+            return bool(row[permission_name]) if row else False
     
     def get_groups_with_permission(self, permission_name: str) -> List[str]:
         """
@@ -242,21 +214,16 @@ class PermissionGroupDAO(BaseDAO[PermissionGroup]):
         Returns:
             List[str]: 权限组名称列表
         """
-        try:
-            if not self._validate_field_name(permission_name):
-                return []
-            
-            sql = f"SELECT group_name FROM {self.table_name} WHERE {permission_name} = 1"
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql)
-                rows = cursor.fetchall()
-                
-                return [row["group_name"] for row in rows]
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"获取具有权限的组失败: {e}")
+        if not self._validate_field_name(permission_name):
             return []
+        
+        sql = f"SELECT group_name FROM {self.table_name} WHERE {permission_name} = 1"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+            
+            return [row["group_name"] for row in rows]
     
     def set_permission(self, group_name: str, permission_name: str, value: bool) -> bool:
         """
@@ -273,14 +240,10 @@ class PermissionGroupDAO(BaseDAO[PermissionGroup]):
         if not self._validate_field_name(permission_name):
             return False
         
-        try:
-            sql = f"UPDATE permission_groups SET {permission_name} = ? WHERE group_name = ?"
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (value, group_name))
-                return cursor.rowcount > 0
-        except sqlite3.Error as e:
-            self.logger.error(f"设置权限失败: {e}")
-            return False
+        sql = f"UPDATE permission_groups SET {permission_name} = ? WHERE group_name = ?"
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (value, group_name))
+            return cursor.rowcount > 0
     
     def permission_group_exists(self, group_name: str) -> bool:
         """
@@ -292,14 +255,10 @@ class PermissionGroupDAO(BaseDAO[PermissionGroup]):
         Returns:
             bool: 权限组是否存在
         """
-        try:
-            sql = "SELECT 1 FROM permission_groups WHERE group_name = ? LIMIT 1"
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (group_name,))
-                return cursor.fetchone() is not None
-        except sqlite3.Error as e:
-            self.logger.error(f"检查权限组是否存在失败: {e}")
-            return False
+        sql = "SELECT 1 FROM permission_groups WHERE group_name = ? LIMIT 1"
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (group_name,))
+            return cursor.fetchone() is not None
     
     def get_permission_summary(self, group_name: str) -> Dict[str, bool]:
         """
@@ -311,23 +270,18 @@ class PermissionGroupDAO(BaseDAO[PermissionGroup]):
         Returns:
             Dict[str, bool]: 权限汇总
         """
-        try:
-            sql = f"SELECT * FROM {self.table_name} WHERE group_name = ?"
+        sql = f"SELECT * FROM {self.table_name} WHERE group_name = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (group_name,))
+            row = cursor.fetchone()
             
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (group_name,))
-                row = cursor.fetchone()
-                
-                if row:
-                    # 排除group_name字段，只返回权限字段
-                    permissions = dict(row)
-                    permissions.pop("group_name", None)
-                    return {k: bool(v) for k, v in permissions.items()}
-                
-                return {}
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"获取权限汇总失败: {e}")
+            if row:
+                # 排除group_name字段，只返回权限字段
+                permissions = dict(row)
+                permissions.pop("group_name", None)
+                return {k: bool(v) for k, v in permissions.items()}
+            
             return {}
     
     def copy_permission_group(self, source_group: str, target_group: str) -> bool:
@@ -341,29 +295,24 @@ class PermissionGroupDAO(BaseDAO[PermissionGroup]):
         Returns:
             bool: 复制是否成功
         """
-        try:
-            # 获取源权限组信息
-            source_permissions = self.get_permission_group(source_group)
-            if not source_permissions:
-                return False
-            
-            # 更改组名
-            source_permissions["group_name"] = target_group
-            
-            # 插入新权限组
-            columns = ', '.join(source_permissions.keys())
-            placeholders = ', '.join(['?' for _ in source_permissions])
-            values = tuple(source_permissions.values())
-            
-            sql = f"INSERT INTO {self.table_name} ({columns}) VALUES ({placeholders})"
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, values)
-                return cursor.rowcount > 0
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"复制权限组失败: {e}")
+        # 获取源权限组信息
+        source_permissions = self.get_permission_group(source_group)
+        if not source_permissions:
             return False
+        
+        # 更改组名
+        source_permissions["group_name"] = target_group
+        
+        # 插入新权限组
+        columns = ', '.join(source_permissions.keys())
+        placeholders = ', '.join(['?' for _ in source_permissions])
+        values = tuple(source_permissions.values())
+        
+        sql = f"INSERT INTO {self.table_name} ({columns}) VALUES ({placeholders})"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, values)
+            return cursor.rowcount > 0
     
     def reset_to_default_permissions(self) -> bool:
         """

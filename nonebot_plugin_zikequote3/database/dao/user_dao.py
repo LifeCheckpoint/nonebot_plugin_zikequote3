@@ -146,15 +146,11 @@ class UserDAO(BaseDAO[User]):
         Returns:
             List[User]: 有头像的用户列表
         """
-        try:
-            sql = "SELECT * FROM users WHERE avatar IS NOT NULL"
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql)
-                rows = cursor.fetchall()
-                return [self._row_to_model(row) for row in rows]
-        except sqlite3.Error as e:
-            self.logger.error(f"获取有头像的用户失败: {e}")
-            return []
+        sql = "SELECT * FROM users WHERE avatar IS NOT NULL"
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+            return [self._row_to_model(row) for row in rows]
     
     def count_users(self) -> int:
         """
@@ -163,15 +159,11 @@ class UserDAO(BaseDAO[User]):
         Returns:
             int: 用户总数
         """
-        try:
-            sql = "SELECT COUNT(*) FROM users"
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql)
-                result = cursor.fetchone()
-                return result[0] if result else 0
-        except sqlite3.Error as e:
-            self.logger.error(f"统计用户总数失败: {e}")
-            return 0
+        sql = "SELECT COUNT(*) FROM users"
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql)
+            result = cursor.fetchone()
+            return result[0] if result else 0
     
     def batch_create_users(self, users: List[UserCreate]) -> bool:
         """
@@ -186,16 +178,12 @@ class UserDAO(BaseDAO[User]):
         if not users:
             return True
         
-        try:
-            sql = "INSERT INTO users (qq_id, avatar) VALUES (?, ?)"
-            values_list = [(user.qq_id, user.avatar) for user in users]
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.executemany(sql, values_list)
-                return cursor.rowcount == len(users)
-        except sqlite3.Error as e:
-            self.logger.error(f"批量创建用户失败: {e}")
-            return False
+        sql = "INSERT INTO users (qq_id, avatar) VALUES (?, ?)"
+        values_list = [(user.qq_id, user.avatar) for user in users]
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.executemany(sql, values_list)
+            return cursor.rowcount == len(users)
     
     def get_users_without_avatar(self) -> List[User]:
         """
@@ -204,15 +192,10 @@ class UserDAO(BaseDAO[User]):
         Returns:
             List[User]: 没有头像的用户列表
         """
-        try:
-            sql = f"SELECT * FROM {self.table_name} WHERE avatar IS NULL"
+        sql = f"SELECT * FROM {self.table_name} WHERE avatar IS NULL"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql)
+            rows = cursor.fetchall()
             
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql)
-                rows = cursor.fetchall()
-                
-                return [self._row_to_model(row) for row in rows]
-                
-        except Exception as e:
-            self.logger.error(f"获取没有头像的用户失败: {e}")
-            return []
+            return [self._row_to_model(row) for row in rows]

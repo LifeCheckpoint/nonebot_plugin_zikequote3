@@ -43,18 +43,14 @@ class UserNicknameDAO(BaseDAO[UserNickname]):
         Returns:
             bool: 添加是否成功
         """
-        try:
-            sql = "INSERT INTO user_nicknames (qq_id, current_using, name) VALUES (?, ?, ?)"
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (
-                    nickname_create.qq_id,
-                    nickname_create.current_using,
-                    nickname_create.name
-                ))
-                return cursor.rowcount > 0
-        except sqlite3.Error as e:
-            self.logger.error(f"添加用户昵称失败: {e}")
-            return False
+        sql = "INSERT INTO user_nicknames (qq_id, current_using, name) VALUES (?, ?, ?)"
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (
+                nickname_create.qq_id,
+                nickname_create.current_using,
+                nickname_create.name
+            ))
+            return cursor.rowcount > 0
     
     def get_current_nickname(self, qq_id: str) -> Optional[UserNickname]:
         """
@@ -66,15 +62,11 @@ class UserNicknameDAO(BaseDAO[UserNickname]):
         Returns:
             Optional[UserNickname]: 当前昵称或None
         """
-        try:
-            sql = "SELECT * FROM user_nicknames WHERE qq_id = ? AND current_using = 1"
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (qq_id,))
-                row = cursor.fetchone()
-                return self._row_to_model(row) if row else None
-        except sqlite3.Error as e:
-            self.logger.error(f"获取用户当前昵称失败: {e}")
-            return None
+        sql = "SELECT * FROM user_nicknames WHERE qq_id = ? AND current_using = 1"
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (qq_id,))
+            row = cursor.fetchone()
+            return self._row_to_model(row) if row else None
     
     def get_all_nicknames(self, qq_id: str) -> List[UserNickname]:
         """
@@ -86,15 +78,11 @@ class UserNicknameDAO(BaseDAO[UserNickname]):
         Returns:
             List[UserNickname]: 昵称列表
         """
-        try:
-            sql = "SELECT * FROM user_nicknames WHERE qq_id = ?"
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (qq_id,))
-                rows = cursor.fetchall()
-                return [self._row_to_model(row) for row in rows]
-        except sqlite3.Error as e:
-            self.logger.error(f"获取用户所有昵称失败: {e}")
-            return []
+        sql = "SELECT * FROM user_nicknames WHERE qq_id = ?"
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (qq_id,))
+            rows = cursor.fetchall()
+            return [self._row_to_model(row) for row in rows]
     
     def set_current_nickname(self, qq_id: str, name: str) -> bool:
         """
@@ -107,32 +95,27 @@ class UserNicknameDAO(BaseDAO[UserNickname]):
         Returns:
             bool: 设置是否成功
         """
-        try:
-            with self.connection_manager.cursor() as cursor:
-                # 首先取消所有当前昵称
+        with self.connection_manager.cursor() as cursor:
+            # 首先取消所有当前昵称
+            cursor.execute(
+                f"UPDATE {self.table_name} SET current_using = 0 WHERE qq_id = ?",
+                (qq_id,)
+            )
+            
+            # 设置新的当前昵称
+            cursor.execute(
+                f"UPDATE {self.table_name} SET current_using = 1 WHERE qq_id = ? AND name = ?",
+                (qq_id, name)
+            )
+            
+            # 如果没有更新到记录，说明昵称不存在，需要创建
+            if cursor.rowcount == 0:
                 cursor.execute(
-                    f"UPDATE {self.table_name} SET current_using = 0 WHERE qq_id = ?",
-                    (qq_id,)
-                )
-                
-                # 设置新的当前昵称
-                cursor.execute(
-                    f"UPDATE {self.table_name} SET current_using = 1 WHERE qq_id = ? AND name = ?",
+                    f"INSERT INTO {self.table_name} (qq_id, current_using, name) VALUES (?, 1, ?)",
                     (qq_id, name)
                 )
-                
-                # 如果没有更新到记录，说明昵称不存在，需要创建
-                if cursor.rowcount == 0:
-                    cursor.execute(
-                        f"INSERT INTO {self.table_name} (qq_id, current_using, name) VALUES (?, 1, ?)",
-                        (qq_id, name)
-                    )
-                
-                return True
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"设置用户当前昵称失败: {e}")
-            return False
+            
+            return True
     
     def remove_nickname(self, qq_id: str, name: str) -> bool:
         """
@@ -145,16 +128,11 @@ class UserNicknameDAO(BaseDAO[UserNickname]):
         Returns:
             bool: 删除是否成功
         """
-        try:
-            sql = f"DELETE FROM {self.table_name} WHERE qq_id = ? AND name = ?"
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (qq_id, name))
-                return cursor.rowcount > 0
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"删除用户昵称失败: {e}")
-            return False
+        sql = f"DELETE FROM {self.table_name} WHERE qq_id = ? AND name = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (qq_id, name))
+            return cursor.rowcount > 0
     
     def clear_user_nicknames(self, qq_id: str) -> bool:
         """
@@ -166,16 +144,11 @@ class UserNicknameDAO(BaseDAO[UserNickname]):
         Returns:
             bool: 清空是否成功
         """
-        try:
-            sql = f"DELETE FROM {self.table_name} WHERE qq_id = ?"
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (qq_id,))
-                return True
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"清空用户昵称失败: {e}")
-            return False
+        sql = f"DELETE FROM {self.table_name} WHERE qq_id = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (qq_id,))
+            return True
 
 
 class GroupNicknameDAO(BaseDAO[GroupNickname]):
@@ -216,19 +189,15 @@ class GroupNicknameDAO(BaseDAO[GroupNickname]):
         Returns:
             bool: 添加是否成功
         """
-        try:
-            sql = "INSERT INTO group_nicknames (qq_id, group_id, current_using, name) VALUES (?, ?, ?, ?)"
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (
-                    nickname_create.qq_id,
-                    nickname_create.group_id,
-                    nickname_create.current_using,
-                    nickname_create.name
-                ))
-                return cursor.rowcount > 0
-        except sqlite3.Error as e:
-            self.logger.error(f"添加群名片失败: {e}")
-            return False
+        sql = "INSERT INTO group_nicknames (qq_id, group_id, current_using, name) VALUES (?, ?, ?, ?)"
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (
+                nickname_create.qq_id,
+                nickname_create.group_id,
+                nickname_create.current_using,
+                nickname_create.name
+            ))
+            return cursor.rowcount > 0
     
     def get_current_group_nickname(self, qq_id: str, group_id: str) -> Optional[GroupNickname]:
         """
@@ -241,15 +210,11 @@ class GroupNicknameDAO(BaseDAO[GroupNickname]):
         Returns:
             Optional[GroupNickname]: 当前群名片或None
         """
-        try:
-            sql = "SELECT * FROM group_nicknames WHERE qq_id = ? AND group_id = ? AND current_using = 1"
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (qq_id, group_id))
-                row = cursor.fetchone()
-                return self._row_to_model(row) if row else None
-        except sqlite3.Error as e:
-            self.logger.error(f"获取用户当前群名片失败: {e}")
-            return None
+        sql = "SELECT * FROM group_nicknames WHERE qq_id = ? AND group_id = ? AND current_using = 1"
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (qq_id, group_id))
+            row = cursor.fetchone()
+            return self._row_to_model(row) if row else None
     
     def get_all_group_nicknames(self, qq_id: str, group_id: str) -> List[GroupNickname]:
         """
@@ -262,15 +227,11 @@ class GroupNicknameDAO(BaseDAO[GroupNickname]):
         Returns:
             List[GroupNickname]: 群名片列表
         """
-        try:
-            sql = "SELECT * FROM group_nicknames WHERE qq_id = ? AND group_id = ?"
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (qq_id, group_id))
-                rows = cursor.fetchall()
-                return [self._row_to_model(row) for row in rows]
-        except sqlite3.Error as e:
-            self.logger.error(f"获取用户群名片记录失败: {e}")
-            return []
+        sql = "SELECT * FROM group_nicknames WHERE qq_id = ? AND group_id = ?"
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (qq_id, group_id))
+            rows = cursor.fetchall()
+            return [self._row_to_model(row) for row in rows]
     
     def get_user_all_group_nicknames(self, qq_id: str) -> List[GroupNickname]:
         """
@@ -282,15 +243,11 @@ class GroupNicknameDAO(BaseDAO[GroupNickname]):
         Returns:
             List[GroupNickname]: 所有群名片列表
         """
-        try:
-            sql = "SELECT * FROM group_nicknames WHERE qq_id = ?"
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (qq_id,))
-                rows = cursor.fetchall()
-                return [self._row_to_model(row) for row in rows]
-        except sqlite3.Error as e:
-            self.logger.error(f"获取用户所有群名片失败: {e}")
-            return []
+        sql = "SELECT * FROM group_nicknames WHERE qq_id = ?"
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (qq_id,))
+            rows = cursor.fetchall()
+            return [self._row_to_model(row) for row in rows]
     
     def set_current_group_nickname(self, qq_id: str, group_id: str, name: str) -> bool:
         """
@@ -304,32 +261,27 @@ class GroupNicknameDAO(BaseDAO[GroupNickname]):
         Returns:
             bool: 设置是否成功
         """
-        try:
-            with self.connection_manager.cursor() as cursor:
-                # 首先取消该群组中的所有当前名片
+        with self.connection_manager.cursor() as cursor:
+            # 首先取消该群组中的所有当前名片
+            cursor.execute(
+                f"UPDATE {self.table_name} SET current_using = 0 WHERE qq_id = ? AND group_id = ?",
+                (qq_id, group_id)
+            )
+            
+            # 设置新的当前名片
+            cursor.execute(
+                f"UPDATE {self.table_name} SET current_using = 1 WHERE qq_id = ? AND group_id = ? AND name = ?",
+                (qq_id, group_id, name)
+            )
+            
+            # 如果没有更新到记录，说明名片不存在，需要创建
+            if cursor.rowcount == 0:
                 cursor.execute(
-                    f"UPDATE {self.table_name} SET current_using = 0 WHERE qq_id = ? AND group_id = ?",
-                    (qq_id, group_id)
-                )
-                
-                # 设置新的当前名片
-                cursor.execute(
-                    f"UPDATE {self.table_name} SET current_using = 1 WHERE qq_id = ? AND group_id = ? AND name = ?",
+                    f"INSERT INTO {self.table_name} (qq_id, group_id, current_using, name) VALUES (?, ?, 1, ?)",
                     (qq_id, group_id, name)
                 )
-                
-                # 如果没有更新到记录，说明名片不存在，需要创建
-                if cursor.rowcount == 0:
-                    cursor.execute(
-                        f"INSERT INTO {self.table_name} (qq_id, group_id, current_using, name) VALUES (?, ?, 1, ?)",
-                        (qq_id, group_id, name)
-                    )
-                
-                return True
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"设置群名片失败: {e}")
-            return False
+            
+            return True
     
     def remove_group_nickname(self, qq_id: str, group_id: str, name: str) -> bool:
         """
@@ -343,16 +295,11 @@ class GroupNicknameDAO(BaseDAO[GroupNickname]):
         Returns:
             bool: 删除是否成功
         """
-        try:
-            sql = f"DELETE FROM {self.table_name} WHERE qq_id = ? AND group_id = ? AND name = ?"
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (qq_id, group_id, name))
-                return cursor.rowcount > 0
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"删除群名片失败: {e}")
-            return False
+        sql = f"DELETE FROM {self.table_name} WHERE qq_id = ? AND group_id = ? AND name = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (qq_id, group_id, name))
+            return cursor.rowcount > 0
     
     def clear_user_group_nicknames(self, qq_id: str, group_id: str) -> bool:
         """
@@ -365,16 +312,11 @@ class GroupNicknameDAO(BaseDAO[GroupNickname]):
         Returns:
             bool: 清空是否成功
         """
-        try:
-            sql = f"DELETE FROM {self.table_name} WHERE qq_id = ? AND group_id = ?"
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (qq_id, group_id))
-                return True
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"清空用户群名片失败: {e}")
-            return False
+        sql = f"DELETE FROM {self.table_name} WHERE qq_id = ? AND group_id = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (qq_id, group_id))
+            return True
     
     def clear_group_all_nicknames(self, group_id: str) -> bool:
         """
@@ -386,16 +328,11 @@ class GroupNicknameDAO(BaseDAO[GroupNickname]):
         Returns:
             bool: 清空是否成功
         """
-        try:
-            sql = f"DELETE FROM {self.table_name} WHERE group_id = ?"
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (group_id,))
-                return True
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"清空群组所有名片失败: {e}")
-            return False
+        sql = f"DELETE FROM {self.table_name} WHERE group_id = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (group_id,))
+            return True
     
     def get_group_nickname_statistics(self, group_id: str) -> Dict[str, Any]:
         """
@@ -407,37 +344,28 @@ class GroupNicknameDAO(BaseDAO[GroupNickname]):
         Returns:
             Dict[str, Any]: 统计信息
         """
-        try:
-            sql = f"""
-            SELECT 
-                COUNT(*) as total_nicknames,
-                COUNT(DISTINCT qq_id) as users_with_nicknames,
-                COUNT(CASE WHEN current_using = 1 THEN 1 END) as current_nicknames
-            FROM {self.table_name}
-            WHERE group_id = ?
-            """
+        sql = f"""
+        SELECT
+            COUNT(*) as total_nicknames,
+            COUNT(DISTINCT qq_id) as users_with_nicknames,
+            COUNT(CASE WHEN current_using = 1 THEN 1 END) as current_nicknames
+        FROM {self.table_name}
+        WHERE group_id = ?
+        """
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (group_id,))
+            row = cursor.fetchone()
             
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (group_id,))
-                row = cursor.fetchone()
-                
-                if row:
-                    return {
-                        "total_nicknames": row["total_nicknames"],
-                        "users_with_nicknames": row["users_with_nicknames"],
-                        "current_nicknames": row["current_nicknames"]
-                    }
-                else:
-                    return {
-                        "total_nicknames": 0,
-                        "users_with_nicknames": 0,
-                        "current_nicknames": 0
-                    }
-                    
-        except sqlite3.Error as e:
-            self.logger.error(f"获取群组名片统计失败: {e}")
-            return {
-                "total_nicknames": 0,
-                "users_with_nicknames": 0,
-                "current_nicknames": 0
-            }
+            if row:
+                return {
+                    "total_nicknames": row["total_nicknames"],
+                    "users_with_nicknames": row["users_with_nicknames"],
+                    "current_nicknames": row["current_nicknames"]
+                }
+            else:
+                return {
+                    "total_nicknames": 0,
+                    "users_with_nicknames": 0,
+                    "current_nicknames": 0
+                }

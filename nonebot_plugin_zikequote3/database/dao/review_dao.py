@@ -103,14 +103,10 @@ class ReviewDAO(BaseDAO[Review]):
         Returns:
             bool: 删除是否成功
         """
-        try:
-            sql = "DELETE FROM reviews WHERE review_id = ?"
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (review_id,))
-                return cursor.rowcount > 0
-        except sqlite3.Error as e:
-            self.logger.error(f"删除评论失败: {e}")
-            return False
+        sql = "DELETE FROM reviews WHERE review_id = ?"
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (review_id,))
+            return cursor.rowcount > 0
     
     def get_reviews_by_quote(self, quote_id: str, limit: Optional[int] = None, offset: int = 0) -> List[Review]:
         """
@@ -124,21 +120,17 @@ class ReviewDAO(BaseDAO[Review]):
         Returns:
             List[Review]: 评论列表
         """
-        try:
-            sql = "SELECT * FROM reviews WHERE quote_id = ? ORDER BY time_stamp"
-            params: List[Any] = [quote_id]
-            
-            if limit is not None:
-                sql += " LIMIT ? OFFSET ?"
-                params.extend([limit, offset])
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, params)
-                rows = cursor.fetchall()
-                return [self._row_to_model(row) for row in rows]
-        except sqlite3.Error as e:
-            self.logger.error(f"获取语录评论失败: {e}")
-            return []
+        sql = "SELECT * FROM reviews WHERE quote_id = ? ORDER BY time_stamp"
+        params: List[Any] = [quote_id]
+        
+        if limit is not None:
+            sql += " LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
+            return [self._row_to_model(row) for row in rows]
     
     def get_reviews_by_author(self, author_id: str, limit: Optional[int] = None, offset: int = 0) -> List[Review]:
         """
@@ -152,21 +144,17 @@ class ReviewDAO(BaseDAO[Review]):
         Returns:
             List[Review]: 评论列表
         """
-        try:
-            sql = f"SELECT * FROM {self.table_name} WHERE author_id = ? ORDER BY time_stamp"
-            params: List[Any] = [author_id]
-            
-            if limit is not None:
-                sql += " LIMIT ? OFFSET ?"
-                params.extend([limit, offset])
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, params)
-                rows = cursor.fetchall()
-                return [self._row_to_model(row) for row in rows]
-        except sqlite3.Error as e:
-            self.logger.error(f"获取作者评论失败: {e}")
-            return []
+        sql = f"SELECT * FROM {self.table_name} WHERE author_id = ? ORDER BY time_stamp"
+        params: List[Any] = [author_id]
+        
+        if limit is not None:
+            sql += " LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
+            return [self._row_to_model(row) for row in rows]
     
     def get_recent_reviews(self, limit: Optional[int] = None, offset: int = 0) -> List[Review]:
         """
@@ -179,21 +167,17 @@ class ReviewDAO(BaseDAO[Review]):
         Returns:
             List[Review]: 最近评论列表
         """
-        try:
-            sql = f"SELECT * FROM {self.table_name} ORDER BY time_stamp DESC"
-            params: List[Any] = []
-            
-            if limit is not None:
-                sql += " LIMIT ? OFFSET ?"
-                params.extend([limit, offset])
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, params)
-                rows = cursor.fetchall()
-                return [self._row_to_model(row) for row in rows]
-        except sqlite3.Error as e:
-            self.logger.error(f"获取最近评论失败: {e}")
-            return []
+        sql = f"SELECT * FROM {self.table_name} ORDER BY time_stamp DESC"
+        params: List[Any] = []
+        
+        if limit is not None:
+            sql += " LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
+            return [self._row_to_model(row) for row in rows]
     
     def search_reviews_by_content(self, keyword: str, limit: Optional[int] = None, offset: int = 0) -> List[Review]:
         """
@@ -207,24 +191,19 @@ class ReviewDAO(BaseDAO[Review]):
         Returns:
             List[Review]: 评论列表
         """
-        try:
-            pattern = f"%{keyword}%"
-            sql = f"SELECT * FROM {self.table_name} WHERE content LIKE ? ORDER BY time_stamp DESC"
-            params: List[Any] = [pattern]
+        pattern = f"%{keyword}%"
+        sql = f"SELECT * FROM {self.table_name} WHERE content LIKE ? ORDER BY time_stamp DESC"
+        params: List[Any] = [pattern]
+        
+        if limit is not None:
+            sql += " LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
             
-            if limit is not None:
-                sql += " LIMIT ? OFFSET ?"
-                params.extend([limit, offset])
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, params)
-                rows = cursor.fetchall()
-                
-                return [self._row_to_model(row) for row in rows]
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"搜索评论失败: {e}")
-            return []
+            return [self._row_to_model(row) for row in rows]
     
     def count_reviews_by_quote(self, quote_id: str) -> int:
         """
@@ -236,15 +215,11 @@ class ReviewDAO(BaseDAO[Review]):
         Returns:
             int: 评论数量
         """
-        try:
-            sql = f"SELECT COUNT(*) FROM {self.table_name} WHERE quote_id = ?"
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (quote_id,))
-                result = cursor.fetchone()
-                return result[0] if result else 0
-        except sqlite3.Error as e:
-            self.logger.error(f"统计语录评论数量失败: {e}")
-            return 0
+        sql = f"SELECT COUNT(*) FROM {self.table_name} WHERE quote_id = ?"
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (quote_id,))
+            result = cursor.fetchone()
+            return result[0] if result else 0
     
     def count_reviews_by_author(self, author_id: str) -> int:
         """
@@ -256,15 +231,11 @@ class ReviewDAO(BaseDAO[Review]):
         Returns:
             int: 评论数量
         """
-        try:
-            sql = f"SELECT COUNT(*) FROM {self.table_name} WHERE author_id = ?"
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (author_id,))
-                result = cursor.fetchone()
-                return result[0] if result else 0
-        except sqlite3.Error as e:
-            self.logger.error(f"统计作者评论数量失败: {e}")
-            return 0
+        sql = f"SELECT COUNT(*) FROM {self.table_name} WHERE author_id = ?"
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (author_id,))
+            result = cursor.fetchone()
+            return result[0] if result else 0
     
     def get_reviews_with_quote_info(self, limit: Optional[int] = None, offset: int = 0) -> List[Dict[str, Any]]:
         """
@@ -277,43 +248,38 @@ class ReviewDAO(BaseDAO[Review]):
         Returns:
             List[Dict[str, Any]]: 包含语录信息的评论列表
         """
-        try:
-            sql = f"""
-            SELECT 
-                r.review_id, r.time_stamp, r.author_id, r.quote_id, r.content as review_content,
-                q.content as quote_content, q.author_id as quote_author_id, q.group_id
-            FROM {self.table_name} r
-            JOIN quotes q ON r.quote_id = q.quote_id
-            ORDER BY r.time_stamp DESC
-            """
-            params: List[Any] = []
+        sql = f"""
+        SELECT
+            r.review_id, r.time_stamp, r.author_id, r.quote_id, r.content as review_content,
+            q.content as quote_content, q.author_id as quote_author_id, q.group_id
+        FROM {self.table_name} r
+        JOIN quotes q ON r.quote_id = q.quote_id
+        ORDER BY r.time_stamp DESC
+        """
+        params: List[Any] = []
+        
+        if limit is not None:
+            sql += " LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
             
-            if limit is not None:
-                sql += " LIMIT ? OFFSET ?"
-                params.extend([limit, offset])
+            result = []
+            for row in rows:
+                result.append({
+                    "review_id": row["review_id"],
+                    "time_stamp": row["time_stamp"],
+                    "author_id": row["author_id"],
+                    "quote_id": row["quote_id"],
+                    "review_content": row["review_content"],
+                    "quote_content": row["quote_content"],
+                    "quote_author_id": row["quote_author_id"],
+                    "group_id": row["group_id"]
+                })
             
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, params)
-                rows = cursor.fetchall()
-                
-                result = []
-                for row in rows:
-                    result.append({
-                        "review_id": row["review_id"],
-                        "time_stamp": row["time_stamp"],
-                        "author_id": row["author_id"],
-                        "quote_id": row["quote_id"],
-                        "review_content": row["review_content"],
-                        "quote_content": row["quote_content"],
-                        "quote_author_id": row["quote_author_id"],
-                        "group_id": row["group_id"]
-                    })
-                
-                return result
-                
-        except Exception as e:
-            self.logger.error(f"获取评论和语录信息失败: {e}")
-            return []
+            return result
     
     def get_reviews_by_quote_author(self, quote_author_id: str, limit: Optional[int] = None, offset: int = 0) -> List[Review]:
         """
@@ -327,28 +293,23 @@ class ReviewDAO(BaseDAO[Review]):
         Returns:
             List[Review]: 评论列表
         """
-        try:
-            sql = f"""
-            SELECT r.* FROM {self.table_name} r
-            JOIN quotes q ON r.quote_id = q.quote_id
-            WHERE q.author_id = ?
-            ORDER BY r.time_stamp DESC
-            """
-            params: List[Any] = [quote_author_id]
+        sql = f"""
+        SELECT r.* FROM {self.table_name} r
+        JOIN quotes q ON r.quote_id = q.quote_id
+        WHERE q.author_id = ?
+        ORDER BY r.time_stamp DESC
+        """
+        params: List[Any] = [quote_author_id]
+        
+        if limit is not None:
+            sql += " LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
             
-            if limit is not None:
-                sql += " LIMIT ? OFFSET ?"
-                params.extend([limit, offset])
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, params)
-                rows = cursor.fetchall()
-                
-                return [self._row_to_model(row) for row in rows]
-                
-        except Exception as e:
-            self.logger.error(f"根据语录作者获取评论失败: {e}")
-            return []
+            return [self._row_to_model(row) for row in rows]
     
     def delete_reviews_by_quote(self, quote_id: str) -> bool:
         """
@@ -360,16 +321,11 @@ class ReviewDAO(BaseDAO[Review]):
         Returns:
             bool: 删除是否成功
         """
-        try:
-            sql = f"DELETE FROM {self.table_name} WHERE quote_id = ?"
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (quote_id,))
-                return True  # 即使没有删除任何行也返回True
-                
-        except Exception as e:
-            self.logger.error(f"删除语录评论失败: {e}")
-            return False
+        sql = f"DELETE FROM {self.table_name} WHERE quote_id = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (quote_id,))
+            return True  # 即使没有删除任何行也返回True
     
     def delete_reviews_by_author(self, author_id: str) -> bool:
         """
@@ -381,16 +337,11 @@ class ReviewDAO(BaseDAO[Review]):
         Returns:
             bool: 删除是否成功
         """
-        try:
-            sql = f"DELETE FROM {self.table_name} WHERE author_id = ?"
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (author_id,))
-                return True  # 即使没有删除任何行也返回True
-                
-        except Exception as e:
-            self.logger.error(f"删除作者评论失败: {e}")
-            return False
+        sql = f"DELETE FROM {self.table_name} WHERE author_id = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (author_id,))
+            return True  # 即使没有删除任何行也返回True
     
     def batch_create_reviews(self, reviews: List[ReviewCreate]) -> bool:
         """
@@ -405,20 +356,16 @@ class ReviewDAO(BaseDAO[Review]):
         if not reviews:
             return True
         
-        try:
-            sql = "INSERT INTO reviews (review_id, time_stamp, author_id, quote_id, content) VALUES (?, ?, ?, ?, ?)"
-            current_time = datetime.now().isoformat()
-            values_list = [
-                (review.review_id, current_time, review.author_id, review.quote_id, review.content)
-                for review in reviews
-            ]
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.executemany(sql, values_list)
-                return cursor.rowcount == len(reviews)
-        except sqlite3.Error as e:
-            self.logger.error(f"批量创建评论失败: {e}")
-            return False
+        sql = "INSERT INTO reviews (review_id, time_stamp, author_id, quote_id, content) VALUES (?, ?, ?, ?, ?)"
+        current_time = datetime.now().isoformat()
+        values_list = [
+            (review.review_id, current_time, review.author_id, review.quote_id, review.content)
+            for review in reviews
+        ]
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.executemany(sql, values_list)
+            return cursor.rowcount == len(reviews)
     
     def get_review_statistics(self) -> Dict[str, Any]:
         """
@@ -427,36 +374,27 @@ class ReviewDAO(BaseDAO[Review]):
         Returns:
             Dict[str, Any]: 统计信息
         """
-        try:
-            sql = f"""
-            SELECT 
-                COUNT(*) as total_reviews,
-                COUNT(DISTINCT author_id) as unique_reviewers,
-                COUNT(DISTINCT quote_id) as reviewed_quotes
-            FROM {self.table_name}
-            """
+        sql = f"""
+        SELECT
+            COUNT(*) as total_reviews,
+            COUNT(DISTINCT author_id) as unique_reviewers,
+            COUNT(DISTINCT quote_id) as reviewed_quotes
+        FROM {self.table_name}
+        """
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql)
+            row = cursor.fetchone()
             
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql)
-                row = cursor.fetchone()
-                
-                if row:
-                    return {
-                        "total_reviews": row["total_reviews"],
-                        "unique_reviewers": row["unique_reviewers"],
-                        "reviewed_quotes": row["reviewed_quotes"]
-                    }
-                else:
-                    return {
-                        "total_reviews": 0,
-                        "unique_reviewers": 0,
-                        "reviewed_quotes": 0
-                    }
-                    
-        except Exception as e:
-            self.logger.error(f"获取评论统计信息失败: {e}")
-            return {
-                "total_reviews": 0,
-                "unique_reviewers": 0,
-                "reviewed_quotes": 0
-            }
+            if row:
+                return {
+                    "total_reviews": row["total_reviews"],
+                    "unique_reviewers": row["unique_reviewers"],
+                    "reviewed_quotes": row["reviewed_quotes"]
+                }
+            else:
+                return {
+                    "total_reviews": 0,
+                    "unique_reviewers": 0,
+                    "reviewed_quotes": 0
+                }

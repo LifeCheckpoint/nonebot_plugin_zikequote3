@@ -178,15 +178,11 @@ class GroupDAO(BaseDAO[Group]):
         Returns:
             List[Group]: 按名称排序的群组列表
         """
-        try:
-            sql = "SELECT * FROM groups ORDER BY name"
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql)
-                rows = cursor.fetchall()
-                return [self._row_to_model(row) for row in rows]
-        except sqlite3.Error as e:
-            self.logger.error(f"获取排序群组列表失败: {e}")
-            return []
+        sql = "SELECT * FROM groups ORDER BY name"
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+            return [self._row_to_model(row) for row in rows]
     
     def count_groups(self) -> int:
         """
@@ -195,15 +191,11 @@ class GroupDAO(BaseDAO[Group]):
         Returns:
             int: 群组总数
         """
-        try:
-            sql = "SELECT COUNT(*) FROM groups"
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql)
-                result = cursor.fetchone()
-                return result[0] if result else 0
-        except sqlite3.Error as e:
-            self.logger.error(f"统计群组总数失败: {e}")
-            return 0
+        sql = "SELECT COUNT(*) FROM groups"
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql)
+            result = cursor.fetchone()
+            return result[0] if result else 0
     
     def batch_create_groups(self, groups: List[GroupCreate]) -> bool:
         """
@@ -218,16 +210,12 @@ class GroupDAO(BaseDAO[Group]):
         if not groups:
             return True
         
-        try:
-            sql = "INSERT INTO groups (group_id, name) VALUES (?, ?)"
-            values_list = [(group.group_id, group.name) for group in groups]
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.executemany(sql, values_list)
-                return cursor.rowcount == len(groups)
-        except sqlite3.Error as e:
-            self.logger.error(f"批量创建群组失败: {e}")
-            return False
+        sql = "INSERT INTO groups (group_id, name) VALUES (?, ?)"
+        values_list = [(group.group_id, group.name) for group in groups]
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.executemany(sql, values_list)
+            return cursor.rowcount == len(groups)
     
     def get_groups_with_name_containing(self, keyword: str) -> List[Group]:
         """

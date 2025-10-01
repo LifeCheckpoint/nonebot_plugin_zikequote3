@@ -83,16 +83,11 @@ class GroupMemberDAO(BaseDAO[GroupMember]):
         Returns:
             bool: 更新是否成功
         """
-        try:
-            sql = f"UPDATE {self.table_name} SET permission_group = ? WHERE group_id = ? AND qq_id = ?"
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (permission_group, group_id, qq_id))
-                return cursor.rowcount > 0
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"更新群成员权限失败: {e}")
-            return False
+        sql = f"UPDATE {self.table_name} SET permission_group = ? WHERE group_id = ? AND qq_id = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (permission_group, group_id, qq_id))
+            return cursor.rowcount > 0
     
     def delete_group_member(self, group_id: str, qq_id: str) -> bool:
         """
@@ -105,16 +100,11 @@ class GroupMemberDAO(BaseDAO[GroupMember]):
         Returns:
             bool: 删除是否成功
         """
-        try:
-            sql = f"DELETE FROM {self.table_name} WHERE group_id = ? AND qq_id = ?"
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (group_id, qq_id))
-                return cursor.rowcount > 0
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"删除群成员失败: {e}")
-            return False
+        sql = f"DELETE FROM {self.table_name} WHERE group_id = ? AND qq_id = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (group_id, qq_id))
+            return cursor.rowcount > 0
     
     def group_member_exists(self, group_id: str, qq_id: str) -> bool:
         """
@@ -127,16 +117,11 @@ class GroupMemberDAO(BaseDAO[GroupMember]):
         Returns:
             bool: 群成员关系是否存在
         """
-        try:
-            sql = f"SELECT 1 FROM {self.table_name} WHERE group_id = ? AND qq_id = ?"
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (group_id, qq_id))
-                return cursor.fetchone() is not None
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"检查群成员存在性失败: {e}")
-            return False
+        sql = f"SELECT 1 FROM {self.table_name} WHERE group_id = ? AND qq_id = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (group_id, qq_id))
+            return cursor.fetchone() is not None
     
     def get_members_by_group(self, group_id: str) -> List[GroupMember]:
         """
@@ -148,15 +133,11 @@ class GroupMemberDAO(BaseDAO[GroupMember]):
         Returns:
             List[GroupMember]: 群成员列表
         """
-        try:
-            sql = f"SELECT * FROM {self.table_name} WHERE group_id = ?"
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (group_id,))
-                rows = cursor.fetchall()
-                return [self._row_to_model(row) for row in rows]
-        except sqlite3.Error as e:
-            self.logger.error(f"获取群组成员失败: {e}")
-            return []
+        sql = f"SELECT * FROM {self.table_name} WHERE group_id = ?"
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (group_id,))
+            rows = cursor.fetchall()
+            return [self._row_to_model(row) for row in rows]
     
     def get_groups_by_user(self, qq_id: str) -> List[GroupMember]:
         """
@@ -168,15 +149,11 @@ class GroupMemberDAO(BaseDAO[GroupMember]):
         Returns:
             List[GroupMember]: 群成员关系列表
         """
-        try:
-            sql = f"SELECT * FROM {self.table_name} WHERE qq_id = ?"
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (qq_id,))
-                rows = cursor.fetchall()
-                return [self._row_to_model(row) for row in rows]
-        except sqlite3.Error as e:
-            self.logger.error(f"获取用户群组关系失败: {e}")
-            return []
+        sql = f"SELECT * FROM {self.table_name} WHERE qq_id = ?"
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (qq_id,))
+            rows = cursor.fetchall()
+            return [self._row_to_model(row) for row in rows]
     
     def get_members_by_permission(self, group_id: str, permission_group: str) -> List[GroupMember]:
         """
@@ -189,15 +166,11 @@ class GroupMemberDAO(BaseDAO[GroupMember]):
         Returns:
             List[GroupMember]: 群成员列表
         """
-        try:
-            sql = f"SELECT * FROM {self.table_name} WHERE group_id = ? AND permission_group = ?"
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (group_id, permission_group))
-                rows = cursor.fetchall()
-                return [self._row_to_model(row) for row in rows]
-        except sqlite3.Error as e:
-            self.logger.error(f"根据权限获取群成员失败: {e}")
-            return []
+        sql = f"SELECT * FROM {self.table_name} WHERE group_id = ? AND permission_group = ?"
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (group_id, permission_group))
+            rows = cursor.fetchall()
+            return [self._row_to_model(row) for row in rows]
     
     def get_admins_by_group(self, group_id: str) -> List[GroupMember]:
         """
@@ -209,18 +182,13 @@ class GroupMemberDAO(BaseDAO[GroupMember]):
         Returns:
             List[GroupMember]: 管理员列表
         """
-        try:
-            sql = f"SELECT * FROM {self.table_name} WHERE group_id = ? AND permission_group IN ('op', 'root')"
+        sql = f"SELECT * FROM {self.table_name} WHERE group_id = ? AND permission_group IN ('op', 'root')"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (group_id,))
+            rows = cursor.fetchall()
             
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (group_id,))
-                rows = cursor.fetchall()
-                
-                return [self._row_to_model(row) for row in rows]
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"获取群管理员失败: {e}")
-            return []
+            return [self._row_to_model(row) for row in rows]
     
     def count_members_by_group(self, group_id: str) -> int:
         """
@@ -232,15 +200,11 @@ class GroupMemberDAO(BaseDAO[GroupMember]):
         Returns:
             int: 成员数量
         """
-        try:
-            sql = f"SELECT COUNT(*) FROM {self.table_name} WHERE group_id = ?"
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (group_id,))
-                result = cursor.fetchone()
-                return result[0] if result else 0
-        except sqlite3.Error as e:
-            self.logger.error(f"统计群组成员数量失败: {e}")
-            return 0
+        sql = f"SELECT COUNT(*) FROM {self.table_name} WHERE group_id = ?"
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (group_id,))
+            result = cursor.fetchone()
+            return result[0] if result else 0
     
     def count_groups_by_user(self, qq_id: str) -> int:
         """
@@ -252,15 +216,11 @@ class GroupMemberDAO(BaseDAO[GroupMember]):
         Returns:
             int: 群组数量
         """
-        try:
-            sql = f"SELECT COUNT(*) FROM {self.table_name} WHERE qq_id = ?"
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (qq_id,))
-                result = cursor.fetchone()
-                return result[0] if result else 0
-        except sqlite3.Error as e:
-            self.logger.error(f"统计用户群组数量失败: {e}")
-            return 0
+        sql = f"SELECT COUNT(*) FROM {self.table_name} WHERE qq_id = ?"
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (qq_id,))
+            result = cursor.fetchone()
+            return result[0] if result else 0
     
     def get_group_permission_statistics(self, group_id: str) -> Dict[str, int]:
         """
@@ -272,27 +232,22 @@ class GroupMemberDAO(BaseDAO[GroupMember]):
         Returns:
             Dict[str, int]: 权限分布统计
         """
-        try:
-            sql = f"""
-            SELECT permission_group, COUNT(*) as count
-            FROM {self.table_name}
-            WHERE group_id = ?
-            GROUP BY permission_group
-            """
+        sql = f"""
+        SELECT permission_group, COUNT(*) as count
+        FROM {self.table_name}
+        WHERE group_id = ?
+        GROUP BY permission_group
+        """
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (group_id,))
+            rows = cursor.fetchall()
             
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (group_id,))
-                rows = cursor.fetchall()
-                
-                result = {}
-                for row in rows:
-                    result[row["permission_group"]] = row["count"]
-                
-                return result
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"获取群组权限统计失败: {e}")
-            return {}
+            result = {}
+            for row in rows:
+                result[row["permission_group"]] = row["count"]
+            
+            return result
     
     def batch_add_members(self, group_id: str, qq_ids: List[str], permission_group: str = "normal") -> bool:
         """
@@ -309,18 +264,13 @@ class GroupMemberDAO(BaseDAO[GroupMember]):
         if not qq_ids:
             return True
         
-        try:
-            sql = f"INSERT OR IGNORE INTO {self.table_name} (group_id, qq_id, permission_group) VALUES (?, ?, ?)"
-            
-            values = [(group_id, qq_id, permission_group) for qq_id in qq_ids]
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.executemany(sql, values)
-                return True
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"批量添加群成员失败: {e}")
-            return False
+        sql = f"INSERT OR IGNORE INTO {self.table_name} (group_id, qq_id, permission_group) VALUES (?, ?, ?)"
+        
+        values = [(group_id, qq_id, permission_group) for qq_id in qq_ids]
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.executemany(sql, values)
+            return True
     
     def batch_remove_members(self, group_id: str, qq_ids: List[str]) -> bool:
         """
@@ -336,18 +286,13 @@ class GroupMemberDAO(BaseDAO[GroupMember]):
         if not qq_ids:
             return True
         
-        try:
-            placeholders = ', '.join(['?' for _ in qq_ids])
-            sql = f"DELETE FROM {self.table_name} WHERE group_id = ? AND qq_id IN ({placeholders})"
-            params = [group_id] + qq_ids
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, params)
-                return True
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"批量移除群成员失败: {e}")
-            return False
+        placeholders = ', '.join(['?' for _ in qq_ids])
+        sql = f"DELETE FROM {self.table_name} WHERE group_id = ? AND qq_id IN ({placeholders})"
+        params = [group_id] + qq_ids
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, params)
+            return True
     
     def update_or_create_member(self, group_id: str, qq_id: str, permission_group: str = "normal") -> bool:
         """
@@ -361,17 +306,12 @@ class GroupMemberDAO(BaseDAO[GroupMember]):
         Returns:
             bool: 操作是否成功
         """
-        try:
-            # 使用 INSERT OR REPLACE 语法
-            sql = f"INSERT OR REPLACE INTO {self.table_name} (group_id, qq_id, permission_group) VALUES (?, ?, ?)"
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (group_id, qq_id, permission_group))
-                return cursor.rowcount > 0
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"更新或创建群成员失败: {e}")
-            return False
+        # 使用 INSERT OR REPLACE 语法
+        sql = f"INSERT OR REPLACE INTO {self.table_name} (group_id, qq_id, permission_group) VALUES (?, ?, ?)"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (group_id, qq_id, permission_group))
+            return cursor.rowcount > 0
     
     def delete_all_members_by_group(self, group_id: str) -> bool:
         """
@@ -383,16 +323,11 @@ class GroupMemberDAO(BaseDAO[GroupMember]):
         Returns:
             bool: 删除是否成功
         """
-        try:
-            sql = f"DELETE FROM {self.table_name} WHERE group_id = ?"
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (group_id,))
-                return True  # 即使没有删除任何行也返回True
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"删除群组所有成员失败: {e}")
-            return False
+        sql = f"DELETE FROM {self.table_name} WHERE group_id = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (group_id,))
+            return True  # 即使没有删除任何行也返回True
     
     def delete_all_groups_by_user(self, qq_id: str) -> bool:
         """
@@ -404,13 +339,8 @@ class GroupMemberDAO(BaseDAO[GroupMember]):
         Returns:
             bool: 删除是否成功
         """
-        try:
-            sql = f"DELETE FROM {self.table_name} WHERE qq_id = ?"
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (qq_id,))
-                return True  # 即使没有删除任何行也返回True
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"删除用户所有群组关系失败: {e}")
-            return False
+        sql = f"DELETE FROM {self.table_name} WHERE qq_id = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (qq_id,))
+            return True  # 即使没有删除任何行也返回True

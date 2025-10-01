@@ -75,18 +75,13 @@ class QuoteDAO(BaseDAO[Quote]):
         Returns:
             Optional[Quote]: 语录对象或None
         """
-        try:
-            sql = "SELECT * FROM quotes WHERE quote_id = ?"
+        sql = "SELECT * FROM quotes WHERE quote_id = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (quote_id,))
+            row = cursor.fetchone()
             
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (quote_id,))
-                row = cursor.fetchone()
-                
-                return self._row_to_model(row) if row else None
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"根据ID获取语录失败: {e}")
-            return None
+            return self._row_to_model(row) if row else None
     
     def update_quote(self, quote_id: str, quote_update: QuoteUpdate) -> bool:
         """
@@ -99,30 +94,25 @@ class QuoteDAO(BaseDAO[Quote]):
         Returns:
             bool: 更新是否成功
         """
-        try:
-            update_parts = []
-            params = []
-            
-            if quote_update.content is not None:
-                update_parts.append("content = ?")
-                params.append(quote_update.content)
-            if quote_update.total_show_time is not None:
-                update_parts.append("total_show_time = ?")
-                params.append(quote_update.total_show_time)
-            
-            if not update_parts:
-                return True
-            
-            sql = f"UPDATE quotes SET {', '.join(update_parts)} WHERE quote_id = ?"
-            params.append(quote_id)
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, params)
-                return cursor.rowcount > 0
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"更新语录失败: {e}")
-            return False
+        update_parts = []
+        params = []
+        
+        if quote_update.content is not None:
+            update_parts.append("content = ?")
+            params.append(quote_update.content)
+        if quote_update.total_show_time is not None:
+            update_parts.append("total_show_time = ?")
+            params.append(quote_update.total_show_time)
+        
+        if not update_parts:
+            return True
+        
+        sql = f"UPDATE quotes SET {', '.join(update_parts)} WHERE quote_id = ?"
+        params.append(quote_id)
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, params)
+            return cursor.rowcount > 0
     
     def delete_quote(self, quote_id: str) -> bool:
         """
@@ -134,16 +124,11 @@ class QuoteDAO(BaseDAO[Quote]):
         Returns:
             bool: 删除是否成功
         """
-        try:
-            sql = "DELETE FROM quotes WHERE quote_id = ?"
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (quote_id,))
-                return cursor.rowcount > 0
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"删除语录失败: {e}")
-            return False
+        sql = "DELETE FROM quotes WHERE quote_id = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (quote_id,))
+            return cursor.rowcount > 0
     
     def get_quotes_by_group(self, group_id: str, limit: Optional[int] = None, offset: int = 0) -> List[Quote]:
         """
@@ -157,23 +142,18 @@ class QuoteDAO(BaseDAO[Quote]):
         Returns:
             List[Quote]: 语录列表
         """
-        try:
-            sql = f"SELECT * FROM {self.table_name} WHERE group_id = ? ORDER BY time_stamp"
-            params: List[Any] = [group_id]
+        sql = f"SELECT * FROM {self.table_name} WHERE group_id = ? ORDER BY time_stamp"
+        params: List[Any] = [group_id]
+        
+        if limit is not None:
+            sql += " LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
             
-            if limit is not None:
-                sql += " LIMIT ? OFFSET ?"
-                params.extend([limit, offset])
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, params)
-                rows = cursor.fetchall()
-                
-                return [self._row_to_model(row) for row in rows]
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"根据群组获取语录失败: {e}")
-            return []
+            return [self._row_to_model(row) for row in rows]
     
     def get_quotes_by_author(self, author_id: str, limit: Optional[int] = None, offset: int = 0) -> List[Quote]:
         """
@@ -187,23 +167,18 @@ class QuoteDAO(BaseDAO[Quote]):
         Returns:
             List[Quote]: 语录列表
         """
-        try:
-            sql = f"SELECT * FROM {self.table_name} WHERE author_id = ? ORDER BY time_stamp"
-            params: List[Any] = [author_id]
+        sql = f"SELECT * FROM {self.table_name} WHERE author_id = ? ORDER BY time_stamp"
+        params: List[Any] = [author_id]
+        
+        if limit is not None:
+            sql += " LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
             
-            if limit is not None:
-                sql += " LIMIT ? OFFSET ?"
-                params.extend([limit, offset])
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, params)
-                rows = cursor.fetchall()
-                
-                return [self._row_to_model(row) for row in rows]
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"根据作者获取语录失败: {e}")
-            return []
+            return [self._row_to_model(row) for row in rows]
     
     def get_quotes_by_group_and_author(self, group_id: str, author_id: str,
                                      limit: Optional[int] = None, offset: int = 0) -> List[Quote]:
@@ -219,23 +194,18 @@ class QuoteDAO(BaseDAO[Quote]):
         Returns:
             List[Quote]: 语录列表
         """
-        try:
-            sql = f"SELECT * FROM {self.table_name} WHERE group_id = ? AND author_id = ? ORDER BY time_stamp"
-            params: List[Any] = [group_id, author_id]
+        sql = f"SELECT * FROM {self.table_name} WHERE group_id = ? AND author_id = ? ORDER BY time_stamp"
+        params: List[Any] = [group_id, author_id]
+        
+        if limit is not None:
+            sql += " LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
             
-            if limit is not None:
-                sql += " LIMIT ? OFFSET ?"
-                params.extend([limit, offset])
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, params)
-                rows = cursor.fetchall()
-                
-                return [self._row_to_model(row) for row in rows]
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"根据群组和作者获取语录失败: {e}")
-            return []
+            return [self._row_to_model(row) for row in rows]
     
     def search_quotes_by_content(self, keyword: str, group_id: Optional[str] = None, 
                                limit: Optional[int] = None, offset: int = 0) -> List[Quote]:
@@ -251,29 +221,24 @@ class QuoteDAO(BaseDAO[Quote]):
         Returns:
             List[Quote]: 语录列表
         """
-        try:
-            pattern = f"%{keyword}%"
+        pattern = f"%{keyword}%"
+        
+        if group_id:
+            sql = f"SELECT * FROM {self.table_name} WHERE content LIKE ? AND group_id = ? ORDER BY time_stamp DESC"
+            params: List[Any] = [pattern, group_id]
+        else:
+            sql = f"SELECT * FROM {self.table_name} WHERE content LIKE ? ORDER BY time_stamp DESC"
+            params: List[Any] = [pattern]
+        
+        if limit is not None:
+            sql += " LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
             
-            if group_id:
-                sql = f"SELECT * FROM {self.table_name} WHERE content LIKE ? AND group_id = ? ORDER BY time_stamp DESC"
-                params: List[Any] = [pattern, group_id]
-            else:
-                sql = f"SELECT * FROM {self.table_name} WHERE content LIKE ? ORDER BY time_stamp DESC"
-                params: List[Any] = [pattern]
-            
-            if limit is not None:
-                sql += " LIMIT ? OFFSET ?"
-                params.extend([limit, offset])
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, params)
-                rows = cursor.fetchall()
-                
-                return [self._row_to_model(row) for row in rows]
-                
-        except Exception as e:
-            self.logger.error(f"搜索语录失败: {e}")
-            return []
+            return [self._row_to_model(row) for row in rows]
     
     def get_popular_quotes(self, group_id: Optional[str] = None, 
                          limit: Optional[int] = None, offset: int = 0) -> List[Quote]:
@@ -288,27 +253,22 @@ class QuoteDAO(BaseDAO[Quote]):
         Returns:
             List[Quote]: 热门语录列表
         """
-        try:
-            if group_id:
-                sql = f"SELECT * FROM {self.table_name} WHERE group_id = ? ORDER BY total_show_time DESC"
-                params: List[Any] = [group_id]
-            else:
-                sql = f"SELECT * FROM {self.table_name} ORDER BY total_show_time DESC"
-                params: List[Any] = []
+        if group_id:
+            sql = f"SELECT * FROM {self.table_name} WHERE group_id = ? ORDER BY total_show_time DESC"
+            params: List[Any] = [group_id]
+        else:
+            sql = f"SELECT * FROM {self.table_name} ORDER BY total_show_time DESC"
+            params: List[Any] = []
+        
+        if limit is not None:
+            sql += " LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
             
-            if limit is not None:
-                sql += " LIMIT ? OFFSET ?"
-                params.extend([limit, offset])
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, params)
-                rows = cursor.fetchall()
-                
-                return [self._row_to_model(row) for row in rows]
-                
-        except Exception as e:
-            self.logger.error(f"获取热门语录失败: {e}")
-            return []
+            return [self._row_to_model(row) for row in rows]
     
     def get_recent_quotes(self, group_id: Optional[str] = None, 
                         limit: Optional[int] = None, offset: int = 0) -> List[Quote]:
@@ -323,27 +283,22 @@ class QuoteDAO(BaseDAO[Quote]):
         Returns:
             List[Quote]: 最近语录列表
         """
-        try:
-            if group_id:
-                sql = f"SELECT * FROM {self.table_name} WHERE group_id = ? ORDER BY time_stamp DESC"
-                params: List[Any] = [group_id]
-            else:
-                sql = f"SELECT * FROM {self.table_name} ORDER BY time_stamp DESC"
-                params: List[Any] = []
+        if group_id:
+            sql = f"SELECT * FROM {self.table_name} WHERE group_id = ? ORDER BY time_stamp DESC"
+            params: List[Any] = [group_id]
+        else:
+            sql = f"SELECT * FROM {self.table_name} ORDER BY time_stamp DESC"
+            params: List[Any] = []
+        
+        if limit is not None:
+            sql += " LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
             
-            if limit is not None:
-                sql += " LIMIT ? OFFSET ?"
-                params.extend([limit, offset])
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, params)
-                rows = cursor.fetchall()
-                
-                return [self._row_to_model(row) for row in rows]
-                
-        except Exception as e:
-            self.logger.error(f"获取最近语录失败: {e}")
-            return []
+            return [self._row_to_model(row) for row in rows]
     
     def increment_show_time(self, quote_id: str) -> bool:
         """
@@ -355,16 +310,11 @@ class QuoteDAO(BaseDAO[Quote]):
         Returns:
             bool: 更新是否成功
         """
-        try:
-            sql = f"UPDATE {self.table_name} SET total_show_time = total_show_time + 1 WHERE quote_id = ?"
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (quote_id,))
-                return cursor.rowcount > 0
-                
-        except Exception as e:
-            self.logger.error(f"增加展示次数失败: {e}")
-            return False
+        sql = f"UPDATE {self.table_name} SET total_show_time = total_show_time + 1 WHERE quote_id = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (quote_id,))
+            return cursor.rowcount > 0
     
     def count_quotes_by_group(self, group_id: str) -> int:
         """
@@ -376,17 +326,12 @@ class QuoteDAO(BaseDAO[Quote]):
         Returns:
             int: 语录数量
         """
-        try:
-            sql = f"SELECT COUNT(*) FROM {self.table_name} WHERE group_id = ?"
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (group_id,))
-                result = cursor.fetchone()
-                return result[0] if result else 0
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"统计群组语录数量失败: {e}")
-            return 0
+        sql = f"SELECT COUNT(*) FROM {self.table_name} WHERE group_id = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (group_id,))
+            result = cursor.fetchone()
+            return result[0] if result else 0
     
     def count_quotes_by_author(self, author_id: str) -> int:
         """
@@ -398,17 +343,12 @@ class QuoteDAO(BaseDAO[Quote]):
         Returns:
             int: 语录数量
         """
-        try:
-            sql = f"SELECT COUNT(*) FROM {self.table_name} WHERE author_id = ?"
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (author_id,))
-                result = cursor.fetchone()
-                return result[0] if result else 0
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"统计作者语录数量失败: {e}")
-            return 0
+        sql = f"SELECT COUNT(*) FROM {self.table_name} WHERE author_id = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (author_id,))
+            result = cursor.fetchone()
+            return result[0] if result else 0
     
     def get_quote_statistics_by_group(self, group_id: str) -> Dict[str, Any]:
         """
@@ -420,44 +360,34 @@ class QuoteDAO(BaseDAO[Quote]):
         Returns:
             Dict[str, Any]: 统计信息
         """
-        try:
-            sql = f"""
-            SELECT 
-                COUNT(*) as total_quotes,
-                COUNT(DISTINCT author_id) as unique_authors,
-                SUM(total_show_time) as total_shows,
-                AVG(total_show_time) as avg_shows
-            FROM {self.table_name} 
-            WHERE group_id = ?
-            """
+        sql = f"""
+        SELECT
+            COUNT(*) as total_quotes,
+            COUNT(DISTINCT author_id) as unique_authors,
+            SUM(total_show_time) as total_shows,
+            AVG(total_show_time) as avg_shows
+        FROM {self.table_name}
+        WHERE group_id = ?
+        """
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (group_id,))
+            row = cursor.fetchone()
             
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, (group_id,))
-                row = cursor.fetchone()
-                
-                if row:
-                    return {
-                        "total_quotes": row["total_quotes"],
-                        "unique_authors": row["unique_authors"],
-                        "total_shows": row["total_shows"] or 0,
-                        "avg_shows": round(row["avg_shows"] or 0, 2)
-                    }
-                else:
-                    return {
-                        "total_quotes": 0,
-                        "unique_authors": 0,
-                        "total_shows": 0,
-                        "avg_shows": 0
-                    }
-                    
-        except Exception as e:
-            self.logger.error(f"获取群组统计信息失败: {e}")
-            return {
-                "total_quotes": 0,
-                "unique_authors": 0,
-                "total_shows": 0,
-                "avg_shows": 0
-            }
+            if row:
+                return {
+                    "total_quotes": row["total_quotes"],
+                    "unique_authors": row["unique_authors"],
+                    "total_shows": row["total_shows"] or 0,
+                    "avg_shows": round(row["avg_shows"] or 0, 2)
+                }
+            else:
+                return {
+                    "total_quotes": 0,
+                    "unique_authors": 0,
+                    "total_shows": 0,
+                    "avg_shows": 0
+                }
     
     def get_random_quote(self, group_id: Optional[str] = None) -> Optional[Quote]:
         """
@@ -469,23 +399,18 @@ class QuoteDAO(BaseDAO[Quote]):
         Returns:
             Optional[Quote]: 随机语录或None
         """
-        try:
-            if group_id:
-                sql = f"SELECT * FROM {self.table_name} WHERE group_id = ? ORDER BY RANDOM() LIMIT 1"
-                params = [group_id]
-            else:
-                sql = f"SELECT * FROM {self.table_name} ORDER BY RANDOM() LIMIT 1"
-                params = []
+        if group_id:
+            sql = f"SELECT * FROM {self.table_name} WHERE group_id = ? ORDER BY RANDOM() LIMIT 1"
+            params = [group_id]
+        else:
+            sql = f"SELECT * FROM {self.table_name} ORDER BY RANDOM() LIMIT 1"
+            params = []
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, params)
+            row = cursor.fetchone()
             
-            with self.connection_manager.cursor() as cursor:
-                cursor.execute(sql, params)
-                row = cursor.fetchone()
-                
-                return self._row_to_model(row) if row else None
-                
-        except Exception as e:
-            self.logger.error(f"获取随机语录失败: {e}")
-            return None
+            return self._row_to_model(row) if row else None
     
     def batch_create_quotes(self, quotes: List[QuoteCreate]) -> bool:
         """
@@ -500,27 +425,22 @@ class QuoteDAO(BaseDAO[Quote]):
         if not quotes:
             return True
         
-        try:
-            sql = """
-            INSERT INTO quotes (quote_id, time_stamp, author_id, group_id, content, total_show_time)
-            VALUES (?, ?, ?, ?, ?, ?)
-            """
-            
-            values_list = []
-            for quote in quotes:
-                values_list.append((
-                    quote.quote_id,
-                    datetime.now(),
-                    quote.author_id,
-                    quote.group_id,
-                    quote.content,
-                    quote.total_show_time
-                ))
-            
-            with self.connection_manager.cursor() as cursor:
-                cursor.executemany(sql, values_list)
-                return cursor.rowcount == len(quotes)
-                
-        except sqlite3.Error as e:
-            self.logger.error(f"批量创建语录失败: {e}")
-            return False
+        sql = """
+        INSERT INTO quotes (quote_id, time_stamp, author_id, group_id, content, total_show_time)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """
+        
+        values_list = []
+        for quote in quotes:
+            values_list.append((
+                quote.quote_id,
+                datetime.now(),
+                quote.author_id,
+                quote.group_id,
+                quote.content,
+                quote.total_show_time
+            ))
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.executemany(sql, values_list)
+            return cursor.rowcount == len(quotes)
