@@ -3,6 +3,7 @@ from ..interface.permission import permission_check, PMS
 
 
 # region 自动收集事件
+# auto_collect_cmds
 
 matcher_listener = on_message(
     priority=15, block=False, permission=permission_check(PMS.BE_COLLECTED)
@@ -11,7 +12,7 @@ matcher_listener = on_message(
 # endregion
 
 # region 语录统计命令
-# stastics_cmds
+# quote_stastics_cmds
 
 _rank_cmds = ("语录rank", "语录排行", "quote_rank", "语录信息", "quote_info")
 matcher_rank = on_command(
@@ -30,7 +31,7 @@ matcher_quote_list = on_command(
 # endregion
 
 # region 语录修改命令
-# modify_cmd
+# quote_modify_cmds
 
 _add_quote_cmds = ("加语录", "add_quote", "quote_add", "添加语录", "新增语录", "语录添加")
 matcher_add_quote = on_command(
@@ -63,7 +64,7 @@ matcher_del_comment = on_command(
 # endregion
 
 # region 语录读取命令
-# read_cmds
+# quote_read_cmds
 
 _random_quote_cmds = ("语录", "quote", "随机语录", "来句语录")
 matcher_random_quote = on_command(
@@ -117,6 +118,7 @@ matcher_update_quote = on_command(
 
 # region 插件配置命令
 # settings_cmds
+
 _get_quote_setting_cmds = (
     "当前语录设置", "get_quote_setting", "get_quote_config", "查看语录设置", "查看语录配置", 
     "语录配置查看", "语录设置查看", "查看当前语录设置", "查看当前语录配置"

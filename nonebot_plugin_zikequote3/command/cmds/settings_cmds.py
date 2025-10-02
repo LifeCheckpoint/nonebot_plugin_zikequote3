@@ -3,9 +3,9 @@
 """
 
 from ast import literal_eval
-from .comand_definition import *
-from ..imports import *
-from ..imports import _module_html_templates_root, _module_render_cache_root, _cfg_toml, _default_cfg_toml
+from ..comand_definition import *
+from ...imports import *
+from ...imports import _module_html_templates_root, _module_render_cache_root, _cfg_toml, _default_cfg_toml
 
 @matcher_get_quote_setting.handle()
 async def f_get_quote_setting(event: GroupME):
@@ -43,7 +43,7 @@ async def f_modify_quote_setting(event: GroupME, arg: Message = CommandArg()):
         return
     
     try:
-        from ..config import modify_group_config
+        from ...config import modify_group_config
         modify_group_config(event.group_id, schema_str, new_value, reload=True)
     except Exception as e:
         await mfinish(matcher_modify_quote_setting, msg_quote_setting_update_failed, error=str(e))
@@ -66,7 +66,7 @@ async def f_reset_quote_setting(event: GroupME):
 @matcher_reload_quote_setting.handle()
 async def f_reload_quote_setting(event: GroupME):
     """重载当前群组配置"""
-    from ..imports import notify_reload_config
+    from ...imports import notify_reload_config
     try:
         notify_reload_config()
     except Exception as e:

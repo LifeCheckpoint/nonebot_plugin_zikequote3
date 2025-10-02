@@ -1,7 +1,4 @@
-from .info_quote import *
-from .modify_quote import *
-from .read_quote import *
-from .comand_definition import *
+from .cmds import *
 
 from ..utils.install_frontend import verify_installation, install_frontend_dependencies
 driver = get_driver()
