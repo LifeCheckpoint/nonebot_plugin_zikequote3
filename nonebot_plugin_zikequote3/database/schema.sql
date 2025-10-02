@@ -46,9 +46,11 @@ CREATE TABLE IF NOT EXISTS quotes (
     author_id TEXT NOT NULL,
     group_id TEXT NOT NULL,
     content TEXT NOT NULL,
+    image_content_uuid TEXT DEFAULT NULL,
     total_show_time INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (author_id) REFERENCES users(qq_id),
-    FOREIGN KEY (group_id) REFERENCES groups(group_id)
+    FOREIGN KEY (group_id) REFERENCES groups(group_id),
+    FOREIGN KEY (image_content_uuid) REFERENCES images(uuid) ON DELETE SET NULL
 );
 
 -- 保存语录评论的表
@@ -61,6 +63,16 @@ CREATE TABLE IF NOT EXISTS reviews (
     FOREIGN KEY (author_id) REFERENCES users(qq_id),
     FOREIGN KEY (quote_id) REFERENCES quotes(quote_id) ON DELETE CASCADE
 );
+
+-- 保存语录图片信息的表
+CREATE TABLE IF NOT EXISTS images (
+    uuid TEXT PRIMARY KEY,
+    original_filename TEXT,
+    stored_filename TEXT NOT NULL,
+    file_path TEXT NOT NULL,
+    time_stamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    checksum_sha256 TEXT NOT NULL
+)
 
 -- 保存暂存信息的表，暂存当前尚未进行语录收集的聊天记录
 CREATE TABLE IF NOT EXISTS msgs_queue (

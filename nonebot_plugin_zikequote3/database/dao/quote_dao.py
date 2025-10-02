@@ -24,6 +24,7 @@ class QuoteDAO(BaseDAO[Quote]):
             author_id=row["author_id"],
             group_id=row["group_id"],
             content=row["content"],
+            image_content_uuid=row["image_content_uuid"],
             total_show_time=row["total_show_time"]
         )
     
@@ -35,6 +36,7 @@ class QuoteDAO(BaseDAO[Quote]):
             "author_id": model.author_id,
             "group_id": model.group_id,
             "content": model.content,
+            "image_content_uuid": model.image_content_uuid,
             "total_show_time": model.total_show_time
         }
     
@@ -49,8 +51,8 @@ class QuoteDAO(BaseDAO[Quote]):
             bool: 创建是否成功
         """
         sql = """
-        INSERT INTO quotes (quote_id, time_stamp, author_id, group_id, content, total_show_time)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO quotes (quote_id, time_stamp, author_id, group_id, content, image_content_uuid, total_show_time)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         """
         values = (
             quote_create.quote_id,
@@ -58,6 +60,7 @@ class QuoteDAO(BaseDAO[Quote]):
             quote_create.author_id,
             quote_create.group_id,
             quote_create.content,
+            quote_create.image_content_uuid,
             quote_create.total_show_time
         )
         
@@ -100,6 +103,9 @@ class QuoteDAO(BaseDAO[Quote]):
         if quote_update.content is not None:
             update_parts.append("content = ?")
             params.append(quote_update.content)
+        if quote_update.image_content_uuid is not None:
+            update_parts.append("image_content_uuid = ?")
+            params.append(quote_update.image_content_uuid)
         if quote_update.total_show_time is not None:
             update_parts.append("total_show_time = ?")
             params.append(quote_update.total_show_time)
@@ -426,8 +432,8 @@ class QuoteDAO(BaseDAO[Quote]):
             return True
         
         sql = """
-        INSERT INTO quotes (quote_id, time_stamp, author_id, group_id, content, total_show_time)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO quotes (quote_id, time_stamp, author_id, group_id, content, image_content_uuid, total_show_time)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         """
         
         values_list = []
@@ -438,6 +444,7 @@ class QuoteDAO(BaseDAO[Quote]):
                 quote.author_id,
                 quote.group_id,
                 quote.content,
+                quote.image_content_uuid,
                 quote.total_show_time
             ))
         

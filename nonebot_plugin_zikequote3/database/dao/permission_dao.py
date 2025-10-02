@@ -15,16 +15,6 @@ class PermissionGroupDAO(BaseDAO[PermissionGroup]):
     def table_name(self) -> str:
         return "permission_groups"
     
-    def _validate_field_name(self, field_name: str) -> bool:
-        """验证字段名是否为有效的权限字段"""
-        allowed_permissions = [
-            "be_collected", "get_quote", "add_quote", "search_quote",
-            "review_quote", "update_quote_self", "update_quote_group",
-            "delete_review_self", "delete_review_group", "delete_quote_self",
-            "delete_quote_group", "ban_others", "op_others", "banop_others", "others"
-        ]
-        return field_name in allowed_permissions
-    
     def _row_to_model(self, row: Row) -> PermissionGroup:
         """将数据库行转换为PermissionGroup模型对象"""
         return PermissionGroup(
@@ -193,9 +183,6 @@ class PermissionGroupDAO(BaseDAO[PermissionGroup]):
         Returns:
             bool: 是否具有权限
         """
-        if not self._validate_field_name(permission_name):
-            return False
-        
         sql = f"SELECT {permission_name} FROM {self.table_name} WHERE group_name = ?"
         
         with self.connection_manager.cursor() as cursor:
@@ -214,9 +201,6 @@ class PermissionGroupDAO(BaseDAO[PermissionGroup]):
         Returns:
             List[str]: 权限组名称列表
         """
-        if not self._validate_field_name(permission_name):
-            return []
-        
         sql = f"SELECT group_name FROM {self.table_name} WHERE {permission_name} = 1"
         
         with self.connection_manager.cursor() as cursor:
@@ -237,9 +221,6 @@ class PermissionGroupDAO(BaseDAO[PermissionGroup]):
         Returns:
             bool: 设置是否成功
         """
-        if not self._validate_field_name(permission_name):
-            return False
-        
         sql = f"UPDATE permission_groups SET {permission_name} = ? WHERE group_name = ?"
         with self.connection_manager.cursor() as cursor:
             cursor.execute(sql, (value, group_name))
