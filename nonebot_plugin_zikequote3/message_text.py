@@ -241,3 +241,11 @@ def msg_quote_setting_update_failed(error: Optional[str] = None):
         f"语录设置...没有成功更新呢... 原因：{reason}": 1,
     }
     return options
+
+def msg_quote_setting_reload_failed(error: Optional[str] = None):
+    """语录设置重载失败"""
+    reason = error or "我也不知道..."
+    options = {
+        f"语录设置...没有成功重载呢😭... 服务器说：{reason}": 1,
+    }
+    return options

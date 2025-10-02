@@ -1,5 +1,5 @@
 """
-调整设置相关命令
+语录设置调整相关命令
 """
 
 from ast import literal_eval
@@ -50,3 +50,27 @@ async def f_modify_quote_setting(event: GroupME, arg: Message = CommandArg()):
         return
     
     await matcher_modify_quote_setting.finish("配置修改成功~")
+
+@matcher_batch_modify_quote_setting.handle()
+async def f_batch_modify_quote_setting(event: GroupME, arg: Message = CommandArg()):
+    """批量修改当前配置"""
+    args = arg.extract_plain_text().strip()
+
+    # TODO 确认逻辑
+
+@matcher_reset_quote_setting.handle()
+async def f_reset_quote_setting(event: GroupME):
+    """重置当前群组配置"""
+    # TODO 确认逻辑
+
+@matcher_reload_quote_setting.handle()
+async def f_reload_quote_setting(event: GroupME):
+    """重载当前群组配置"""
+    from ..imports import notify_reload_config
+    try:
+        notify_reload_config()
+    except Exception as e:
+        await mfinish(matcher_reload_quote_setting, msg_quote_setting_reload_failed, error=str(e))
+        return
+    
+    await matcher_reload_quote_setting.finish("配置重载成功~")
