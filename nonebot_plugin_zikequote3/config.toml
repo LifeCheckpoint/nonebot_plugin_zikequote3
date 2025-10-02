@@ -11,6 +11,9 @@ enable_auto_collect = true # 启用自动收集，需要配置 LLM
 pickup_interval = 80 # 自动收集触发的消息数量阈值
 msg_max_length = 35 # 最大可被处理的消息长度
 enable_duplicate = false # 允许群内个人重复语录
+enable_image_collection = true # 允许图片语录收集
+img_max_sidelength = 3840 # 允许收集的图片最大边长，单位 px，超出会被裁剪
+img_max_size_mb = 5 # 允许收集的图片最大体积，单位 MB
 
 [fetching]
 enable_cross_group_fetching = false # 允许跨群抓取调用者个人语录

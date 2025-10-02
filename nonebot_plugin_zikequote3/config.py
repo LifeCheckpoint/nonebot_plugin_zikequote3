@@ -22,6 +22,9 @@ class CollectingConfig(BaseModel):
     pickup_interval: int = 80
     msg_max_length: int = 35
     enable_duplicate: bool = False
+    enable_image_collection: bool = True
+    img_max_sidelength: int = 3840
+    img_max_size_mb: float = 5
 
 class FetchingConfig(BaseModel):
     enable_cross_group_fetching: bool = False
