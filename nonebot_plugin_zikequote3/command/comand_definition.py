@@ -110,7 +110,7 @@ _update_quote_cmds = ("语录强制更新", "更新语录", "语录更新", "强
 matcher_update_quote = on_command(
     _update_quote_cmds[0],
     aliases=set(_update_quote_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.GET_QUOTE)
+    priority=10, block=True, permission=permission_check(PMS.COMMON_OPERATIONS)
 )
 
 # endregion
@@ -124,7 +124,7 @@ _get_quote_setting_cmds = (
 matcher_get_quote_setting = on_command(
     _get_quote_setting_cmds[0],
     aliases=set(_get_quote_setting_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.OTHERS)
+    priority=10, block=True, permission=permission_check(PMS.MODIFY_SETTINGS)
 )
 
 _modify_quote_setting_cmds = (
@@ -135,7 +135,7 @@ _modify_quote_setting_cmds = (
 matcher_modify_quote_setting = on_command(
     _modify_quote_setting_cmds[0],
     aliases=set(_modify_quote_setting_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.OTHERS)
+    priority=10, block=True, permission=permission_check(PMS.MODIFY_SETTINGS)
 )
 
 _batch_modify_quote_setting_cmds = (
@@ -146,7 +146,7 @@ _batch_modify_quote_setting_cmds = (
 matcher_batch_modify_quote_setting = on_command(
     _batch_modify_quote_setting_cmds[0],
     aliases=set(_batch_modify_quote_setting_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.OTHERS)
+    priority=10, block=True, permission=permission_check(PMS.MODIFY_SETTINGS)
 )
 
 _reset_quote_setting_cmds = (
@@ -156,7 +156,7 @@ _reset_quote_setting_cmds = (
 matcher_reset_quote_setting = on_command(
     _reset_quote_setting_cmds[0],
     aliases=set(_reset_quote_setting_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.OTHERS)
+    priority=10, block=True, permission=permission_check(PMS.MODIFY_SETTINGS)
 )
 
 _reload_quote_setting_cmds = (
@@ -166,7 +166,7 @@ _reload_quote_setting_cmds = (
 matcher_reload_quote_setting = on_command(
     _reload_quote_setting_cmds[0],
     aliases=set(_reload_quote_setting_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.OTHERS)
+    priority=10, block=True, permission=permission_check(PMS.MODIFY_SETTINGS)
 )
 
 # endregion

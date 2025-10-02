@@ -50,6 +50,8 @@ class PermissionGroupDAO(BaseDAO[PermissionGroup]):
             "delete_review_group": permission_create.delete_review_group,
             "delete_quote_self": permission_create.delete_quote_self,
             "delete_quote_group": permission_create.delete_quote_group,
+            "modify_settings": permission_create.modify_settings,
+            "common_operations": permission_create.common_operations,
             "ban_others": permission_create.ban_others,
             "op_others": permission_create.op_others,
             "banop_others": permission_create.banop_others,
@@ -122,6 +124,10 @@ class PermissionGroupDAO(BaseDAO[PermissionGroup]):
             update_data["delete_quote_self"] = permission_update.delete_quote_self
         if permission_update.delete_quote_group is not None:
             update_data["delete_quote_group"] = permission_update.delete_quote_group
+        if permission_update.modify_settings is not None:
+            update_data["modify_settings"] = permission_update.modify_settings
+        if permission_update.common_operations is not None:
+            update_data["common_operations"] = permission_update.common_operations
         if permission_update.ban_others is not None:
             update_data["ban_others"] = permission_update.ban_others
         if permission_update.op_others is not None:
@@ -295,49 +301,3 @@ class PermissionGroupDAO(BaseDAO[PermissionGroup]):
             cursor.execute(sql, values)
             return cursor.rowcount > 0
     
-    def reset_to_default_permissions(self) -> bool:
-        """
-        重置为默认权限组（重新执行schema中的初始化数据）
-        
-        Returns:
-            bool: 重置是否成功
-        """
-        # 清空现有权限组
-        with self.connection_manager.cursor() as cursor:
-            cursor.execute(f"DELETE FROM {self.table_name}")
-        
-        # 重新插入默认权限组
-        default_groups = [
-            ('normal',
-                True, True, True, True, True,
-                True, False, True, False,
-                True, False, False, False, False, False),
-            ('ban',
-                False, False, False, False, False,
-                False, False, False, False,
-                False, False, False, False, False, False),
-            ('ban_cud',
-                True, True, False, True, False,
-                False, False, False, False,
-                False, False, False, False, False, False),
-            ('op',
-                True, True, True, True, True,
-                True, True, True, True,
-                True, True, True, False, False, False),
-            ('root',
-                True, True, True, True, True,
-                True, True, True, True,
-                True, True, True, True, True, True)
-        ]
-        
-        sql = f"""
-        INSERT INTO {self.table_name} (
-            group_name, be_collected, get_quote, add_quote, search_quote, review_quote,
-            update_quote_self, update_quote_group, delete_review_self, delete_review_group,
-            delete_quote_self, delete_quote_group, ban_others, op_others, banop_others, others
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """
-        
-        with self.connection_manager.cursor() as cursor:
-            cursor.executemany(sql, default_groups)
-            return True

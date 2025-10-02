@@ -17,6 +17,8 @@ class PMS:
     DELETE_REVIEW_GROUP = "delete_review_group"
     DELETE_QUOTE_SELF = "delete_quote_self"
     DELETE_QUOTE_GROUP = "delete_quote_group"
+    MODIFY_SETTINGS = "modify_settings"
+    COMMON_OPERATIONS = "common_operations"
     BAN_OTHERS = "ban_others"
     BANOP_OTHERS = "banop_others"
     OTHERS = "others"

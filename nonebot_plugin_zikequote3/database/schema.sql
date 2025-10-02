@@ -106,6 +106,8 @@ CREATE TABLE IF NOT EXISTS permission_groups (
     delete_review_group BOOLEAN DEFAULT FALSE NOT NULL,
     delete_quote_self BOOLEAN DEFAULT TRUE NOT NULL,
     delete_quote_group BOOLEAN DEFAULT FALSE NOT NULL,
+    modify_settings BOOLEAN DEFAULT FALSE NOT NULL,
+    common_operations BOOLEAN DEFAULT TRUE NOT NULL,
     ban_others BOOLEAN DEFAULT FALSE NOT NULL,
     op_others BOOLEAN DEFAULT FALSE NOT NULL,
     banop_others BOOLEAN DEFAULT FALSE NOT NULL,
@@ -127,6 +129,7 @@ WITH new_permissions (
     update_quote_self, update_quote_group,
     delete_review_self, delete_review_group,
     delete_quote_self, delete_quote_group,
+    modify_settings, common_operations,
     ban_others, op_others, banop_others, others
 ) AS (
     VALUES
@@ -137,12 +140,14 @@ WITH new_permissions (
             TRUE, FALSE,
             TRUE, FALSE,
             TRUE, FALSE,
+            FALSE, TRUE,
             FALSE, FALSE, FALSE, FALSE
         ),
         -- ban 完全封禁
         (
             'ban',
             FALSE, FALSE, FALSE, FALSE, FALSE,
+            FALSE, FALSE,
             FALSE, FALSE,
             FALSE, FALSE,
             FALSE, FALSE,
@@ -155,6 +160,7 @@ WITH new_permissions (
             FALSE, FALSE,
             FALSE, FALSE,
             FALSE, FALSE,
+            FALSE, FALSE,
             FALSE, FALSE, FALSE, FALSE
         ),
         -- op 管理员
@@ -164,6 +170,7 @@ WITH new_permissions (
             TRUE, TRUE,  -- 可修改群内其他语录
             TRUE, TRUE,  -- 可删除群内其他评论
             TRUE, TRUE,  -- 可删除群内其他语录
+            FALSE, TRUE,
             TRUE, FALSE, FALSE, FALSE  -- 可 ban 普通用户
         ),
         -- root 最高权限
@@ -173,6 +180,7 @@ WITH new_permissions (
             TRUE, TRUE,
             TRUE, TRUE,
             TRUE, TRUE,
+            TRUE, TRUE, -- 可修改设置
             TRUE, TRUE, TRUE, TRUE -- 可设置他人 op
         )
 )
@@ -182,6 +190,7 @@ INSERT INTO permission_groups (
     update_quote_self, update_quote_group,
     delete_review_self, delete_review_group,
     delete_quote_self, delete_quote_group,
+    modify_settings, common_operations,
     ban_others, op_others, banop_others, others
 )
 SELECT *
