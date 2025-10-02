@@ -42,4 +42,5 @@ nonreloadable_items = [
     "general.check_intergrity",
     "permission.static_root",
     "llm.api_key_path",
+    "configure.nonreloadable_items",
 ]
