@@ -13,7 +13,7 @@ async def f_listener(event: GroupME, bot: Bot):
     """
     监听群组消息，处理可能的语录收集
     """
-    if not cfg.enable_auto_collect:
+    if not cfg.general.enable_zikequote3:
         return
     
     success = await pick_received_msg(event, bot)
@@ -27,8 +27,8 @@ async def f_rank(event: GroupME, arg: Message = CommandArg()):
     语录排行
     """
     key = arg.extract_plain_text().strip()
-    num_topn = cfg.max_rank_show
-    if key.isdigit() and 0 < int(key) <= cfg.max_rank_show:
+    num_topn = cfg.showcase.max_rank_user_num
+    if key.isdigit() and 0 < int(key) <= cfg.showcase.max_rank_user_num:
         num_topn = int(key)
     
     msg_pending_num = len(get_typed_message_list(event.group_id))

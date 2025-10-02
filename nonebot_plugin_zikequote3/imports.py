@@ -18,11 +18,14 @@ import random
 import requests
 
 # 插件根目录
-_plugin_root: Path = Path(__file__).parent
+_plugin_root = Path(__file__).parent
+_module_database_root = _plugin_root / "database"
+_module_html_templates_root = _plugin_root / "templates"
 
 # 载入全局数据库对象
 from .database.connection_manager import ConnectionManager
-db = ConnectionManager(store.get_data_dir("ZikeQuote3") / "zikequote3.db")
+db_path = store.get_data_dir("ZikeQuote3") / "zikequote3.db"
+db = ConnectionManager(db_path)
 db.initialize_db() # 初始化，保证完整性
 
 from .utils.async_tools import serial_execution, async_modify_lock
