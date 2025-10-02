@@ -24,7 +24,7 @@ comment_show_method = "noai" # 语录评论展示方式: no | noai | all
 hitokoto_url = "https://v1.hitokoto.cn" # 获取名人名言 Hitokoto API
 
 [permission]
-static_root = [] # 不可变最高权限列表
+static_root = [] # 不可变最高权限 QQ 号列表，List[int]
 
 [llm]
 # 模型配置较为复杂，其它端点调整工作需到对应文件进行修改

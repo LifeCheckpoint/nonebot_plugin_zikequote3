@@ -30,9 +30,12 @@ db_path = store.get_data_dir("ZikeQuote3") / "zikequote3.db"
 db = ConnectionManager(db_path)
 db.initialize_db() # 初始化，保证完整性
 
+
+# 载入外部工具
 from .utils.async_tools import serial_execution, async_modify_lock
 from .external.html_render import full_render_html, template, full_render_markdown
 from .external.msg_text import msend, mfinish
+
 
 # 加载 toml 配置并注入 BaseModel
 from .config import reload_config, ConfigPath
@@ -41,6 +44,7 @@ _default_cfg_toml, default_cfg, _cfg_toml, cfg = reload_config()
 def notify_reload_config():
     global _default_cfg_toml, default_cfg, _cfg_toml, cfg
     _default_cfg_toml, default_cfg, _cfg_toml, cfg = reload_config()
+
 
 # 加载消息导入
 from .message_text import *

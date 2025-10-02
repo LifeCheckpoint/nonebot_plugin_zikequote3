@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from nonebot.adapters.onebot.v11 import GroupMessageEvent as GroupME
 from nonebot.permission import Permission as NBPermission
-from ..imports import db
+from ..imports import db, default_cfg
 import logging
 
 class PMS:
@@ -36,11 +36,12 @@ class QuotePermissionChecker(NBPermission):
 
         try:
             pms_group = db.dao.get_group_member_dao().get_member_permission_group(group_id, qq_id)
+            is_static_root = event.user_id in default_cfg.permission.static_root
         except Exception as e:
             logging.error(f"获取用户权限组失败，事件处理将被忽略: {e}")
             return False
         
-        if pms_group is None:
+        if pms_group is None or pms_group == "":
             logging.info(f"用户 {qq_id} 在群 {group_id} 中无权限组，事件处理将被忽略")
             return False
     
@@ -50,4 +51,4 @@ class QuotePermissionChecker(NBPermission):
             logging.error(f"检查权限组信息失败，事件处理将被忽略: {e}")
             return False
         
-        return pms
+        return pms or is_static_root
