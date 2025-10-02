@@ -16,6 +16,7 @@ dependencies = [
   "pytest-asyncio>=1.0.0",
   "nonebug>=0.4.3",
   "tomlkit>=0.13.3",
+  "pillow>=11.3.0",
 ]
 requires-python = ">=3.12"
 readme = "README.md"
