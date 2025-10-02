@@ -33,7 +33,7 @@ from .external.html_render import full_render_html, template, full_render_markdo
 from .external.msg_text import msend, mfinish
 
 # 加载 toml 配置并注入 BaseModel
-from .config import reload_config
+from .config import reload_config, ConfigPath
 _default_cfg_toml, default_cfg, _cfg_toml, cfg = reload_config()
 # 允许热更新配置
 def notify_reload_config():
