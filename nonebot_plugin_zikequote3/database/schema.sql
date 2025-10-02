@@ -176,3 +176,10 @@ SELECT *
 FROM new_permissions
 WHERE NOT EXISTS (SELECT 1 FROM permission_groups);
 COMMIT;
+
+-- 群聊自定义配置表
+CREATE TABLE IF NOT EXISTS group_configs (
+    group_id TEXT PRIMARY KEY,
+    toml_config TEXT NOT NULL,
+    FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
+);
