@@ -2,9 +2,9 @@
 # 如有修改，注意调整 `config.py` 中的配置模型
 
 [general]
-enable_zikequote3 = true # 总开关，仅在文件配置有效
-enable_groups = [] # 启用插件的群列表，仅在文件配置有效
-check_intergrity = true # 启动时检查 Node.js 依赖完整性，仅在文件配置有效
+enable_zikequote3 = true # 总开关
+enable_groups = [] # 启用插件的群列表
+check_intergrity = true # 启动时检查 Node.js 依赖完整性
 
 [collecting]
 enable_auto_collect = true # 启用自动收集，需要配置 LLM
@@ -35,18 +35,11 @@ temperature = 0.2
 max_retries = 3 # 请求失败重试次数
 
 [configure]
-# 允许进行热更新的配置项，仅在文件配置有效
-reloadable_items = [
-    "collecting.enable_auto_collect",
-    "collecting.pickup_interval",
-    "collecting.msg_max_length",
-    "collecting.enable_duplicate",
-    "fetching.enable_cross_group_fetching",
-    "fetching.algorithm",
-    "showcase.max_rank_user_num",
-    "showcase.quote_num_per_page",
-    "showcase.page_num_limit",
-    "showcase.comment_show_method",
-    "llm.model",
-    "llm.temperature"
+# 不允许进行热更新，并且强制全局应用的配置项
+nonreloadable_items = [
+    "general.enable_zikequote3",
+    "general.enable_groups",
+    "general.check_intergrity",
+    "permission.static_root",
+    "llm.api_key_path",
 ]

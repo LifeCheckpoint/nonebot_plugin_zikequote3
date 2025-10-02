@@ -120,6 +120,17 @@ matcher_modify_quote_setting = on_command(
     priority=10, block=True, permission=permission_check(PMS.OTHERS)
 )
 
+_batch_modify_quote_setting_cmds = (
+    "批量修改语录设置", "批量修改语录配置", "批量设置语录设置", "批量设置语录配置", 
+    "批量更改语录设置", "批量更改语录配置", "批量更新语录设置", "批量更新语录配置",
+    "batch_set_quote_setting", "batch_set_quote_config"
+)
+matcher_batch_modify_quote_setting = on_command(
+    _batch_modify_quote_setting_cmds[0],
+    aliases=set(_batch_modify_quote_setting_cmds[1:]),
+    priority=10, block=True, permission=permission_check(PMS.OTHERS)
+)
+
 _reset_quote_setting_cmds = (
     "重置语录设置", "重置语录配置", "恢复语录设置", "恢复语录配置",
     "reset_quote_setting", "reset_quote_config"

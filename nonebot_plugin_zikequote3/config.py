@@ -45,7 +45,7 @@ class LLMConfig(BaseModel):
     max_retries: int = 3
 
 class ConfigureConfig(BaseModel):
-    reloadable_items: List[str] = Field(default_factory=list)
+    nonreloadable_items: List[str] = Field(default_factory=list)
 
 class ConfigSchema(BaseModel):
     general: GeneralConfig = Field(default_factory=GeneralConfig)
@@ -115,17 +115,22 @@ def modify_group_config(group_id: int, schema_str: str, new_value: Any, reload: 
     group_toml = _cfg_toml.get(group_id, _default_cfg_toml)
     
     # 解析设置项模式
-    try:
-        reloadable_cfgs_schema = default_cfg.configure.reloadable_items
-        # 检查 schema_str 是否在 reloadable_cfgs_keys 中
-        if schema_str not in reloadable_cfgs_schema:
-            raise ValueError(f"配置项模式 '{schema_str}' 不存在或不可修改")
-        schema_parts = schema_str.split('.')
+    nonreloadable_cfgs_schema = default_cfg.configure.nonreloadable_items
+    if schema_str in nonreloadable_cfgs_schema:
+        raise ValueError(f"配置项模式 '{schema_str}' 不可修改")
+    schema_parts = schema_str.split('.')
 
-        if len(schema_parts) != 2:
-            raise ValueError(f"配置项模式层数不为 2")
-        
-        section, key = schema_parts
+    if len(schema_parts) != 2:
+        raise ValueError(f"配置项模式层数不为 2")
+    
+    section, key = schema_parts
+    if section not in group_toml:
+        raise ValueError(f"配置项模式 '{section}' 不存在")
+    
+    if key not in group_toml[section]: # type: ignore
+        raise ValueError(f"配置项 '{key}' 在模式 '{section}' 中不存在")
+
+    try:
         group_toml[section][key] = new_value # type: ignore
     except Exception as e:
         raise ValueError(f"解析配置项模式失败: {e}")
@@ -140,3 +145,26 @@ def modify_group_config(group_id: int, schema_str: str, new_value: Any, reload: 
     
     if reload:
         notify_reload_config()
+
+    logger.info(f"群 {group_id} 的配置项 '{schema_str}' 已更新为 '{new_value}'")
+
+def batch_modify_group_config(group_ids: List[int], schema_str: str, new_value: Any, reload: bool = True) -> int:
+    """
+    批量修改指定群组的配置
+
+    :param group_ids: 群号列表
+    :param schema_str: 配置的模式文本
+    :param new_value: 新的配置值
+    :param reload: 是否在修改后重新加载配置
+
+    :return: 成功修改的群组数量
+    """
+    success_count = 0
+    for gid in group_ids:
+        try:
+            modify_group_config(gid, schema_str, new_value, reload)
+            success_count += 1
+        except Exception as e:
+            logger.error(f"修改群 {gid} 的配置项失败: {e}")
+    logger.info(f"已调整 {success_count} 个群的配置项 '{schema_str}' 至 '{new_value}'")
+    return success_count
