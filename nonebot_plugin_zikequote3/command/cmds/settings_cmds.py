@@ -2,7 +2,6 @@
 语录设置调整相关命令
 """
 
-from ast import literal_eval
 from ..comand_definition import *
 from ...imports import *
 from ...imports import _module_html_templates_root, _module_render_cache_root, _cfg_toml, _default_cfg_toml
@@ -10,16 +9,11 @@ from ...imports import _module_html_templates_root, _module_render_cache_root, _
 @matcher_get_quote_setting.handle()
 async def f_get_quote_setting(event: GroupME):
     """生成当前配置预览"""
+    from ...services.settings.get_quote_setting import s_get_quote_setting
+
     try:
-        is_default = _cfg_toml.get(event.group_id, None) is None
-        data = {
-            "title": "语录配置预览",
-            "subtitle": f"群聊 {event.group_id}" + ("（默认配置）" if is_default else ""),
-            "language": "language-toml",
-            "code": tomlkit.dumps(_cfg_toml.get(event.group_id, _default_cfg_toml))
-        }
+        data = s_get_quote_setting(event.group_id)
         image_data = await full_render_html(_module_html_templates_root / "CodeFrame.html", _module_render_cache_root, data=data)
-        send_msg = await matcher_get_quote_setting.send(MsgSeg.image(image_data))
     except Exception as e:
         logger.error(f"生成配置预览失败: {e}")
         await matcher_get_quote_setting.finish(f"生成配置预览失败啦O.O，服务器说：{e}")
@@ -29,6 +23,8 @@ async def f_get_quote_setting(event: GroupME):
 @matcher_modify_quote_setting.handle()
 async def f_modify_quote_setting(event: GroupME, arg: Message = CommandArg()):
     """修改当前配置"""
+    from ...services.settings.modify_quote_setting import s_validate_parse_param
+
     args = arg.extract_plain_text().strip().split(" ", 2)
 
     if len(args) < 2:
@@ -36,8 +32,7 @@ async def f_modify_quote_setting(event: GroupME, arg: Message = CommandArg()):
         return
     
     try:
-        schema_str = args[0].strip()
-        new_value = literal_eval(args[1].strip())
+        schema_str, new_value = s_validate_parse_param(args)
     except Exception as e:
         await mfinish(matcher_modify_quote_setting, msg_quote_setting_update_failed, error=f"输入的参数不合法哦~（{e}）")
         return
@@ -67,6 +62,7 @@ async def f_reset_quote_setting(event: GroupME):
 async def f_reload_quote_setting(event: GroupME):
     """重载当前群组配置"""
     from ...imports import notify_reload_config
+    
     try:
         notify_reload_config()
     except Exception as e:
