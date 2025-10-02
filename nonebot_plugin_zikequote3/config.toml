@@ -38,7 +38,7 @@ temperature = 0.2
 max_retries = 3 # 请求失败重试次数
 
 [configure]
-# 不允许进行热更新，并且强制全局应用的配置项
+# 不允许进行热更新，并且应该全局应用的配置项
 nonreloadable_items = [
     "general.enable_zikequote3",
     "general.enable_groups",

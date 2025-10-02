@@ -443,6 +443,7 @@ class QuoteMigration:
                 author_id=quote_data['author_id'],
                 group_id=quote_data['group_id'],
                 content=quote_data['content'],
+                image_content_uuid=None,
                 total_show_time=quote_data['total_show_time']
             )
             
