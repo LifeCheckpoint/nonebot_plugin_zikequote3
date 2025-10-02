@@ -1,6 +1,10 @@
+# ZikeQuote3 配置文件
+# 如有修改，注意调整 `config.py` 中的配置模型
+
 [general]
-enable_zikequote3 = true # 总开关
-check_intergrity = true # 启动时检查 Node.js 依赖完整性
+enable_zikequote3 = true # 总开关，仅在文件配置有效
+enable_groups = [] # 启用插件的群列表，仅在文件配置有效
+check_intergrity = true # 启动时检查 Node.js 依赖完整性，仅在文件配置有效
 
 [collecting]
 enable_auto_collect = true # 启用自动收集，需要配置 LLM
@@ -21,7 +25,6 @@ hitokoto_url = "https://v1.hitokoto.cn" # 获取名人名言 Hitokoto API
 
 [permission]
 static_root = [] # 不可变最高权限列表
-enable_groups = [] # 启用插件的群列表
 
 [llm]
 # 模型配置较为复杂，其它端点调整工作需到对应文件进行修改
@@ -30,3 +33,20 @@ api_key_path = "utils/api_key" # API Key 文件路径，相对插件根目录
 model = "deepseek/deepseek-v3.2-exp"
 temperature = 0.2
 max_retries = 3 # 请求失败重试次数
+
+[configure]
+# 允许进行热更新的配置项，仅在文件配置有效
+reloadable_items = [
+    "collecting.enable_auto_collect",
+    "collecting.pickup_interval",
+    "collecting.msg_max_length",
+    "collecting.enable_duplicate",
+    "fetching.enable_cross_group_fetching",
+    "fetching.algorithm",
+    "showcase.max_rank_user_num",
+    "showcase.quote_num_per_page",
+    "showcase.page_num_limit",
+    "showcase.comment_show_method",
+    "llm.model",
+    "llm.temperature"
+]
