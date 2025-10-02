@@ -1,6 +1,7 @@
 from .info_quote import *
 from .modify_quote import *
 from .read_quote import *
+from .comand_definition import *
 
 from ..utils.install_frontend import verify_installation, install_frontend_dependencies
 driver = get_driver()
@@ -9,7 +10,9 @@ async def f_startup():
     """
     启动后检查依赖
     """
-    if not cfg.enable or not cfg.check_frontend:
+    from ..imports import default_cfg
+
+    if not default_cfg.general.enable_zikequote3 or not default_cfg.general.check_intergrity:
         return
 
     if verify_installation():

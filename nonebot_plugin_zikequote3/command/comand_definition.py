@@ -2,10 +2,16 @@ from ..imports import on_message, on_command
 from ..interface.permission import permission_check, PMS
 
 
-# info_quote
+# region 自动收集事件
+
 matcher_listener = on_message(
     priority=15, block=False, permission=permission_check(PMS.BE_COLLECTED)
 )
+
+# endregion
+
+# region 语录统计命令
+# stastics_cmds
 
 _rank_cmds = ("语录rank", "语录排行", "quote_rank", "语录信息", "quote_info")
 matcher_rank = on_command(
@@ -14,21 +20,17 @@ matcher_rank = on_command(
     priority=10, block=True, permission=permission_check(PMS.GET_QUOTE)
 )
 
-_setting_showing_cmds = ("语录设置", "语录设置信息", "quote_setting", "语录配置", "quote_config", "查看语录设置", "查看语录配置")
-matcher_setting_showing = on_command(
-    _setting_showing_cmds[0],
-    aliases=set(_setting_showing_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.OTHERS)
-)
-
-
-# modify_quote
-_update_quote_cmds = ("语录强制更新", "更新语录", "语录更新", "强制更新语录", "强制语录更新")
-matcher_update_quote = on_command(
-    _update_quote_cmds[0],
-    aliases=set(_update_quote_cmds[1:]),
+_quote_list_cmds = ("语录列表", "语录list", "语录列表", "quote_list", "列语录")
+matcher_quote_list = on_command(
+    _quote_list_cmds[0],
+    aliases=set(_quote_list_cmds[1:]),
     priority=10, block=True, permission=permission_check(PMS.GET_QUOTE)
 )
+
+# endregion
+
+# region 语录修改命令
+# modify_cmd
 
 _add_quote_cmds = ("加语录", "add_quote", "quote_add", "添加语录", "新增语录", "语录添加")
 matcher_add_quote = on_command(
@@ -58,18 +60,12 @@ matcher_del_comment = on_command(
     priority=10, block=True, permission=permission_check(PMS.DELETE_REVIEW_GROUP)
 )
 
+# endregion
 
-# old_quote
-_old_quote_cmds = ("老语录", "lt语录", "lt_quote", "老语录", "oldquote", "旧语录", "LT语录")
-matcher_old_quote = on_command(
-    _old_quote_cmds[0],
-    aliases=set(_old_quote_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.GET_QUOTE)
-)
+# region 语录读取命令
+# read_cmds
 
-
-# read_quote
-_random_quote_cmds = ("语录", "quote", "随机语录")
+_random_quote_cmds = ("语录", "quote", "随机语录", "来句语录")
 matcher_random_quote = on_command(
     _random_quote_cmds[0],
     aliases=set(_random_quote_cmds[1:]),
@@ -83,22 +79,44 @@ matcher_quote_card = on_command(
     priority=10, block=True, permission=permission_check(PMS.GET_QUOTE)
 )
 
-_quote_list_cmds = ("语录列表", "语录list", "语录列表", "quote_list", "列语录")
-matcher_quote_list = on_command(
-    _quote_list_cmds[0],
-    aliases=set(_quote_list_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.GET_QUOTE)
+_quote_search_cmds = (
+    "查语录", "查询语录", "quote_search", "语录搜索",
+    "语录查找", "搜语录", "找语录", "搜语录", "找语录", "搜索语录", "查找语录",
+    "寻找语录", "检索语录"
 )
-
-_quote_search_cmds = ("查语录", "quote_search", "语录搜索", "语录查找", "搜语录", "找语录")
 matcher_quote_search = on_command(
     _quote_search_cmds[0],
     aliases=set(_quote_search_cmds[1:]),
     priority=10, block=True, permission=permission_check(PMS.GET_QUOTE)
 )
 
+_quote_image_fetching_cmds = (
+    "语录原图", "语录图片", "quote_image", "quote_img",
+    "语录img", "语录图像", "获取语录图片", "获取语录原图", "获取语录img",
+    "获取语录图像", "get_quote_image", "get_quote_img"
+)
+matcher_quote_image_fetching = on_command(
+    _quote_image_fetching_cmds[0],
+    aliases=set(_quote_image_fetching_cmds[1:]),
+    priority=10, block=True, permission=permission_check(PMS.GET_QUOTE)
+)
 
-# settings
+# endregion
+
+# region 普通 op 命令
+# common_op_cmds
+
+_update_quote_cmds = ("语录强制更新", "更新语录", "语录更新", "强制更新语录", "强制语录更新")
+matcher_update_quote = on_command(
+    _update_quote_cmds[0],
+    aliases=set(_update_quote_cmds[1:]),
+    priority=10, block=True, permission=permission_check(PMS.GET_QUOTE)
+)
+
+# endregion
+
+# region 插件配置命令
+# settings_cmds
 _get_quote_setting_cmds = (
     "当前语录设置", "get_quote_setting", "get_quote_config", "查看语录设置", "查看语录配置", 
     "语录配置查看", "语录设置查看", "查看当前语录设置", "查看当前语录配置"
@@ -150,3 +168,5 @@ matcher_reload_quote_setting = on_command(
     aliases=set(_reload_quote_setting_cmds[1:]),
     priority=10, block=True, permission=permission_check(PMS.OTHERS)
 )
+
+# endregion
