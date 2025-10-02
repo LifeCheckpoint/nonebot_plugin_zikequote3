@@ -21,6 +21,8 @@ import requests
 _plugin_root = Path(__file__).parent
 _module_database_root = _plugin_root / "database"
 _module_html_templates_root = _plugin_root / "templates"
+_module_render_cache_root = _module_html_templates_root / "temp_output"
+
 
 # 载入全局数据库对象
 from .database.connection_manager import ConnectionManager

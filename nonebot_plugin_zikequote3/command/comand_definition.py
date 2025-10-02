@@ -129,3 +129,13 @@ matcher_reset_quote_setting = on_command(
     aliases=set(_reset_quote_setting_cmds[1:]),
     priority=10, block=True, permission=permission_check(PMS.OTHERS)
 )
+
+_reload_quote_setting_cmds = (
+    "重载语录设置", "重载语录配置", "重新加载语录设置", "重新加载语录配置",
+    "刷新语录设置", "刷新语录配置", "reload_quote_setting", "reload_quote_config"
+)
+matcher_reload_quote_setting = on_command(
+    _reload_quote_setting_cmds[0],
+    aliases=set(_reload_quote_setting_cmds[1:]),
+    priority=10, block=True, permission=permission_check(PMS.OTHERS)
+)

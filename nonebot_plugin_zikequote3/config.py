@@ -78,12 +78,12 @@ def reload_config():
     try:
         group_configs = db.dao.get_group_configs_dao().get_all_group_configs()
         # 转换为字典
-        _cfg_toml: Dict[str, tomlkit.TOMLDocument] = {}
-        _cfg: Dict[str, ConfigSchema] = {}
+        _cfg_toml: Dict[int, tomlkit.TOMLDocument] = {}
+        _cfg: Dict[int, ConfigSchema] = {}
         for gc in group_configs:
             try:
-                _cfg_toml[gc.group_id] = tomlkit.parse(gc.toml_config)            
-                _cfg[gc.group_id] = parse_config_from_toml(_cfg_toml[gc.group_id])
+                _cfg_toml[int(gc.group_id)] = tomlkit.parse(gc.toml_config)            
+                _cfg[int(gc.group_id)] = parse_config_from_toml(_cfg_toml[int(gc.group_id)])
             except Exception as e:
                 logger.error(f"解析群 {gc.group_id} 的自定义配置失败，其将使用默认配置: {e}")
 
@@ -93,7 +93,7 @@ def reload_config():
 
     return _default_cfg_toml, _defaul_cfg, _cfg_toml, _cfg
 
-def modify_group_config(group_id: str, schema_str: str, new_value: Any, reload: bool = True) -> None:
+def modify_group_config(group_id: int, schema_str: str, new_value: Any, reload: bool = True) -> None:
     """
     修改指定群组的配置，如果群组自定义配置不存在，则创建一个新的配置。
 
@@ -133,7 +133,7 @@ def modify_group_config(group_id: str, schema_str: str, new_value: Any, reload: 
     # 写入数据库
     try:
         db.dao.get_group_configs_dao().update_or_create_group_config(
-            group_id, tomlkit.dumps(group_toml)
+            str(group_id), tomlkit.dumps(group_toml)
         )
     except Exception as e:
         raise Exception(f"配置项写入数据库失败: {e}")
