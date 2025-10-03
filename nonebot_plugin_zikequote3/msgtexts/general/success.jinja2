@@ -1,44 +1,45 @@
 {# 执行成功通用模板 #}
 {% macro success_message(randint, action, entity_name = None, detial = None) -%}
-{%- set totalmsgs = 10 -%}
-    {%- if randint % totalmsgs == 0 -%}
+    {%- set totalmsgs = 10 -%}
+    {%- set choice = range(totalmsgs) | random -%}
+    {%- if choice == 0 -%}
         {% if entity_name %}为{{ entity_name }}{% endif %}执行{{ action }}成功完成啦！(≧∇≦)/{% if detial %}执行详情如下~
-        {{ detial }}{% endif %}
+{{ detial }}{% endif %}
     {%- endif -%}
-    {%- if randint % totalmsgs == 1 -%}
+    {%- if choice == 1 -%}
         {% if entity_name %}{{ entity_name }}的{% endif %}{{ action }}完成！(o゜▽゜)o☆{% if detial %}执行详情如下😙
-        {{ detial }}{% endif %}
+{{ detial }}{% endif %}
     {%- endif -%}
-    {%- if randint % totalmsgs == 2 -%}
+    {%- if choice == 2 -%}
         好耶！为{% if entity_name %}{{ entity_name }}执行{% endif %}{{ action }}已经成功啦~ (ﾉ´ヮ´)ﾉ{% if detial %}下面是执行详细反馈哟~
-        {{ detial }}{% endif %}
+{{ detial }}{% endif %}
     {%- endif -%}
-    {%- if randint % totalmsgs == 3 -%}
+    {%- if choice == 3 -%}
         搞定~{% if entity_name %}已为{{ entity_name }}执行{% endif %}『{{ action }}』的过程十分顺利~(^▽^*){% if detial %}下面是执行详情哟~
-        {{ detial }}{% endif %}
+{{ detial }}{% endif %}
     {%- endif -%}
-    {%- if randint % totalmsgs == 4 -%}
+    {%- if choice == 4 -%}
         叮咚~{% if entity_name %}{{ entity_name }}的{% endif %}{{ action }}操作圆满结束喵！{% if detial %}详细报告在这里呢~
-        {{ detial }}{% endif %}
+{{ detial }}{% endif %}
     {%- endif -%}
-    {%- if randint % totalmsgs == 5 -%}
+    {%- if choice == 5 -%}
         顺利完成！已经{% if entity_name %}为{{ entity_name }}{% endif %}做好『{{ action }}』了哟~ ฅ^•ω•^ฅ{% if detial %}这是详细情况喵~
-        {{ detial }}{% endif %}
+{{ detial }}{% endif %}
     {%- endif -%}
-    {%- if randint % totalmsgs == 6 -%}
+    {%- if choice == 6 -%}
         {{ action }}任务{% if entity_name %}对{{ entity_name }}{% endif %}执行完毕！✨{% if detial %}具体细节汇报如下喵~
-        {{ detial }}{% endif %}
+{{ detial }}{% endif %}
     {%- endif -%}
-    {%- if randint % totalmsgs == 7 -%}
+    {%- if choice == 7 -%}
         喵呜~{% if entity_name %}{{ entity_name }}的{% endif %}{{ action }}已经搞定啦！🐾{% if detial %}详情在这里喵~
-        {{ detial }}{% endif %}
+{{ detial }}{% endif %}
     {%- endif -%}
-    {%- if randint % totalmsgs == 8 -%}
+    {%- if choice == 8 -%}
         顺利完成！{{ action }}魔法事件{% if entity_name %}在{{ entity_name }}上{% endif %}成功应用啦！(>^ω^<){% if detial %}魔法效果详情~
-        {{ detial }}{% endif %}
+{{ detial }}{% endif %}
     {%- endif -%}
-        {%- if randint % totalmsgs == 9 -%}
+        {%- if choice == 9 -%}
         任务完成！{% if entity_name %}关于{{ entity_name }}的{% endif %}{{ action }}操作全部OK喵~ ٩(◕‿◕｡)۶{% if detial %}这是完成报告哟~
-        {{ detial }}{% endif %}
+{{ detial }}{% endif %}
     {%- endif -%}
 {%- endmacro %}
