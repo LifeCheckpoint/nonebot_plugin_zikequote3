@@ -63,6 +63,41 @@ class ConfigSchema(BaseModel):
 def parse_config_from_toml(toml_doc: tomlkit.TOMLDocument) -> ConfigSchema:
     return ConfigSchema.model_validate(toml_doc)
 
+def fix_config_integrity(default_toml: tomlkit.TOMLDocument, group_toml: tomlkit.TOMLDocument) -> bool:
+    """
+    修复群组配置的完整性，确保数据库中的配置包含所有本地默认配置项
+    
+    Args:
+        default_toml: 本地默认配置的TOML文档
+        group_toml: 群组配置的TOML文档
+    
+    Returns:
+        bool: 配置是否被修改
+    """
+    changed = False
+    
+    # 遍历默认配置的所有节
+    for section_name in default_toml.keys():
+        if section_name not in group_toml:
+            # 如果群组配置中缺少整个节，则添加整个节
+            group_toml[section_name] = default_toml[section_name]
+            changed = True
+            logger.info(f"为群组配置添加缺失的节: {section_name}")
+        else:
+            # 如果节存在，检查该节下的所有键
+            default_section = default_toml[section_name]
+            group_section = group_toml[section_name]
+            
+            # 遍历默认节的所有键
+            for key_name in default_section.keys(): # type: ignore
+                if key_name not in group_section:
+                    # 如果群组配置中缺少该键，则添加默认值
+                    group_section[key_name] = default_section[key_name] # type: ignore
+                    changed = True
+                    logger.info(f"为群组配置的节 '{section_name}' 添加缺失的键: {key_name}")
+    
+    return changed
+
 def reload_config():
     """
     加载 / 重载所有自定义群组配置
@@ -85,8 +120,21 @@ def reload_config():
         _cfg: Dict[int, ConfigSchema] = {}
         for gc in group_configs:
             try:
-                _cfg_toml[int(gc.group_id)] = tomlkit.parse(gc.toml_config)            
-                _cfg[int(gc.group_id)] = parse_config_from_toml(_cfg_toml[int(gc.group_id)])
+                group_toml = tomlkit.parse(gc.toml_config)
+                
+                # 检查并修复配置完整性
+                if fix_config_integrity(_default_cfg_toml, group_toml):
+                    # 配置有变化，更新数据库
+                    try:
+                        db.dao.get_group_configs_dao().update_or_create_group_config(
+                            str(gc.group_id), tomlkit.dumps(group_toml)
+                        )
+                        logger.info(f"已修复群 {gc.group_id} 的配置完整性")
+                    except Exception as e:
+                        logger.error(f"更新群 {gc.group_id} 的配置失败: {e}")
+                
+                _cfg_toml[int(gc.group_id)] = group_toml
+                _cfg[int(gc.group_id)] = parse_config_from_toml(group_toml)
             except Exception as e:
                 logger.error(f"解析群 {gc.group_id} 的自定义配置失败，其将使用默认配置: {e}")
 
