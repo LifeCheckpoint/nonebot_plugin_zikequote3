@@ -1,0 +1,14 @@
+{
+    "default": true,
+    "MD041": false,
+    "MD013": false,
+    "MD033": {
+        "allowed_elements": [
+            "font", "li", "table", "tr", "td",
+            "a", "div", "img", "br", "p",
+            "span", "b", "i", "strong", "em",
+            "u", "sup", "sub", "code", "pre",
+            "details", "summary"
+        ]
+    }
+}

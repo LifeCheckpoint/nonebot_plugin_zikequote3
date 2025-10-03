@@ -8,7 +8,7 @@
 
 # ZikeQuote3
 
-_✨ 一个 LLM 介入的群聊语录插件 ✨_
+✨ _一个 LLM 介入的群聊语录插件_ ✨
 
 </div>
 
@@ -37,7 +37,7 @@ ZikeQuote3 基于 NoneBot2 开发，便于群聊语录自动收集与管理，�
     下载该仓库后，进入命令行并使用
 
         poetry install
-    
+
     以安装 `pyproject.toml` 中的依赖
     </details>
 
@@ -76,15 +76,17 @@ ZikeQuote3 基于 NoneBot2 开发，便于群聊语录自动收集与管理，�
 
     打开 nonebot2 项目根目录下的 `pyproject.toml` 文件, 在 `[tool.nonebot]` 部分追加写入
 
-    ```toml
-    plugins = ["nonebot-plugin-zikequote3"]
-    ```
+        ```toml
+        plugins = ["nonebot-plugin-zikequote3"]
+        ```
 
 2. **确保系统安装 Node.js**，首次进入插件**默认自动安装前端依赖**，或者手动安装截图相关后端及其依赖：
-    ```bash
-    cd your/bot/plugins/external/html_render/
-    npm install
-    ```
+
+        ```bash
+        cd your/bot/plugins/external/html_render/
+        npm install
+        ```
+
 3. 创建文件 `utils/api_key` 配置 LLM API Key，可自行修改 `utils/llm_solo.py` 使用自定义客户端、模型与参数
 
 ## ⚙ 配置
@@ -104,7 +106,6 @@ ZikeQuote3 基于 NoneBot2 开发，便于群聊语录自动收集与管理，�
 - `/语录卡 [关键词]`: 生成语录卡片图片，可按关键词搜索。
 - `/语录列表 [用户]`: 查看某个用户的语录列表。
 - `/查语录 关键词`: 搜索包含指定关键词的语录。
-
 
 ## 🖼️ 更新日志
 
@@ -138,23 +139,23 @@ ZikeQuote3 基于 NoneBot2 开发，便于群聊语录自动收集与管理，�
 ## 🚧 实现
 
 - **数据存储**:
-    - 语录数据和聊天历史记录均以 JSON 格式存储在本地文件系统中，每个群组对应一个独立的文件（位于插件数据目录下的 `history` 和 `quotes` 子目录）。
+  - 语录数据和聊天历史记录均以 JSON 格式存储在本地文件系统中，每个群组对应一个独立的文件（位于插件数据目录下的 `history` 和 `quotes` 子目录）。
 
 - **自动收集机制**:
-    - 如果相关配置 `cfg.enable_auto_collect` 被启用，插件将捕获群聊消息，并将消息暂存。
-    - 当暂存的消息数量达到配置的阈值 `cfg.pickup_interval`，触发自动收集流程 `interface/message_handle.py`。
-    - 消息历史被发送给集成 LLM，LLM 根据预设的 Prompt `prompts/quote_pickup.txt` 对消息进行分析，提取潜在的语录并生成评论。
-    - 提取出的语录和评论会被添加到语录库中。
+  - 如果相关配置 `cfg.enable_auto_collect` 被启用，插件将捕获群聊消息，并将消息暂存。
+  - 当暂存的消息数量达到配置的阈值 `cfg.pickup_interval`，触发自动收集流程 `interface/message_handle.py`。
+  - 消息历史被发送给集成 LLM，LLM 根据预设的 Prompt `prompts/quote_pickup.txt` 对消息进行分析，提取潜在的语录并生成评论。
+  - 提取出的语录和评论会被添加到语录库中。
 
 - **语录处理**:
-    - 语录收集通过 `external/json_data_manager/chat_history_data.py` 收集历史信息实现
-    - 语录的添加、删除和评论等操作通过直接操作群聊对应 JSON 数据文件。
-    - 随机语录的选取采用了基于展示次数的简单权重算法 `interface/quote_handle.py::calculate_weight`。
+  - 语录收集通过 `external/json_data_manager/chat_history_data.py` 收集历史信息实现
+  - 语录的添加、删除和评论等操作通过直接操作群聊对应 JSON 数据文件。
+  - 随机语录的选取采用了基于展示次数的简单权重算法 `interface/quote_handle.py::calculate_weight`。
 
 - **HTML 渲染**:
-    - 插件利用 `external/html_render/` 渲染图片。
-    - 渲染通过 Python 调用 Node.js 脚本 `external/html_render/screenshot.js`，使用 Puppeteer 库来控制无头浏览器加载本地 HTML 模板文件 `templates/` 目录，并进行截图。
+  - 插件利用 `external/html_render/` 渲染图片。
+  - 渲染通过 Python 调用 Node.js 脚本 `external/html_render/screenshot.js`，使用 Puppeteer 库来控制无头浏览器加载本地 HTML 模板文件 `templates/` 目录，并进行截图。
 
 - **消息文本管理**:
-    - 插件的消息回复文本通过 `external/msg_text/msg.py` 进行管理。
-    - 支持带有概率的文本片段字典和固定文本混合。
+  - 插件的消息回复文本通过 `external/msg_text/msg.py` 进行管理。
+  - 支持带有概率的文本片段字典和固定文本混合。
