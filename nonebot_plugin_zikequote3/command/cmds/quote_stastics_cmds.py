@@ -18,7 +18,7 @@ async def f_rank(event: GroupME, arg: Message = CommandArg()):
     rank_info["stats"]["pending_quotes"] = msg_pending_num
 
     try:
-        image_data = await full_render_html(cfg.path.templates / "rank.html", cfg.path.templates, data=rank_info, width=800, height=600)
+        image_data = await html_img_render(cfg.path.templates / "rank.html", cfg.path.templates, data=rank_info, width=800, height=600)
     except Exception as e:
         print("生成语录排行失败：", e)
         await mfinish(matcher_rank, msg_rank_failed, error=str(e))
@@ -64,7 +64,7 @@ async def f_quote_list(event: GroupME, arg: Message = CommandArg()):
 
     # 生成图片
     try:
-        image_data = await full_render_html(cfg.path.templates / "list.html", cfg.path.templates, data=data, width=800, height=200)
+        image_data = await html_img_render(cfg.path.templates / "list.html", cfg.path.templates, data=data, width=800, height=200)
         await matcher_quote_list.send(MsgSeg.image(image_data))
     except Exception as e:
         print(f"生成语录列表失败：{e}")

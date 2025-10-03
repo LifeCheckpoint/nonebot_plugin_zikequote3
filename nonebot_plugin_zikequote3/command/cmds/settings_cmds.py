@@ -13,7 +13,7 @@ async def f_get_quote_setting(event: GroupME):
 
     try:
         data = s_get_quote_setting(event.group_id)
-        image_data = await full_render_html(_module_html_templates_root / "CodeFrame.html", _module_render_cache_root, data=data)
+        image_data = await html_img_render(_module_html_templates_root / "CodeFrame.html", _module_render_cache_root, data=data)
     except Exception as e:
         logger.error(f"生成配置预览失败: {e}")
         await matcher_get_quote_setting.finish(f"生成配置预览失败啦O.O，服务器说：{e}")

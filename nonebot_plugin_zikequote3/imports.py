@@ -33,7 +33,7 @@ db.initialize_db() # 初始化，保证完整性
 
 # 载入外部工具
 from .utils.async_tools import serial_execution, async_modify_lock
-from .external.html_render import full_render_html, template, full_render_markdown
+from .external.html_render import html_img_render, template, parse_md2html
 from .external.msg_text import msend, mfinish
 
 

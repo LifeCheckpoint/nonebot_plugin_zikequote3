@@ -39,7 +39,7 @@ async def f_quote_card(event: GroupME, arg: Message = CommandArg()):
     else:
         # 生成图片
         try:
-            image_data = await full_render_html(cfg.path.templates / "card.html", cfg.path.templates, data=asdict(result), width=630, height=120)
+            image_data = await html_img_render(cfg.path.templates / "card.html", cfg.path.templates, data=asdict(result), width=630, height=120)
             send_msg = await matcher_quote_card.send(MsgSeg.image(image_data))
             add_mapping(event.group_id, send_msg["message_id"], result.quote_id)
         except Exception as e:
@@ -78,7 +78,7 @@ async def f_quote_search(event: GroupME, arg: Message = CommandArg()):
 
     # 生成图片
     try:
-        image_data = await full_render_html(cfg.path.templates / "list.html", cfg.path.templates, data=data, width=800, height=200)
+        image_data = await html_img_render(cfg.path.templates / "list.html", cfg.path.templates, data=data, width=800, height=200)
         await matcher_quote_search.send(MsgSeg.image(image_data))
     except Exception as e:
         print(f"生成语录搜索列表失败：{e}")

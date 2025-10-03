@@ -7,4 +7,4 @@
 """
 
 from .screenshot import async_generate_screenshot
-from .html_parser import generate_html_by_file, generate_html_by_str, full_render_html, full_render_markdown, template
+from .html_parser import generate_html_by_file, generate_html_by_str, html_img_render, parse_md2html, template
