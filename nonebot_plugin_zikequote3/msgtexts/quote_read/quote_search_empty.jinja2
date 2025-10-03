@@ -1,0 +1,8 @@
+{# 语录搜索关键词为空模板 #}
+{%- set totalmsgs = 2 -%}
+{%- set choice = range(totalmsgs) | random -%}
+{%- if choice == 0 -%}
+要输入一个关键词才能搜索哦(👉ﾟヮﾟ)👉
+{%- elif choice == 1 -%}
+( *︾▽︾)~你还没有说要搜什么呢
+{%- endif -%}

@@ -1,0 +1,8 @@
+{# 语录列表模糊匹配模板 #}
+{%- set totalmsgs = 2 -%}
+{%- set choice = range(totalmsgs) | random -%}
+{%- if choice == 0 -%}
+找到了「{{ key }}」这个群友呢，但是有 {{ num }} 个同名的群友哦~ 试试通过QQ号精确确认？(o゜▽゜)o☆
+{%- elif choice == 1 -%}
+有 {{ num }} 个叫「{{ key }}」的群友呢~ 试试用QQ号来精确确认？(●'◡'●)
+{%- endif -%}

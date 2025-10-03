@@ -1,0 +1,3 @@
+{# 删除语录ID无效模板 #}
+{% from "../general/failure.jinja2" import fail_message %}
+{{ fail_message("删除语录", detial="要输入一个有效的语录ID才能删除哦") }}

@@ -1,0 +1,26 @@
+{# 语录未找到模板 #}
+{%- if key is none or key == "" -%}
+{%- set totalmsgs = 4 -%}
+{%- set choice = range(totalmsgs) | random -%}
+{%- if choice == 0 -%}
+呜呜(っ﹏<。) 没有找到相关的语录呢...
+{%- elif choice == 1 -%}
+查询失败...没找到相关的语录哦？
+{%- elif choice == 2 -%}
+坏消息！没有找到符合条件的语录哦ヾ(≧へ≦)〃
+{%- elif choice == 3 -%}
+抱歉，没找到符合条件的语录呢X﹏X
+{%- endif -%}
+{%- else -%}
+{%- set totalmsgs = 4 -%}
+{%- set choice = range(totalmsgs) | random -%}
+{%- if choice == 0 -%}
+抱歉，没找到包含「{{ key }}」的语录呢X﹏X
+{%- elif choice == 1 -%}
+呜呜(っ﹏<。) 没有找到包含「{{ key }}」的语录呢...
+{%- elif choice == 2 -%}
+查询失败...没找到包含「{{ key }}」的语录哦？
+{%- elif choice == 3 -%}
+坏消息！没有找到符合条件「{{ key }}」的语录哦ヾ(≧へ≦)〃
+{%- endif -%}
+{%- endif -%}

@@ -1,5 +1,5 @@
 {# 执行成功通用模板 #}
-{% macro success_message(randint, action, entity_name = None, detial = None) -%}
+{% macro success_message(action, entity_name = None, detial = None) -%}
     {%- set totalmsgs = 10 -%}
     {%- set choice = range(totalmsgs) | random -%}
     {%- if choice == 0 -%}

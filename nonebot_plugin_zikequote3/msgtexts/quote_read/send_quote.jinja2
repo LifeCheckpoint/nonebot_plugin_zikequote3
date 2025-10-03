@@ -1,0 +1,15 @@
+{# 发送语录模板 #}
+{%- set totalmsgs = 5 -%}
+{%- set choice = range(totalmsgs) | random -%}
+{%- if choice == 0 -%}
+{{ author }}曾经说过：{{ quote }}
+{%- elif choice == 1 -%}
+{{ author }}曰：{{ quote }}
+{%- elif choice == 2 -%}
+{{ author }}说：{{ quote }}
+{%- elif choice == 3 -%}
+{{ author }}：{{ quote }}
+{%- elif choice == 4 -%}
+{{ quote }}
+——{{ author }}
+{%- endif -%}

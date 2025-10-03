@@ -1,14 +1,16 @@
 {# 图片生成失败详情 #}
-{%- set totalmsgs = 5 -%}
-{%- set choice = range(totalmsgs) | random -%}
-{%- if choice == 0 -%}
-喵~ 生成{{entity}}的图片时遇到了技术问题，可能是图像引擎暂时不可用或者资源不足...(っ °Д °;)っ{% if error_msg %}服务器还说：{{ error_msg }}{% endif %}
-{%- elif choice == 1 -%}
-我想做一张{{entity}}的图片，但是图像处理服务出现了异常喵！{% if error_msg %}服务器还提醒：{{ error_msg }}{% endif %}
-{%- elif choice == 2 -%}
-生成{{entity}}的图片失败啦...~~>_<~~{% if error_msg %}服务器报告了错误{{ error_msg }}{% endif %}
-{%- elif choice == 3 -%}
-呜...{{entity}}的图片生成被中断了⊙﹏⊙∥ {% if error_msg %}服务器还告诉我{{ error_msg }}{% endif %}
-{%- elif choice == 4 -%}
-无法完成{{entity}}的图片生成任务喵இ௰இ {% if error_msg %}服务器还提醒我{{ error_msg }}{% endif %}
-{%- endif -%}
+{% macro fail_detail_gen_image(entity, error_msg = None) -%}
+    {%- set totalmsgs = 5 -%}
+    {%- set choice = range(totalmsgs) | random -%}
+    {%- if choice == 0 -%}
+    喵~ 生成{{entity}}的图片时遇到了技术问题，可能是图像引擎暂时不可用或者资源不足...(っ °Д °;)っ{% if error_msg %}服务器还说：{{ error_msg }}{% endif %}
+    {%- elif choice == 1 -%}
+    我想做一张{{entity}}的图片，但是图像处理服务出现了异常喵！{% if error_msg %}服务器还提醒：{{ error_msg }}{% endif %}
+    {%- elif choice == 2 -%}
+    生成{{entity}}的图片失败啦...~~>_<~~{% if error_msg %}服务器报告了错误{{ error_msg }}{% endif %}
+    {%- elif choice == 3 -%}
+    呜...{{entity}}的图片生成被中断了⊙﹏⊙∥ {% if error_msg %}服务器还告诉我{{ error_msg }}{% endif %}
+    {%- elif choice == 4 -%}
+    无法完成{{entity}}的图片生成任务喵இ௰இ {% if error_msg %}服务器还提醒我{{ error_msg }}{% endif %}
+    {%- endif -%}
+{%- endmacro -%}
