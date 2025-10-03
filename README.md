@@ -10,6 +10,19 @@
 
 ✨ _一个 LLM 介入的群聊语录插件_ ✨
 
+<a href="./LICENSE">
+    <img src="https://img.shields.io/github/license/LifeCheckpoint/nonebot_plugin_zikequote3.svg" alt="license">
+</a><!--
+<a href="https://pypi.python.org/pypi/nonebot-plugin-zikequote3">
+    <img src="https://img.shields.io/pypi/v/nonebot-plugin-zikequote3.svg" alt="pypi">
+</a>
+--><a href="https://www.python.org">
+    <img src="https://img.shields.io/badge/python-3.12+-blue.svg" alt="python">
+</a>
+<a href="https://nonebot.dev">
+    <img src="https://img.shields.io/badge/nonebot-2.0.0+-red.svg" alt="nonebot">
+</a>
+
 </div>
 
 ## 📖 介绍
@@ -18,16 +31,31 @@ ZikeQuote3 基于 NoneBot2 开发，便于群聊语录自动收集与管理，�
 
 ## 🗒️ 功能
 
-- **自动收集**: 监听群聊消息，当消息数量达到配置阈值时，自动触发 LLM 对消息历史进行筛选和提取，将符合条件的消收集为语录。
-- **手动管理**: 支持通过命令手动添加、删除和评论语录。
-- **语录排行**: 统计群组成员的语录数量，生成排行榜，并以图片形式展示。
-- **随机语录**: 随机获取一条语录，支持按关键词过滤，并根据语录的展示次数进行权重调整。
-- **语录卡片**: 将单条语录生成卡片图片，方便分享。
-- **语录列表**: 查看某个用户（默认为命令发送者）的语录列表，支持分页，并生成图片展示。
-- **语录搜索**: 搜索包含指定关键词的语录，并生成图片展示。
-- **语录评论**: 对已有语录添加评论。
-- **LLM 集成**: 利用 LLM 对消息历史进行智能分析，自动提取 1~3 条高质量语录并生成评论。
-- **权限控制**: 支持基于群组 ID 的白名单或黑名单权限控制。
+### 🤖 智能收集
+
+- **自动收集**: 持续监听群聊消息，达到消息量阈值**自动触发**筛选。
+- **LLM 集成**: LLM **自动分析**消息历史，根据指导提取**群友语录**并生成简短评论。
+
+### 👨‍💻 手动管理
+
+- **手动管理**: 支持通过命令增删查改。
+- **语录评论**: 对已有语录**添加评论**，丰富内容。
+
+### 🎨 展示查询
+
+- **随机语录**: 支持**不同算法**模式下的随机语录推荐，同时允许多种**筛选推荐**，支持图像和文字。
+- **语录搜索**: 可**搜索罗列**筛选语录。
+- **语录排行**: 统计成员语录数量，生成**图片排行榜**。
+- **语录列表**: 展示查看用户**语录列表**。
+
+### 📊 插件配置
+
+- **群粒度控制**: 支持精细到群粒度的语录插件配置。
+- **动态更新**: 支持热调整配置与热重载配置，灵活方便。
+
+### ⚙️ 权限控制
+
+- **群际精确权限控制**: 通过**权限组**管理方式分配语录功能权限，全面精确。
 
 ## 🔧 安装
 
@@ -135,27 +163,3 @@ ZikeQuote3 基于 NoneBot2 开发，便于群聊语录自动收集与管理，�
 4. 细化了权限控制功能
 5. 规范了配置文件
 6. 命令现在被集中管理
-
-## 🚧 实现
-
-- **数据存储**:
-  - 语录数据和聊天历史记录均以 JSON 格式存储在本地文件系统中，每个群组对应一个独立的文件（位于插件数据目录下的 `history` 和 `quotes` 子目录）。
-
-- **自动收集机制**:
-  - 如果相关配置 `cfg.enable_auto_collect` 被启用，插件将捕获群聊消息，并将消息暂存。
-  - 当暂存的消息数量达到配置的阈值 `cfg.pickup_interval`，触发自动收集流程 `interface/message_handle.py`。
-  - 消息历史被发送给集成 LLM，LLM 根据预设的 Prompt `prompts/quote_pickup.txt` 对消息进行分析，提取潜在的语录并生成评论。
-  - 提取出的语录和评论会被添加到语录库中。
-
-- **语录处理**:
-  - 语录收集通过 `external/json_data_manager/chat_history_data.py` 收集历史信息实现
-  - 语录的添加、删除和评论等操作通过直接操作群聊对应 JSON 数据文件。
-  - 随机语录的选取采用了基于展示次数的简单权重算法 `interface/quote_handle.py::calculate_weight`。
-
-- **HTML 渲染**:
-  - 插件利用 `external/html_render/` 渲染图片。
-  - 渲染通过 Python 调用 Node.js 脚本 `external/html_render/screenshot.js`，使用 Puppeteer 库来控制无头浏览器加载本地 HTML 模板文件 `templates/` 目录，并进行截图。
-
-- **消息文本管理**:
-  - 插件的消息回复文本通过 `external/msg_text/msg.py` 进行管理。
-  - 支持带有概率的文本片段字典和固定文本混合。
