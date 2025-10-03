@@ -26,10 +26,7 @@ extensions = [
     'pymdownx.tilde', # 删除线/下标等
 ]
 
-async def full_render_markdown(
-        markdown_text: str,
-        device_scale_factor: float = 2
-    ) -> bytes:
+async def full_render_markdown(markdown_text: str, device_scale_factor: float = 2) -> bytes:
     """
     完整流程渲染 Markdown 文本并截图
     """
@@ -40,13 +37,13 @@ async def full_render_markdown(
     return image_bytes
 
 async def full_render_html(
-        html_template_file_path: Union[str, Path],
-        dir_html_output: Path,
-        data: Dict,
-        width: int = 1000,
-        height: int = 800,
-        device_scale_factor: float = 2
-    ) -> bytes:
+    html_template_file_path: Union[str, Path],
+    dir_html_output: Path,
+    data: Dict,
+    width: int = 1000,
+    height: int = 800,
+    device_scale_factor: float = 2
+) -> bytes:
     """
     完整流程渲染 HTML 文件并截图，自动处理临时文件
 

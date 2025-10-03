@@ -1,5 +1,4 @@
 const puppeteer = require('puppeteer');
-const path = require('path');
 const process = require('process');
 
 (async () => {
@@ -12,8 +11,8 @@ const process = require('process');
   const deviceScaleFactor = parseFloat(args[4]) || 2.5;
 
   if (!htmlFilePath) {
-      console.error("HTML 绝对路径应该作为第二个传入参数");
-      process.exit(1);
+    console.error("HTML 绝对路径应该作为第二个传入参数");
+    process.exit(1);
   }
 
 
