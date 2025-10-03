@@ -102,6 +102,8 @@ def reload_config():
     """
     加载 / 重载所有自定义群组配置
     """
+    from .utils.defaulting_dict import DefaultingDict
+
     cfg_file = get_plugin_config(ConfigPath).config_toml
 
     if not Path(cfg_file).is_file():
@@ -115,9 +117,12 @@ def reload_config():
     from .imports import db
     try:
         group_configs = db.dao.get_group_configs_dao().get_all_group_configs()
-        # 转换为字典
-        _cfg_toml: Dict[int, tomlkit.TOMLDocument] = {}
-        _cfg: Dict[int, ConfigSchema] = {}
+        
+        # 转换为默认值字典
+        # 通过默认值字典，下游无需再判断 group_id 是否存在，因为不存在时会自动返回配置默认值
+        _cfg_toml: DefaultingDict[int, tomlkit.TOMLDocument] = DefaultingDict(_default_cfg_toml, {})
+        _cfg: DefaultingDict[int, ConfigSchema] = DefaultingDict(_defaul_cfg, {})
+
         for gc in group_configs:
             try:
                 group_toml = tomlkit.parse(gc.toml_config)
