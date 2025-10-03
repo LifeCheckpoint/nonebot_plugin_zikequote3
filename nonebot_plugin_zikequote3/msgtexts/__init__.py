@@ -1,0 +1,45 @@
+"""
+消息模板渲染中转层
+提供类型安全的Jinja2模板渲染方法
+"""
+from pathlib import Path
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+# 初始化Jinja2环境
+template_path = Path(__file__).parent
+env = Environment(
+    loader=FileSystemLoader(template_path),
+    autoescape=select_autoescape(['html', 'xml']),
+    trim_blocks=True,
+    lstrip_blocks=True
+)
+
+# 导入各个模块
+from . import quote_modify
+from . import quote_read
+from . import quote_stastics
+from . import common_op
+from . import settings
+
+# 导出公共接口
+__all__ = [
+    'quote_modify',
+    'quote_read', 
+    'quote_stastics',
+    'common_op',
+    'settings',
+]
+
+def render_template(template_name: str, **kwargs) -> str:
+    """
+    通用模板渲染函数
+    
+    Args:
+        template_name: 模板文件名
+        **kwargs: 模板参数
+        
+    Returns:
+        渲染后的字符串
+    """
+    template = env.get_template(template_name)
+    return template.render(**kwargs)
