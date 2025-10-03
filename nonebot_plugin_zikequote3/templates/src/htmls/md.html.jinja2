@@ -1,22 +1,26 @@
-<!-- 
+{#
     渲染 Markdown 内容模板
-    content: 要渲染的 Markdown 内容，注意扩展正确性
 
-    另外，需要保证该模板依赖文件正确
--->
+    - inline_katex_min_css: 内联 KaTeX 样式
+    - inline_css: 内联自定义样式
+    - katex_min_js: 内联 KaTeX 脚本
+    - auto_render_js: 内联 KaTeX 自动渲染脚本
+
+    - content: 要渲染的 Markdown 内容
+#}
 
 <!DOCTYPE html>
 <html>
 <head>
     <title>Markdown 文档</title>
-    <link rel="stylesheet" href="katex.min.css">
-    <link rel="stylesheet" href="md.css">
-    <script src="katex.min.js"></script>
-    <script src="auto-render.min.js"></script>
+    <style> {{ inline_katex_min_css | safe }} </style>
+    <style> {{ inline_css | safe }} </style>
+    <script> {{ katex_min_js | safe }} </script>
+    <script> {{ auto_render_js | safe }} </script>
 </head>
 <body>
     <div id="preview">
-        {{ content|safe }}
+        {{ content | safe }}
     </div>
 
     <script>
