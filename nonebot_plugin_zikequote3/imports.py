@@ -7,15 +7,14 @@ from nonebot.matcher import Matcher
 from nonebot.params import CommandArg, ArgPlainText
 from nonebot.plugin import PluginMetadata
 from nonebot.typing import T_State
-import nonebot_plugin_localstore as store
 from pathlib import Path
-import tomlkit
 from typing import Optional, Union, Literal, Callable, Any, Dict, List, Tuple
 import asyncio
 import colorsys
-import json
+import nonebot_plugin_localstore as store
 import random
 import requests
+import tomlkit
 
 # 插件根目录
 _plugin_root = Path(__file__).parent
@@ -33,8 +32,7 @@ db.initialize_db() # 初始化，保证完整性
 
 # 载入外部工具
 from .utils.async_tools import serial_execution, async_modify_lock
-from .external.html_render import html_img_render, template, parse_md2html
-from .external.msg_text import msend, mfinish
+from .html_capture import html_img_render, parse_md2html
 
 
 # 加载 toml 配置并注入 BaseModel
@@ -47,4 +45,4 @@ def notify_reload_config():
 
 
 # 加载消息导入
-from .message_text import *
+from . import msgtexts
