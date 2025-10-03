@@ -26,37 +26,3 @@ def generate_color_palette(num_colors: int) -> List[str]:
         colors.append(hex_color)
 
     return colors
-
-from pydantic import BaseModel
-from typing import Type
-
-def format_pydantic_config_markdown(config_model: BaseModel) -> str:
-    """
-    格式化 Pydantic 配置模型为 Markdown 列表格式。
-
-    Args:
-        config_model: Pydantic 配置模型类。
-        indent_level: 当前缩进级别，用于处理嵌套模型。
-
-    Returns:
-        Markdown 格式的配置字符串。
-    """
-    markdown_output = ""
-
-    # 添加模型描述
-    if config_model.__doc__:
-        markdown_output += f"## {config_model.__doc__.strip()}\n\n"
-
-    # 遍历模型的字段
-    for field_name, field in config_model.model_fields.items():
-        default_value = field.default if field.default is not None else "无默认值"
-        description = field.description if field.description else "无描述"
-
-        markdown_output += f"- **{field_name} = {default_value}**: {description}\n"
-
-        # 如果字段是嵌套的 Pydantic 模型，递归调用
-        if isinstance(field.annotation, type) and issubclass(field.annotation, BaseModel):
-            markdown_output += format_pydantic_config_markdown(field.annotation())
-            markdown_output += "\n"
-
-    return markdown_output

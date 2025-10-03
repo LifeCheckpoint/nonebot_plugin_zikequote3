@@ -7,12 +7,12 @@ def get_hitokoto() -> Tuple[Optional[str], Optional[str]]:
     错误返回 (None, None)
     """
     try:
-        response = requests.get(cfg.hitokoto_url, timeout=3)
+        response = requests.get(default_cfg.showcase.hitokoto_url, timeout=3)
         response.raise_for_status()
         data = response.json()
         hitokoto_content = data.get("hitokoto", None)
         from_who = data.get("from_who", None)
         return hitokoto_content, from_who
     except Exception as e:
-        print(f"获取名人名言时发生错误: {e}")
+        logger.error(f"获取名人名言时发生错误: {e}")
         return None, None
