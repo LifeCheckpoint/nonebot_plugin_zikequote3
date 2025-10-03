@@ -1,16 +1,5 @@
 from typing import Optional, Dict, List, Tuple, Union
 
-def msg_no_permission(event: Optional[str] = None):
-    """没有权限"""
-    if event == None:
-        return {
-            "ヾ(≧へ≦)〃嗯，要主人来才可以用这个功能哦~": 1,
-        }
-    else:
-        return {
-            f"ヾ(≧へ≦)〃嗯，要主人来才可以用「{event}」哦~": 1
-        }
-
 def msg_api_request_error(error: Optional[str] = None):
     """API 请求错误"""
     head = {
@@ -148,26 +137,6 @@ def msg_remove_quote_failed(error: Optional[str] = None):
     }
     return options
 
-def msg_quote_card_failed(error: Optional[str] = None):
-    """语录卡生成失败"""
-    reason = error or "我也不知道..."
-    options = {
-        f"语录卡...没有成功制作呢... 原因：{reason}": 1,
-        f"服务器搞砸啦（＞人＜；）... 服务器说：{reason} (╥﹏╥)": 1,
-        f"语录卡生成时出了点小故障...原因：{reason} (⊙_⊙)": 1
-    }
-    return options
-
-def msg_rank_failed(error: Optional[str] = None):
-    """排行榜生成失败"""
-    reason = error or "我也不知道..."
-    options = {
-        f"排行榜...没有成功制作呢... 原因：{reason}": 1,
-        f"服务器出、出了点问题（＞人＜；）... 服务器说：{reason} (。>︿<)_θ": 1,
-        f"服务器没有成功生成排行榜...因为...{reason} (⊙x⊙;)": 1
-    }
-    return options
-
 def msg_quote_list_not_found(key: str):
     """语录列表未找到用户"""
     return {
@@ -181,16 +150,6 @@ def msg_quote_list_ambiguous(key: str, num: int):
         f"找到了「{key}」这个群友呢，但是有 {num} 个同名的群友哦~ 试试通过QQ号精确确认？(o゜▽゜)o☆": 1,
         f"有 {num} 个叫「{key}」的群友呢~ 试试用QQ号来精确确认？(●'◡'●)": 1,
     }
-
-def msg_quote_list_generate_failed(error: Optional[str] = None):
-    """语录列表生成失败"""
-    reason = error or "我也不知道..."
-    options = {
-        f"语录列表...没有成功制作呢... 原因：{reason}": 1,
-        f"服务器搞砸啦（＞人＜；）... 服务器说：{reason}": 1,
-        f"语录列表生成时出了点小故障...原因：{reason} (⊙_⊙)": 1
-    }
-    return options
 
 def msg_quote_search_empty():
     """语录搜索关键词为空"""
@@ -246,6 +205,6 @@ def msg_quote_setting_reload_failed(error: Optional[str] = None):
     """语录设置重载失败"""
     reason = error or "我也不知道..."
     options = {
-        f"语录设置...没有成功重载呢😭... 服务器说：{reason}": 1,
+        f"语录设置...没有成功重载呢... 服务器说：{reason}": 1,
     }
     return options
