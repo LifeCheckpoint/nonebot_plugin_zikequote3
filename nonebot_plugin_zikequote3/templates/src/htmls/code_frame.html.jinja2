@@ -1,0 +1,52 @@
+{#
+    高亮代码显示模板
+
+    inline_github_dark_min_css: 内联 GitHub Dark 主题 css
+    inline_css: 内联 css 样式
+    inline_highlight_min_js: 内联 highlight.js 脚本
+
+    title: 标题
+    subtitle: 副标题
+    language: 代码语言，例如 `language-toml`
+    code: 代码内容
+#}
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    
+    <!-- Highlight.js CSS -->
+    <style>
+        {{ inline_github_dark_min_css | safe }}
+    </style>
+    
+    <style>
+        {{ inline_css | safe }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>{{ title }}</h2>
+            <p>{{ subtitle }}</p>
+        </div>
+        
+        <div class="content">
+            <div class="code-section">
+                <pre><code class="{{ language }}">{{ code }}</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        {{ inline_highlight_min_js | safe }}
+    </script>
+    
+    <script>
+        hljs.highlightAll();
+    </script>
+</body>
+</html>

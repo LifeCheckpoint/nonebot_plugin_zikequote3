@@ -1,0 +1,62 @@
+{#
+    语录卡片模板
+
+    - inline_css: 内联CSS样式
+
+    - quote_id: 语录ID
+    - quote: 语录内容
+    - author_name: 作者姓名
+    - comments: 评论
+        - content: 评论内容
+        - author_name: 评论作者姓名
+        - comment_id: 评论ID
+    - color: 卡片颜色
+#}
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>语录卡片</title>
+    <style>
+        {{ inline_css | safe }}
+    </style>
+</head>
+<body>
+    <div class="quote-card" style="--primary-color: {{ primary_color | default('#667eea') }}; --secondary-color: {{ secondary_color | default('#764ba2') }};">
+        <div class="quote-header">
+            <div class="quote-id"># {{ quote_id }}</div>
+        </div>
+        
+        <div class="quote-main">
+            <div class="quote-icon">"</div>
+            <div class="quote-text">{{ quote }}</div>
+        </div>
+        
+        <div class="quote-author">
+            <div class="author-name">{{ author_name }}</div>
+        </div>
+
+        {% if comments and (comments | length) > 0 %}
+        <div class="comments-section">
+            {% for comment in comments %}
+            <div class="comment-item">
+                <div class="comment-text">{{ comment.content }}</div>
+                <div class="comment-footer">
+                    {% if comment.author_name %}
+                    <div class="comment-author">{{ comment.author_name }}</div>
+                    {% else %}
+                    <div></div>
+                    {% endif %}
+                    <div class="comment-id"># {{ comment.comment_id }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <div class="decorative-element"></div>
+    </div>
+</body>
+</html>

@@ -1,5 +1,8 @@
-<!-- 
+{# 
     语录列表模板
+    
+    - inline_css: 内联CSS样式
+    
     - title: 列表标题
     - description: 语录信息描述
     - addition: 附加信息
@@ -10,7 +13,7 @@
             - quote: 语录内容
             - comment: 语录首条评论
             - comment_author_name: 语录首条评论作者
--->
+#}
 
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -18,7 +21,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }}</title>
-    <link rel="stylesheet" href="list.css">
+    <style>
+        {{ inline_css | safe }}
+    </style>
 </head>
 <body>
     <div class="page-container">
@@ -30,18 +35,23 @@
 
         <main class="main-content">
             {% for section in sections %}
-            <section class="card">
-                <h2 class="card-title" style="background-color: {{ section.color }}">{{ section.title }}</h2>
-                <div class="card-content">
+            <section class="section">
+                <h2 class="section-title" style="background: {{ section.color }};">{{ section.title }}</h2>
+                <div class="quotes-grid">
                     {% for box in section.boxes %}
-                    <div class="content-box">
-                        <h3 class="box-title">{{ box.quote }}</h3>
+                    {% set random_theme = ['theme-purple', 'theme-blue', 'theme-green', 'theme-pink', 'theme-orange', 'theme-teal', 'theme-indigo'] | random %}
+                    <div class="quote-item {{ random_theme }}" style="border-left-color: var(--accent-color);">
+                        <div class="quote-text">{{ box.quote }}</div>
+                        
                         {% if box.comment %}
-                        <p class="box-description">{{ box.comment }}</p>
+                        <div class="quote-comment">
+                            {{ box.comment }}
+                        </div>
                         {% endif %}
+                        
                         {% if box.comment_author_name and box.comment %}
-                        <div class="reason-author-container">
-                            <span class="reason-author">◸{{ box.comment_author_name }}◿</span>
+                        <div class="comment-author">
+                            <span class="comment-author-tag">{{ box.comment_author_name }}</span>
                         </div>
                         {% endif %}
                     </div>
