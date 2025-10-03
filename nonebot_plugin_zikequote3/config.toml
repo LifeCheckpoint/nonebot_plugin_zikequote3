@@ -30,7 +30,7 @@ hitokoto_url = "https://v1.hitokoto.cn" # 获取名人名言 Hitokoto API
 static_root = [] # 不可变最高权限 QQ 号列表，List[int]
 
 [llm]
-# 模型配置较为复杂，其它端点调整工作需到对应文件进行修改
+# 模型配置较为复杂，其它端点调整工作需到 llm_services/client.py 进行修改
 base_url = "https://openrouter.ai/api/v1"
 api_key_path = "utils/api_key" # API Key 文件路径，相对插件根目录
 model = "deepseek/deepseek-v3.2-exp"
