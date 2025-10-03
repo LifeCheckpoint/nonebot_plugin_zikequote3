@@ -1,3 +1,7 @@
+-- 初始化数据库 Schema
+-- 该文件在每次加载数据库时都会执行一次以确保完整性
+-- 因此任何情况下都不要加入破坏性操作
+
 -- 保存基本用户信息的表
 CREATE TABLE IF NOT EXISTS users (
     qq_id TEXT PRIMARY KEY,
