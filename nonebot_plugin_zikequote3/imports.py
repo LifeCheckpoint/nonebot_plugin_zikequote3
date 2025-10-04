@@ -39,8 +39,7 @@ from .database.image_store import ImageStore
 qimg_store = ImageStore(_data_image_root)
 
 
-# 载入外部工具
-from .utils.async_tools import serial_execution, async_modify_lock
+# HTML 截图工具
 from .html_capture import html_img_render, parse_md2html
 
 

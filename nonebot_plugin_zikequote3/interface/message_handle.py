@@ -1,15 +1,7 @@
 from .. import __plugin_meta__
 from ..imports import *
 from ..imports import cfg
-from ..utils.llm_solo import llm_solo
-from ..utils.states import HistoryQuoteState
 
-def validate_msg(event: GroupME) -> bool:
-    """验证事件中的消息是否符合一般收录条件"""
-    message = event.get_plaintext().strip()
-    if not message or message == "" or len(message) > cfg.get("collecting")["msg_max_length"]:
-        return False
-    return True
 
 def get_typed_message_list(group_id: int, filter: Callable[[ChatMessageV3], bool] = lambda msg: True) -> List[ChatMessageV3]:
     """获取指定群组的消息列表"""
@@ -33,56 +25,6 @@ def get_mapping(group_id: int, message_id: int) -> Optional[int]:
     state = HistoryQuoteState(get_mapping_file(group_id))
     return state.get_mapping(message_id)
 
-async def pick_received_msg(event: GroupME, bot: Bot) -> Optional[bool]:
-    """
-    监听群组消息，处理可能的语录收集
-
-    `return`: None: 已收集但未处理，False: 处理失败，True: 处理成功
-    """    
-    if not validate_msg(event):
-        return
-
-    msg_id = event.message_id
-    group_id = event.group_id
-    group_name = event.get_session_id()
-    user_id = event.user_id
-    user_group_nickname = await get_group_member_cardname(group_id, user_id, bot)
-    user_name = event.sender.nickname or ""
-    time_stamp = event.time
-
-    msg_file_name = get_msg_file_name(group_id)
-
-    # 更新群组消息记录文件，完成后保存
-    chat = ChatHistoryManager(__plugin_meta__.name, "history", msg_file_name)
-    with chat:
-        chat.add_message(ChatMessageV3(
-            message_id=msg_id,
-            source_group_id=group_id,
-            source_group_name=group_name,
-            source_user_id=user_id,
-            source_user_name=user_name,
-            source_user_nickname=user_group_nickname,
-            time_stamp=time_stamp,
-            message=event.get_plaintext().strip()
-        ))
-
-    # 到达条数，触发更新并尝试清空
-    if len(chat.get_messages()) >= cfg.pickup_interval:
-        return await read_msg_and_pickup(group_id)
-
-async def read_msg_and_pickup(group_id: int) -> bool:
-    """读取消息并进行语录筛选提取"""
-    chat = ChatHistoryManager(__plugin_meta__.name, "history", get_msg_file_name(group_id))
-    chat.load_from_file()
-    result = await LLM_quote_pickup(group_id, chat.get_typed_messages())
-
-    if result:
-        chat.clear_messages()
-    else:
-        chat.clip_messages(cfg.pickup_interval - 1)
-    chat.save_to_file()
-    
-    return result
 
 @serial_execution
 async def LLM_quote_pickup(group_id: int, message_list: List[ChatMessageV3]) -> bool:

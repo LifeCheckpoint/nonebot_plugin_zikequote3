@@ -6,7 +6,7 @@ async def f_collecting_listener(event: GroupME, bot: Bot):
     """
     监听群组消息，处理自动语录收集
     """
-    from ...services.collecting.collecting_listener import s_queue_put, s_queue_clear
+    from ...services.collecting.collecting_queue import s_queue_put, s_queue_clear
     from ...services.collecting.llm_selection import s_llm_selection
     from ...services.status.personal_info_update import s_update_personal_info_api
     import random as ran

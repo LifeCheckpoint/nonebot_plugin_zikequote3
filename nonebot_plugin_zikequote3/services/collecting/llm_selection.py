@@ -24,6 +24,10 @@ async def s_llm_selection(group_id: str):
             group_id,
             limit=cfg[int(group_id)].collecting.pickup_interval
         )
+
+        if len(messages) == 0:
+            raise ValueError("消息队列为空，请检查配置逻辑正确性")
+
         messages_tuple = [(
             msg.msg_id,
             db.dao.get_group_nickname_dao().get_current_group_nickname(str(msg.qq_id), group_id) or str(msg.qq_id),
