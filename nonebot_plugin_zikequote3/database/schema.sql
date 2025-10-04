@@ -208,3 +208,6 @@ CREATE TABLE IF NOT EXISTS group_configs (
     toml_config TEXT NOT NULL,
     FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
 );
+
+-- 索引优化
+ANALYZE;
