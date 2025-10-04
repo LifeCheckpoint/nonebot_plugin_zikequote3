@@ -5,7 +5,7 @@ from ..services.permissions.permission import permission_check, PMS
 # region 自动收集事件
 # auto_collect_cmds
 
-matcher_listener = on_message(
+matcher_collecting_listener = on_message(
     priority=15, block=False, permission=permission_check(PMS.BE_COLLECTED)
 )
 

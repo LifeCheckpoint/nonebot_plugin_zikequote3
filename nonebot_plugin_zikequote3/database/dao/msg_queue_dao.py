@@ -219,7 +219,7 @@ class QueueGroupMessageCountDAO(BaseDAO[QueueGroupMessageCount]):
             "message_count": model.message_count
         }
     
-    def get_group_count(self, group_id: str) -> QueueGroupMessageCount:
+    def get_group_count(self, group_id: str) -> int:
         """
         获取群组消息计数（如果不存在则创建）
         
@@ -237,13 +237,13 @@ class QueueGroupMessageCountDAO(BaseDAO[QueueGroupMessageCount]):
             row = cursor.fetchone()
             
             if row:
-                return self._row_to_model(row)
+                return self._row_to_model(row).message_count
             
             # 如果不存在，创建新记录
             insert_sql = "INSERT INTO queue_group_message_counts (group_id, message_count) VALUES (?, ?)"
             cursor.execute(insert_sql, (group_id, 0))
             
-            return QueueGroupMessageCount(group_id=group_id, message_count=0)
+            return 0
     
     def increment_count(self, group_id: str) -> int:
         """
