@@ -21,6 +21,8 @@ class CollectingConfig(BaseModel):
     enable_auto_collect: bool = True
     pickup_interval: int = 80
     msg_max_length: int = 35
+    at_least_selections: int = 0
+    at_most_selections: int = 3
     enable_duplicate: bool = False
     enable_image_collection: bool = True
     img_max_sidelength: int = 3840
