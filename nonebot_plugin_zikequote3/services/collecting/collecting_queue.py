@@ -7,14 +7,13 @@ def s_queue_put(group_id: str, msg_id: str, qq_id: str, content: str) -> bool:
     Returns:
         bool: 是否达到收录阈值
     """
-    from ...database.models.msgs_queue import MsgQueueCreate
     with error_report("消息入队"):
-        db.dao.get_msg_queue_dao().create_msg(MsgQueueCreate(
+        db.dao.get_msg_queue_dao().create_msg(
             msg_id=msg_id,
             group_id=group_id,
             qq_id=qq_id,
             content=content.strip(),
-        ))
+        )
 
     with error_report("更新收录计数"):
         db.dao.get_queue_count_dao().increment_count(group_id)

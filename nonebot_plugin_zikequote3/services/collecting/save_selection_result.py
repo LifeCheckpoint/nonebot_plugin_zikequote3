@@ -16,15 +16,14 @@ def s_save_selection_result(group_id: str, response: LLMSelectionResponse):
                     continue
 
         with error_report(f"LLM 消息入库: {quote.id}", True):
-            from ...database.models.quotes import QuoteCreate
-            success = db.dao.get_quote_dao().create_quote(QuoteCreate(
+            success = db.dao.get_quote_dao().create_quote(
                 quote_id=str(random.randint(10 ** 10, 10 ** 11 - 1)),
                 author_id=message_data.qq_id,
                 group_id=group_id,
                 content=quote.quote,
                 image_content_uuid=None,
                 total_show_time=0
-            ))
+            )
 
             if not success:
                 raise ValueError(f"语录入库失败: {quote.id}，请检查 DAO 层")
