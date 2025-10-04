@@ -53,9 +53,9 @@ async def send_llm_request(group_id: int, model: Model, content: str) -> Tuple[s
     return model_response.parts[0].content, model_response.usage # type: ignore
 
 T = TypeVar('T', bound=BaseModel)
-async def send_llm_request_model(group_id: int, model: Model, content: str, response_model: Type[T]) -> Tuple[T, RequestUsage]:
+async def send_llm_request_json2model(group_id: int, model: Model, content: str, response_model: Type[T]) -> Tuple[T, RequestUsage]:
     """
-    发送单次请求到 LLM 模型并获取响应，返回 Pydantic 模型实例
+    发送单次请求到 LLM 模型并获取响应，将返回 JSON 转换为 Pydantic 模型实例
 
     Returns:
         :return: 模型响应文本, 使用量信息

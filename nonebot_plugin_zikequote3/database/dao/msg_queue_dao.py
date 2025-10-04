@@ -81,7 +81,7 @@ class MsgQueueDAO(BaseDAO[MsgQueue]):
     
     def get_msgs_by_group(self, group_id: str, limit: Optional[int] = None, offset: int = 0) -> List[MsgQueue]:
         """
-        根据群组获取消息列表
+        根据群组获取消息列表，取最后 limit 条
         
         Args:
             group_id: 群号
@@ -91,10 +91,10 @@ class MsgQueueDAO(BaseDAO[MsgQueue]):
         Returns:
             List[MsgQueue]: 消息列表
         """
-        sql = "SELECT * FROM msgs_queue WHERE group_id = ? ORDER BY time_stamp"
-        
-        if limit is not None:
-            sql += f" LIMIT {limit} OFFSET {offset}"
+        # 这里有一点要注意，我们要获取最后几条，但是获取到的顺序是结果从早到晚
+        # 因此我们需要先 LIMIT 再反转顺序
+        limitsql = "" if limit is None else f"LIMIT {limit} OFFSET {offset} "
+        sql = f"SELECT * FROM ( SELECT * FROM msgs_queue WHERE group_id = ? ORDER BY time_stamp DESC {limitsql}) AS latest_records ORDER BY time_stamp ASC"
         
         with self.connection_manager.cursor() as cursor:
             cursor.execute(sql, (group_id,))

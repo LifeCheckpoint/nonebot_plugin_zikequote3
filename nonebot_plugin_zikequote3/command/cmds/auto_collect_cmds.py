@@ -6,7 +6,8 @@ async def f_collecting_listener(event: GroupME, bot: Bot):
     """
     监听群组消息，处理自动语录收集
     """
-    from ...services.collecting.collecting_listener import s_queue_put
+    from ...services.collecting.collecting_listener import s_queue_put, s_queue_clear
+    from ...services.collecting.llm_selection import s_llm_selection
     from ...services.status.personal_info_update import s_update_personal_info_api
     import random as ran
 
@@ -24,14 +25,30 @@ async def f_collecting_listener(event: GroupME, bot: Bot):
             content=msg,
         )
     except Exception as e:
-        pass
+        return # TODO
 
     # 以一定概率更新个人信息
     if ran.random() < 0.1:
         try:
             await s_update_personal_info_api(str(event.group_id), str(event.user_id), bot)
         except Exception as e:
-            pass
+            return
 
-    # 达到阈值，尝试触发收录
-    # TODO
+    # 未达到阈值，结束流程，否则尝试触发收录
+    if not is_thresold:
+        return
+    
+    # LLM 筛选
+    try:
+        response, usage = await s_llm_selection(str(event.group_id))
+        logger.info(f"筛选到 {response.num_quotes} 条语录，输入 {usage.input_tokens} tokens，输出 {usage.output_tokens} tokens，总计 {usage.total_tokens} tokens")
+    except Exception as e:
+        return
+    
+    # 最终语录入库，清空队列
+    try:
+        pass
+        s_queue_clear(str(event.group_id))
+    except Exception as e:
+        return
+    

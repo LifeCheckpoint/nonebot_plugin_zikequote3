@@ -199,7 +199,7 @@ class GroupNicknameDAO(BaseDAO[GroupNickname]):
             ))
             return cursor.rowcount > 0
     
-    def get_current_group_nickname(self, qq_id: str, group_id: str) -> Optional[GroupNickname]:
+    def get_current_group_nickname(self, qq_id: str, group_id: str) -> Optional[str]:
         """
         获取用户在群组中当前使用的名片
         
@@ -214,7 +214,7 @@ class GroupNicknameDAO(BaseDAO[GroupNickname]):
         with self.connection_manager.cursor() as cursor:
             cursor.execute(sql, (qq_id, group_id))
             row = cursor.fetchone()
-            return self._row_to_model(row) if row else None
+            return self._row_to_model(row).name if row else None
     
     def get_all_group_nicknames(self, qq_id: str, group_id: str) -> List[GroupNickname]:
         """

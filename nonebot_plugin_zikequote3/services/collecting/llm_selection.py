@@ -1,0 +1,66 @@
+from ...imports import *
+from pydantic import BaseModel, Field
+
+class QuotePickupItem(BaseModel):
+    id: str = Field(..., description="消息 ID")
+    quote: str = Field(..., description="语录内容")
+    comment: str = Field(..., description="简要评述")
+
+class LLMSelectionResponse(BaseModel):
+    num_quotes: int = Field(..., description="筛选出的语录数量")
+    quotes: List[QuotePickupItem] = Field(..., description="筛选出的语录列表")
+
+
+async def s_llm_selection(group_id: str):
+    """
+    使用 LLM 对收集队列中的消息进行筛选
+    """
+    from ...llm_services.client import create_model, send_llm_request_json2model
+    from ...llm_services.prompts import quote_pickup
+
+    # 获取消息，并转换为元组列表
+    try:
+        messages = db.dao.get_msg_queue_dao().get_msgs_by_group(
+            group_id,
+            limit=cfg[int(group_id)].collecting.pickup_interval
+        )
+        messages_tuple = [(
+            msg.msg_id,
+            db.dao.get_group_nickname_dao().get_current_group_nickname(str(msg.qq_id), group_id) or str(msg.qq_id),
+            msg.content
+        ) for msg in messages]
+    except Exception as e:
+        logger.error(f"获取缓存队列消息失败: {e}")
+        sentry_sdk.capture_exception(e)
+        raise e
+    
+    # 创建模型
+    try:
+        model = create_model(int(group_id))
+    except Exception as e:
+        logger.error(f"创建 LLM 模型失败: {e}")
+        sentry_sdk.capture_exception(e)
+        raise e
+    
+    # 构建 prompt
+    try:
+        prompt = quote_pickup.quote_pickup(int(group_id), messages_tuple)
+    except Exception as e:
+        logger.error(f"构建 LLM prompt 失败: {e}")
+        sentry_sdk.capture_exception(e)
+        raise e
+    
+    # 请求并转换为 model schema
+    try:
+        response, usage = await send_llm_request_json2model(
+            int(group_id),
+            model,
+            prompt,
+            LLMSelectionResponse
+        )
+        return response, usage
+    except Exception as e:
+        logger.error(f"LLM 语录筛选请求失败: {e}")
+        sentry_sdk.capture_exception(e)
+        raise e
+    
