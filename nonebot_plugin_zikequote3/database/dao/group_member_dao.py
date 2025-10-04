@@ -51,6 +51,23 @@ class GroupMemberDAO(BaseDAO[GroupMember]):
                 group_member_create.permission_group
             ))
             return cursor.rowcount > 0
+        
+    def is_group_member_exists(self, group_id: str, qq_id: str) -> bool:
+        """
+        检查群成员关系是否存在
+        
+        Args:
+            group_id: 群号
+            qq_id: QQ号
+            
+        Returns:
+            bool: 群成员关系是否存在
+        """
+        sql = f"SELECT 1 FROM {self.table_name} WHERE group_id = ? AND qq_id = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (group_id, qq_id))
+            return cursor.rowcount > 0
     
     def get_group_member(self, group_id: str, qq_id: str) -> Optional[GroupMember]:
         """
