@@ -27,7 +27,6 @@ def permission_check(operator_type: str) -> QuotePermissionChecker:
     return QuotePermissionChecker(operator_type)
 
 
-
 class QuotePermissionChecker(NBPermission):
     operator_type: str
 
@@ -37,6 +36,14 @@ class QuotePermissionChecker(NBPermission):
     async def __call__(self, event: GroupME) -> bool:
         group_id = str(event.group_id)
         qq_id = str(event.user_id)
+
+        # 检查插件是否启用
+        if not default_cfg.general.enable_zikequote3:
+            return False
+        
+        # 检查群组是否在插件启用范围内
+        if event.group_id not in default_cfg.general.enable_groups or str(event.group_id) not in default_cfg.general.enable_groups:
+            return False
 
         # 检查该用户是否在群组关系中，若无则创建
         try:
