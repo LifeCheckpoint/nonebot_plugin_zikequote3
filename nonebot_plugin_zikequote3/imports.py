@@ -20,8 +20,10 @@ import tomlkit
 # 插件根目录
 _plugin_root = Path(__file__).parent
 _module_database_root = _plugin_root / "database"
-_module_html_templates_root = _plugin_root / "templates"
-_module_render_cache_root = _module_html_templates_root / "temp_output"
+_module_html_capture_root = _plugin_root / "html_capture"
+_module_render_html_root = _plugin_root / "templates" / "output" / "rendered_html"
+_module_render_image_root = _plugin_root / "templates" / "output" / "rendered_image"
+_module_templates_root = _plugin_root / "templates"
 
 
 # 载入全局数据库对象
