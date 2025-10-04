@@ -27,9 +27,9 @@ class PermissionGroupDAO(BaseDAO[PermissionGroup]):
             "group_name": model.group_name
         }
     
-    def create_permission_group(self, permission_create: PermissionGroupCreate) -> bool:
+    def _create_permission_group(self, permission_create: PermissionGroupCreate) -> bool:
         """
-        创建新权限组
+        创建新权限组（内部方法）
         
         Args:
             permission_create: 权限组创建模型
@@ -67,6 +67,62 @@ class PermissionGroupDAO(BaseDAO[PermissionGroup]):
         with self.connection_manager.cursor() as cursor:
             cursor.execute(sql, values)
             return cursor.rowcount > 0
+
+    def create_permission_group(self, group_name: str, be_collected: bool, get_quote: bool,
+                               add_quote: bool, search_quote: bool, review_quote: bool,
+                               update_quote_self: bool, update_quote_group: bool,
+                               delete_review_self: bool, delete_review_group: bool,
+                               delete_quote_self: bool, delete_quote_group: bool,
+                               modify_settings: bool, common_operations: bool,
+                               ban_others: bool, op_others: bool, banop_others: bool,
+                               others: bool) -> bool:
+        """
+        创建新权限组
+        
+        Args:
+            group_name: 权限组名称
+            be_collected: 是否可被收集
+            get_quote: 是否可获取语录
+            add_quote: 是否可添加语录
+            search_quote: 是否可搜索语录
+            review_quote: 是否可审核语录
+            update_quote_self: 是否可更新自己的语录
+            update_quote_group: 是否可更新群组语录
+            delete_review_self: 是否可删除自己的审核
+            delete_review_group: 是否可删除群组审核
+            delete_quote_self: 是否可删除自己的语录
+            delete_quote_group: 是否可删除群组语录
+            modify_settings: 是否可修改设置
+            common_operations: 是否可进行常用操作
+            ban_others: 是否可封禁他人
+            op_others: 是否可操作他人
+            banop_others: 是否可封禁操作他人
+            others: 其他权限
+            
+        Returns:
+            bool: 创建是否成功
+        """
+        permission_create = PermissionGroupCreate(
+            group_name=group_name,
+            be_collected=be_collected,
+            get_quote=get_quote,
+            add_quote=add_quote,
+            search_quote=search_quote,
+            review_quote=review_quote,
+            update_quote_self=update_quote_self,
+            update_quote_group=update_quote_group,
+            delete_review_self=delete_review_self,
+            delete_review_group=delete_review_group,
+            delete_quote_self=delete_quote_self,
+            delete_quote_group=delete_quote_group,
+            modify_settings=modify_settings,
+            common_operations=common_operations,
+            ban_others=ban_others,
+            op_others=op_others,
+            banop_others=banop_others,
+            others=others
+        )
+        return self._create_permission_group(permission_create)
     
     def get_permission_group(self, group_name: str) -> Optional[Dict[str, Any]]:
         """

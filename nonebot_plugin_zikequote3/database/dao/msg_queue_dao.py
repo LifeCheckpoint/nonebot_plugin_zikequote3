@@ -38,9 +38,9 @@ class MsgQueueDAO(BaseDAO[MsgQueue]):
             "content": model.content
         }
     
-    def create_msg(self, msg_create: MsgQueueCreate) -> bool:
+    def _create_msg(self, msg_create: MsgQueueCreate) -> bool:
         """
-        创建新的队列消息
+        创建新的队列消息（内部方法）
         
         Args:
             msg_create: 消息创建模型
@@ -60,6 +60,27 @@ class MsgQueueDAO(BaseDAO[MsgQueue]):
                 msg_create.content
             ))
             return cursor.rowcount > 0
+
+    def create_msg(self, msg_id: str, group_id: str, qq_id: str, content: str) -> bool:
+        """
+        创建新的队列消息
+        
+        Args:
+            msg_id: 消息ID
+            group_id: 群号
+            qq_id: QQ号
+            content: 消息内容
+            
+        Returns:
+            bool: 创建是否成功
+        """
+        msg_create = MsgQueueCreate(
+            msg_id=msg_id,
+            group_id=group_id,
+            qq_id=qq_id,
+            content=content
+        )
+        return self._create_msg(msg_create)
     
     def get_msg_by_id(self, msg_id: str) -> Optional[MsgQueue]:
         """

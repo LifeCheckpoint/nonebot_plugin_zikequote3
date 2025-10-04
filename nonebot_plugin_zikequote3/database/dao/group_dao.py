@@ -37,9 +37,9 @@ class GroupDAO(BaseDAO[Group]):
             "name": model.name
         }
     
-    def create_group(self, group_create: GroupCreate) -> bool:
+    def _create_group(self, group_create: GroupCreate) -> bool:
         """
-        创建新群组
+        创建新群组（内部方法）
         
         Args:
             group_create: 群组创建模型
@@ -51,6 +51,20 @@ class GroupDAO(BaseDAO[Group]):
         with self.connection_manager.cursor() as cursor:
             cursor.execute(sql, (group_create.group_id, group_create.name))
             return cursor.rowcount > 0
+
+    def create_group(self, group_id: str, name: str) -> bool:
+        """
+        创建新群组
+        
+        Args:
+            group_id: 群号
+            name: 群名称
+            
+        Returns:
+            bool: 创建是否成功
+        """
+        group_create = GroupCreate(group_id=group_id, name=name)
+        return self._create_group(group_create)
     
     def get_group_by_id(self, group_id: str) -> Optional[Group]:
         """
@@ -68,9 +82,9 @@ class GroupDAO(BaseDAO[Group]):
             row = cursor.fetchone()
             return self._row_to_model(row) if row else None
     
-    def update_group(self, group_id: str, group_update: GroupUpdate) -> bool:
+    def _update_group(self, group_id: str, group_update: GroupUpdate) -> bool:
         """
-        更新群组信息
+        更新群组信息（内部方法）
         
         Args:
             group_id: 群号
@@ -86,6 +100,20 @@ class GroupDAO(BaseDAO[Group]):
         with self.connection_manager.cursor() as cursor:
             cursor.execute(sql, (group_update.name, group_id))
             return cursor.rowcount > 0
+
+    def update_group(self, group_id: str, name: str) -> bool:
+        """
+        更新群组信息
+        
+        Args:
+            group_id: 群号
+            name: 群名称
+            
+        Returns:
+            bool: 更新是否成功
+        """
+        group_update = GroupUpdate(name=name)
+        return self._update_group(group_id, group_update)
     
     def delete_group(self, group_id: str) -> bool:
         """
@@ -197,9 +225,9 @@ class GroupDAO(BaseDAO[Group]):
             result = cursor.fetchone()
             return result[0] if result else 0
     
-    def batch_create_groups(self, groups: List[GroupCreate]) -> bool:
+    def _batch_create_groups(self, groups: List[GroupCreate]) -> bool:
         """
-        批量创建群组
+        批量创建群组（内部方法）
         
         Args:
             groups: 群组创建模型列表
@@ -216,6 +244,23 @@ class GroupDAO(BaseDAO[Group]):
         with self.connection_manager.cursor() as cursor:
             cursor.executemany(sql, values_list)
             return cursor.rowcount == len(groups)
+
+    def batch_create_groups(self, groups: List[Dict[str, str]]) -> bool:
+        """
+        批量创建群组
+        
+        Args:
+            groups: 群组列表，每个群组包含 group_id 和 name
+            
+        Returns:
+            bool: 批量创建是否成功
+        """
+        if not groups:
+            return True
+        
+        group_creates = [GroupCreate(group_id=group["group_id"], name=group["name"])
+                        for group in groups]
+        return self._batch_create_groups(group_creates)
     
     def get_groups_with_name_containing(self, keyword: str) -> List[Group]:
         """
@@ -242,7 +287,6 @@ class GroupDAO(BaseDAO[Group]):
             bool: 操作是否成功
         """
         if self.group_exists(group_id):
-            return self.update_group(group_id, GroupUpdate(name=name))
+            return self.update_group(group_id, name)
         else:
-            group_create = GroupCreate(group_id=group_id, name=name)
-            return self.create_group(group_create)
+            return self.create_group(group_id, name)

@@ -33,9 +33,9 @@ class GroupMemberDAO(BaseDAO[GroupMember]):
             "permission_group": model.permission_group
         }
     
-    def create_group_member(self, group_member_create: GroupMemberCreate) -> bool:
+    def _create_group_member(self, group_member_create: GroupMemberCreate) -> bool:
         """
-        创建新群成员关系
+        创建新群成员关系（内部方法）
         
         Args:
             group_member_create: 群成员创建模型
@@ -51,6 +51,25 @@ class GroupMemberDAO(BaseDAO[GroupMember]):
                 group_member_create.permission_group
             ))
             return cursor.rowcount > 0
+
+    def create_group_member(self, group_id: str, qq_id: str, permission_group: str) -> bool:
+        """
+        创建新群成员关系
+        
+        Args:
+            group_id: 群号
+            qq_id: QQ号
+            permission_group: 权限组
+            
+        Returns:
+            bool: 创建是否成功
+        """
+        group_member_create = GroupMemberCreate(
+            group_id=group_id,
+            qq_id=qq_id,
+            permission_group=permission_group
+        )
+        return self._create_group_member(group_member_create)
         
     def is_group_member_exists(self, group_id: str, qq_id: str) -> bool:
         """

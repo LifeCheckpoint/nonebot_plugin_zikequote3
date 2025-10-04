@@ -37,9 +37,9 @@ class ReviewDAO(BaseDAO[Review]):
             "content": model.content
         }
     
-    def create_review(self, review_create: ReviewCreate) -> bool:
+    def _create_review(self, review_create: ReviewCreate) -> bool:
         """
-        创建新评论
+        创建新评论（内部方法）
         
         Args:
             review_create: 评论创建模型
@@ -57,6 +57,27 @@ class ReviewDAO(BaseDAO[Review]):
                 review_create.content
             ))
             return cursor.rowcount > 0
+
+    def create_review(self, review_id: str, author_id: str, quote_id: str, content: str) -> bool:
+        """
+        创建新评论
+        
+        Args:
+            review_id: 评论ID
+            author_id: 作者QQ号
+            quote_id: 语录ID
+            content: 评论内容
+            
+        Returns:
+            bool: 创建是否成功
+        """
+        review_create = ReviewCreate(
+            review_id=review_id,
+            author_id=author_id,
+            quote_id=quote_id,
+            content=content
+        )
+        return self._create_review(review_create)
     
     def get_review_by_id(self, review_id: str) -> Optional[Review]:
         """
@@ -74,9 +95,9 @@ class ReviewDAO(BaseDAO[Review]):
             row = cursor.fetchone()
             return self._row_to_model(row) if row else None
     
-    def update_review(self, review_id: str, review_update: ReviewUpdate) -> bool:
+    def _update_review(self, review_id: str, review_update: ReviewUpdate) -> bool:
         """
-        更新评论内容
+        更新评论内容（内部方法）
         
         Args:
             review_id: 评论ID
@@ -92,6 +113,20 @@ class ReviewDAO(BaseDAO[Review]):
         with self.connection_manager.cursor() as cursor:
             cursor.execute(sql, (review_update.content, review_id))
             return cursor.rowcount > 0
+
+    def update_review(self, review_id: str, content: str) -> bool:
+        """
+        更新评论内容
+        
+        Args:
+            review_id: 评论ID
+            content: 评论内容
+            
+        Returns:
+            bool: 更新是否成功
+        """
+        review_update = ReviewUpdate(content=content)
+        return self._update_review(review_id, review_update)
     
     def delete_review(self, review_id: str) -> bool:
         """
@@ -343,9 +378,9 @@ class ReviewDAO(BaseDAO[Review]):
             cursor.execute(sql, (author_id,))
             return True  # 即使没有删除任何行也返回True
     
-    def batch_create_reviews(self, reviews: List[ReviewCreate]) -> bool:
+    def _batch_create_reviews(self, reviews: List[ReviewCreate]) -> bool:
         """
-        批量创建评论
+        批量创建评论（内部方法）
         
         Args:
             reviews: 评论创建模型列表
@@ -366,6 +401,30 @@ class ReviewDAO(BaseDAO[Review]):
         with self.connection_manager.cursor() as cursor:
             cursor.executemany(sql, values_list)
             return cursor.rowcount == len(reviews)
+
+    def batch_create_reviews(self, reviews: List[Dict[str, str]]) -> bool:
+        """
+        批量创建评论
+        
+        Args:
+            reviews: 评论列表，每个评论包含 review_id, author_id, quote_id, content
+            
+        Returns:
+            bool: 批量创建是否成功
+        """
+        if not reviews:
+            return True
+        
+        review_creates = []
+        for review in reviews:
+            review_creates.append(ReviewCreate(
+                review_id=review["review_id"],
+                author_id=review["author_id"],
+                quote_id=review["quote_id"],
+                content=review["content"]
+            ))
+        
+        return self._batch_create_reviews(review_creates)
     
     def get_review_statistics(self) -> Dict[str, Any]:
         """

@@ -40,9 +40,9 @@ class QuoteDAO(BaseDAO[Quote]):
             "total_show_time": model.total_show_time
         }
     
-    def create_quote(self, quote_create: QuoteCreate) -> bool:
+    def _create_quote(self, quote_create: QuoteCreate) -> bool:
         """
-        创建新语录
+        创建新语录（内部方法）
         
         Args:
             quote_create: 语录创建模型
@@ -67,6 +67,32 @@ class QuoteDAO(BaseDAO[Quote]):
         with self.connection_manager.cursor() as cursor:
             cursor.execute(sql, values)
             return cursor.rowcount > 0
+
+    def create_quote(self, quote_id: str, author_id: str, group_id: str, content: str,
+                    image_content_uuid: Optional[str] = None, total_show_time: int = 0) -> bool:
+        """
+        创建新语录
+        
+        Args:
+            quote_id: 语录ID
+            author_id: 作者QQ号
+            group_id: 群号
+            content: 语录内容
+            image_content_uuid: 图片内容UUID（可选）
+            total_show_time: 总展示次数（默认0）
+            
+        Returns:
+            bool: 创建是否成功
+        """
+        quote_create = QuoteCreate(
+            quote_id=quote_id,
+            author_id=author_id,
+            group_id=group_id,
+            content=content,
+            image_content_uuid=image_content_uuid,
+            total_show_time=total_show_time
+        )
+        return self._create_quote(quote_create)
     
     def get_quote_by_id(self, quote_id: str) -> Optional[Quote]:
         """
@@ -86,9 +112,9 @@ class QuoteDAO(BaseDAO[Quote]):
             
             return self._row_to_model(row) if row else None
     
-    def update_quote(self, quote_id: str, quote_update: QuoteUpdate) -> bool:
+    def _update_quote(self, quote_id: str, quote_update: QuoteUpdate) -> bool:
         """
-        更新语录信息
+        更新语录信息（内部方法）
         
         Args:
             quote_id: 语录ID
@@ -119,6 +145,27 @@ class QuoteDAO(BaseDAO[Quote]):
         with self.connection_manager.cursor() as cursor:
             cursor.execute(sql, params)
             return cursor.rowcount > 0
+
+    def update_quote(self, quote_id: str, content: Optional[str] = None,
+                    image_content_uuid: Optional[str] = None, total_show_time: Optional[int] = None) -> bool:
+        """
+        更新语录信息
+        
+        Args:
+            quote_id: 语录ID
+            content: 语录内容（可选）
+            image_content_uuid: 图片内容UUID（可选）
+            total_show_time: 总展示次数（可选）
+            
+        Returns:
+            bool: 更新是否成功
+        """
+        quote_update = QuoteUpdate(
+            content=content,
+            image_content_uuid=image_content_uuid,
+            total_show_time=total_show_time
+        )
+        return self._update_quote(quote_id, quote_update)
     
     def delete_quote(self, quote_id: str) -> bool:
         """

@@ -37,9 +37,9 @@ class UserDAO(BaseDAO[User]):
             "avatar": model.avatar
         }
     
-    def create_user(self, user_create: UserCreate) -> bool:
+    def _create_user(self, user_create: UserCreate) -> bool:
         """
-        创建新用户
+        创建新用户（内部方法）
         
         Args:
             user_create: 用户创建模型
@@ -51,6 +51,20 @@ class UserDAO(BaseDAO[User]):
         with self.connection_manager.cursor() as cursor:
             cursor.execute(sql, (user_create.qq_id, user_create.avatar))
             return cursor.rowcount > 0
+
+    def create_user(self, qq_id: str, avatar: Optional[bytes] = None) -> bool:
+        """
+        创建新用户
+        
+        Args:
+            qq_id: QQ号
+            avatar: 头像数据（可选）
+            
+        Returns:
+            bool: 创建是否成功
+        """
+        user_create = UserCreate(qq_id=qq_id, avatar=avatar)
+        return self._create_user(user_create)
     
     def get_user_by_qq_id(self, qq_id: str) -> Optional[User]:
         """
@@ -68,9 +82,9 @@ class UserDAO(BaseDAO[User]):
             row = cursor.fetchone()
             return self._row_to_model(row) if row else None
     
-    def update_user(self, qq_id: str, user_update: UserUpdate) -> bool:
+    def _update_user(self, qq_id: str, user_update: UserUpdate) -> bool:
         """
-        更新用户信息
+        更新用户信息（内部方法）
         
         Args:
             qq_id: QQ号
@@ -86,6 +100,20 @@ class UserDAO(BaseDAO[User]):
         with self.connection_manager.cursor() as cursor:
             cursor.execute(sql, (user_update.avatar, qq_id))
             return cursor.rowcount > 0
+
+    def update_user(self, qq_id: str, avatar: Optional[bytes] = None) -> bool:
+        """
+        更新用户信息
+        
+        Args:
+            qq_id: QQ号
+            avatar: 头像数据（可选）
+            
+        Returns:
+            bool: 更新是否成功
+        """
+        user_update = UserUpdate(avatar=avatar)
+        return self._update_user(qq_id, user_update)
     
     def delete_user(self, qq_id: str) -> bool:
         """
@@ -165,9 +193,9 @@ class UserDAO(BaseDAO[User]):
             result = cursor.fetchone()
             return result[0] if result else 0
     
-    def batch_create_users(self, users: List[UserCreate]) -> bool:
+    def _batch_create_users(self, users: List[UserCreate]) -> bool:
         """
-        批量创建用户
+        批量创建用户（内部方法）
         
         Args:
             users: 用户创建模型列表
@@ -184,6 +212,28 @@ class UserDAO(BaseDAO[User]):
         with self.connection_manager.cursor() as cursor:
             cursor.executemany(sql, values_list)
             return cursor.rowcount == len(users)
+
+    def batch_create_users(self, users: List[Dict[str, Any]]) -> bool:
+        """
+        批量创建用户
+        
+        Args:
+            users: 用户列表，每个用户包含 qq_id 和 avatar（可选）
+            
+        Returns:
+            bool: 批量创建是否成功
+        """
+        if not users:
+            return True
+        
+        user_creates = []
+        for user in users:
+            user_creates.append(UserCreate(
+                qq_id=user["qq_id"],
+                avatar=user.get("avatar")
+            ))
+        
+        return self._batch_create_users(user_creates)
     
     def get_users_without_avatar(self) -> List[User]:
         """

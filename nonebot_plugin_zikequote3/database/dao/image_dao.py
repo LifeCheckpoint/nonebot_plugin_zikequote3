@@ -46,9 +46,9 @@ class ImageDAO(BaseDAO[Image]):
             "checksum_sha256": model.checksum_sha256
         }
     
-    def create_image(self, image_create: ImageCreate) -> bool:
+    def _create_image(self, image_create: ImageCreate) -> bool:
         """
-        创建新图片
+        创建新图片（内部方法）
         
         Args:
             image_create: 图片创建模型
@@ -72,6 +72,29 @@ class ImageDAO(BaseDAO[Image]):
         with self.connection_manager.cursor() as cursor:
             cursor.execute(sql, values)
             return cursor.rowcount > 0
+
+    def create_image(self, uuid: str, original_filename: str, stored_filename: str, file_path: str, checksum_sha256: str) -> bool:
+        """
+        创建新图片
+        
+        Args:
+            uuid: 图片UUID
+            original_filename: 原始文件名
+            stored_filename: 存储文件名
+            file_path: 文件路径
+            checksum_sha256: SHA256校验和
+            
+        Returns:
+            bool: 创建是否成功
+        """
+        image_create = ImageCreate(
+            uuid=uuid,
+            original_filename=original_filename,
+            stored_filename=stored_filename,
+            file_path=file_path,
+            checksum_sha256=checksum_sha256
+        )
+        return self._create_image(image_create)
     
     def get_image_by_uuid(self, uuid: str) -> Optional[Image]:
         """
@@ -91,9 +114,9 @@ class ImageDAO(BaseDAO[Image]):
             
             return self._row_to_model(row) if row else None
     
-    def update_image(self, uuid: str, image_update: ImageUpdate) -> bool:
+    def _update_image(self, uuid: str, image_update: ImageUpdate) -> bool:
         """
-        更新图片信息
+        更新图片信息（内部方法）
         
         Args:
             uuid: 图片UUID
@@ -127,6 +150,29 @@ class ImageDAO(BaseDAO[Image]):
         with self.connection_manager.cursor() as cursor:
             cursor.execute(sql, params)
             return cursor.rowcount > 0
+
+    def update_image(self, uuid: str, original_filename: Optional[str] = None, stored_filename: Optional[str] = None,
+                    file_path: Optional[str] = None, checksum_sha256: Optional[str] = None) -> bool:
+        """
+        更新图片信息
+        
+        Args:
+            uuid: 图片UUID
+            original_filename: 原始文件名（可选）
+            stored_filename: 存储文件名（可选）
+            file_path: 文件路径（可选）
+            checksum_sha256: SHA256校验和（可选）
+            
+        Returns:
+            bool: 更新是否成功
+        """
+        image_update = ImageUpdate(
+            original_filename=original_filename,
+            stored_filename=stored_filename,
+            file_path=file_path,
+            checksum_sha256=checksum_sha256
+        )
+        return self._update_image(uuid, image_update)
     
     def delete_image(self, uuid: str) -> bool:
         """

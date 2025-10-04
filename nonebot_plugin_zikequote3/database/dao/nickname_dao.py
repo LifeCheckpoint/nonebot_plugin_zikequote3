@@ -33,9 +33,9 @@ class UserNicknameDAO(BaseDAO[UserNickname]):
             "name": model.name
         }
     
-    def add_nickname(self, nickname_create: UserNicknameCreate) -> bool:
+    def _add_nickname(self, nickname_create: UserNicknameCreate) -> bool:
         """
-        添加用户昵称
+        添加用户昵称（内部方法）
         
         Args:
             nickname_create: 昵称创建模型
@@ -51,6 +51,25 @@ class UserNicknameDAO(BaseDAO[UserNickname]):
                 nickname_create.name
             ))
             return cursor.rowcount > 0
+
+    def add_nickname(self, qq_id: str, current_using: bool, name: str) -> bool:
+        """
+        添加用户昵称
+        
+        Args:
+            qq_id: QQ号
+            current_using: 是否当前使用
+            name: 昵称
+            
+        Returns:
+            bool: 添加是否成功
+        """
+        nickname_create = UserNicknameCreate(
+            qq_id=qq_id,
+            current_using=current_using,
+            name=name
+        )
+        return self._add_nickname(nickname_create)
     
     def get_current_nickname(self, qq_id: str) -> Optional[UserNickname]:
         """
@@ -179,9 +198,9 @@ class GroupNicknameDAO(BaseDAO[GroupNickname]):
             "name": model.name
         }
     
-    def add_group_nickname(self, nickname_create: GroupNicknameCreate) -> bool:
+    def _add_group_nickname(self, nickname_create: GroupNicknameCreate) -> bool:
         """
-        添加群名片
+        添加群名片（内部方法）
         
         Args:
             nickname_create: 群名片创建模型
@@ -198,6 +217,27 @@ class GroupNicknameDAO(BaseDAO[GroupNickname]):
                 nickname_create.name
             ))
             return cursor.rowcount > 0
+
+    def add_group_nickname(self, qq_id: str, group_id: str, current_using: bool, name: str) -> bool:
+        """
+        添加群名片
+        
+        Args:
+            qq_id: QQ号
+            group_id: 群号
+            current_using: 是否当前使用
+            name: 群名片
+            
+        Returns:
+            bool: 添加是否成功
+        """
+        nickname_create = GroupNicknameCreate(
+            qq_id=qq_id,
+            group_id=group_id,
+            current_using=current_using,
+            name=name
+        )
+        return self._add_group_nickname(nickname_create)
     
     def get_current_group_nickname(self, qq_id: str, group_id: str) -> Optional[str]:
         """

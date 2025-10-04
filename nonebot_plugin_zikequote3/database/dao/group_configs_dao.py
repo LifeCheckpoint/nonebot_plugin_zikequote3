@@ -37,9 +37,9 @@ class GroupConfigsDAO(BaseDAO[GroupConfigs]):
             "toml_config": model.toml_config
         }
     
-    def create_group_config(self, config_create: GroupConfigsCreate) -> bool:
+    def _create_group_config(self, config_create: GroupConfigsCreate) -> bool:
         """
-        创建群自定义配置
+        创建群自定义配置（内部方法）
         
         Args:
             config_create: 群配置创建模型
@@ -51,6 +51,20 @@ class GroupConfigsDAO(BaseDAO[GroupConfigs]):
         with self.connection_manager.cursor() as cursor:
             cursor.execute(sql, (config_create.group_id, config_create.toml_config))
             return cursor.rowcount > 0
+
+    def create_group_config(self, group_id: str, toml_config: str) -> bool:
+        """
+        创建群自定义配置
+        
+        Args:
+            group_id: 群号
+            toml_config: TOML配置内容
+            
+        Returns:
+            bool: 创建是否成功
+        """
+        config_create = GroupConfigsCreate(group_id=group_id, toml_config=toml_config)
+        return self._create_group_config(config_create)
     
     def get_group_config_by_id(self, group_id: str) -> Optional[GroupConfigs]:
         """
@@ -68,9 +82,9 @@ class GroupConfigsDAO(BaseDAO[GroupConfigs]):
             row = cursor.fetchone()
             return self._row_to_model(row) if row else None
     
-    def update_group_config(self, group_id: str, config_update: GroupConfigsUpdate) -> bool:
+    def _update_group_config(self, group_id: str, config_update: GroupConfigsUpdate) -> bool:
         """
-        更新群自定义配置
+        更新群自定义配置（内部方法）
         
         Args:
             group_id: 群号
@@ -86,6 +100,20 @@ class GroupConfigsDAO(BaseDAO[GroupConfigs]):
         with self.connection_manager.cursor() as cursor:
             cursor.execute(sql, (config_update.toml_config, group_id))
             return cursor.rowcount > 0
+
+    def update_group_config(self, group_id: str, toml_config: str) -> bool:
+        """
+        更新群自定义配置
+        
+        Args:
+            group_id: 群号
+            toml_config: TOML配置内容
+            
+        Returns:
+            bool: 更新是否成功
+        """
+        config_update = GroupConfigsUpdate(toml_config=toml_config)
+        return self._update_group_config(group_id, config_update)
     
     def delete_group_config(self, group_id: str) -> bool:
         """
@@ -165,9 +193,9 @@ class GroupConfigsDAO(BaseDAO[GroupConfigs]):
             result = cursor.fetchone()
             return result[0] if result else 0
     
-    def batch_create_group_configs(self, configs: List[GroupConfigsCreate]) -> bool:
+    def _batch_create_group_configs(self, configs: List[GroupConfigsCreate]) -> bool:
         """
-        批量创建群自定义配置
+        批量创建群自定义配置（内部方法）
         
         Args:
             configs: 群配置创建模型列表
@@ -184,6 +212,23 @@ class GroupConfigsDAO(BaseDAO[GroupConfigs]):
         with self.connection_manager.cursor() as cursor:
             cursor.executemany(sql, values_list)
             return cursor.rowcount == len(configs)
+
+    def batch_create_group_configs(self, configs: List[Dict[str, str]]) -> bool:
+        """
+        批量创建群自定义配置
+        
+        Args:
+            configs: 群配置列表，每个配置包含 group_id 和 toml_config
+            
+        Returns:
+            bool: 批量创建是否成功
+        """
+        if not configs:
+            return True
+        
+        config_creates = [GroupConfigsCreate(group_id=config["group_id"], toml_config=config["toml_config"])
+                         for config in configs]
+        return self._batch_create_group_configs(config_creates)
     
     def update_or_create_group_config(self, group_id: str, toml_config: str) -> bool:
         """
@@ -197,10 +242,9 @@ class GroupConfigsDAO(BaseDAO[GroupConfigs]):
             bool: 操作是否成功
         """
         if self.group_config_exists(group_id):
-            return self.update_group_config(group_id, GroupConfigsUpdate(toml_config=toml_config))
+            return self.update_group_config(group_id, toml_config)
         else:
-            config_create = GroupConfigsCreate(group_id=group_id, toml_config=toml_config)
-            return self.create_group_config(config_create)
+            return self.create_group_config(group_id, toml_config)
     
     def get_toml_config_by_group_id(self, group_id: str) -> Optional[str]:
         """

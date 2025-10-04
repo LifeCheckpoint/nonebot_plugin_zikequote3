@@ -37,9 +37,9 @@ class MsgQuoteIDDAO(BaseDAO[MsgQuoteID]):
             "quote_id": model.quote_id
         }
     
-    def create_mapping(self, mapping_create: MsgQuoteIDCreate) -> bool:
+    def _create_mapping(self, mapping_create: MsgQuoteIDCreate) -> bool:
         """
-        创建新的消息ID与语录ID映射关系
+        创建新的消息ID与语录ID映射关系（内部方法）
         
         Args:
             mapping_create: 映射关系创建模型
@@ -51,6 +51,20 @@ class MsgQuoteIDDAO(BaseDAO[MsgQuoteID]):
         with self.connection_manager.cursor() as cursor:
             cursor.execute(sql, (mapping_create.msg_id, mapping_create.quote_id))
             return cursor.rowcount > 0
+
+    def create_mapping(self, msg_id: str, quote_id: str) -> bool:
+        """
+        创建新的消息ID与语录ID映射关系
+        
+        Args:
+            msg_id: 消息ID
+            quote_id: 语录ID
+            
+        Returns:
+            bool: 创建是否成功
+        """
+        mapping_create = MsgQuoteIDCreate(msg_id=msg_id, quote_id=quote_id)
+        return self._create_mapping(mapping_create)
     
     def get_mapping_by_msg_id(self, msg_id: str) -> Optional[MsgQuoteID]:
         """
@@ -191,9 +205,9 @@ class MsgQuoteIDDAO(BaseDAO[MsgQuoteID]):
             rows = cursor.fetchall()
             return [self._row_to_model(row) for row in rows]
     
-    def batch_create_mappings(self, mappings: List[MsgQuoteIDCreate]) -> bool:
+    def _batch_create_mappings(self, mappings: List[MsgQuoteIDCreate]) -> bool:
         """
-        批量创建映射关系
+        批量创建映射关系（内部方法）
         
         Args:
             mappings: 映射关系创建模型列表
@@ -210,6 +224,25 @@ class MsgQuoteIDDAO(BaseDAO[MsgQuoteID]):
         with self.connection_manager.cursor() as cursor:
             cursor.executemany(sql, values_list)
             return cursor.rowcount == len(mappings)
+
+    def batch_create_mappings(self, mappings: List[Dict[str, str]]) -> bool:
+        """
+        批量创建映射关系
+        
+        Args:
+            mappings: 映射关系列表，每个映射包含 msg_id 和 quote_id
+            
+        Returns:
+            bool: 批量创建是否成功
+        """
+        if not mappings:
+            return True
+        
+        mapping_creates = [
+            MsgQuoteIDCreate(msg_id=mapping["msg_id"], quote_id=mapping["quote_id"])
+            for mapping in mappings
+        ]
+        return self._batch_create_mappings(mapping_creates)
     
     def update_or_create_mapping(self, msg_id: str, quote_id: str) -> bool:
         """
@@ -230,5 +263,4 @@ class MsgQuoteIDDAO(BaseDAO[MsgQuoteID]):
                 return cursor.rowcount > 0
         else:
             # 创建新映射关系
-            mapping_create = MsgQuoteIDCreate(msg_id=msg_id, quote_id=quote_id)
-            return self.create_mapping(mapping_create)
+            return self.create_mapping(msg_id, quote_id)
