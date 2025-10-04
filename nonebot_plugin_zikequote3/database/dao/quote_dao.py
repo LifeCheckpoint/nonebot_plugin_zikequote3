@@ -185,6 +185,23 @@ class QuoteDAO(BaseDAO[Quote]):
             rows = cursor.fetchall()
             
             return [self._row_to_model(row) for row in rows]
+        
+    def check_quote_exists_by_author_content(self, author_id: str, content: str) -> bool:
+        """
+        检查指定作者和内容的语录是否存在
+        
+        Args:
+            author_id: 作者QQ号
+            content: 语录内容
+            
+        Returns:
+            bool: 是否存在
+        """
+        sql = f"SELECT 1 FROM {self.table_name} WHERE author_id = ? AND content = ? LIMIT 1"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (author_id, content))
+            return cursor.fetchone() is not None
     
     def get_quotes_by_group_and_author(self, group_id: str, author_id: str,
                                      limit: Optional[int] = None, offset: int = 0) -> List[Quote]:

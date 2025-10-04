@@ -8,6 +8,7 @@ async def f_collecting_listener(event: GroupME, bot: Bot):
     """
     from ...services.collecting.collecting_queue import s_queue_put, s_queue_clear
     from ...services.collecting.llm_selection import s_llm_selection
+    from ...services.collecting.save_selection_result import s_save_selection_result
     from ...services.status.personal_info_update import s_update_personal_info_api
     import random as ran
 
@@ -47,7 +48,7 @@ async def f_collecting_listener(event: GroupME, bot: Bot):
     
     # 最终语录入库，清空队列
     try:
-        pass
+        s_save_selection_result(str(event.group_id), response)
         s_queue_clear(str(event.group_id))
     except Exception as e:
         return

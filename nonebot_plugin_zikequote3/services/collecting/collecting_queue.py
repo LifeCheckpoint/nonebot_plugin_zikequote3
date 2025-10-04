@@ -13,7 +13,7 @@ def s_queue_put(group_id: str, msg_id: str, qq_id: str, content: str) -> bool:
             msg_id=msg_id,
             group_id=group_id,
             qq_id=qq_id,
-            content=content,
+            content=content.strip(),
         ))
 
     with error_report("更新收录计数"):
