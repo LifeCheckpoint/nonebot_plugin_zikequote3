@@ -1,6 +1,7 @@
 """
 html 网页文件
 """
+from ..imports import default_cfg
 from .screenshot import async_generate_screenshot
 
 from pathlib import Path
@@ -11,7 +12,7 @@ import uuid
 
 async def html_img_render(
     html_content: str, cache_dir: Path,
-    width: int = 1000, height: int = 800, device_scale_factor: float = 2
+    width: int = 1000, height: int = 800
 ) -> bytes:
     """
     渲染 HTML 文件并截图，自动处理临时文件
@@ -21,7 +22,6 @@ async def html_img_render(
         :param cache_dir: 用于存放临时文件的目录
         :param width: 截图宽度
         :param height: 截图高度
-        :param device_scale_factor: 设备像素比
 
     Returns:
         :return: 截图结果字节
@@ -43,7 +43,8 @@ async def html_img_render(
     
     # 截图
     returncode, _, err = await async_generate_screenshot(
-        temp_html, temp_image, width=width, height=height, device_scale_factor=device_scale_factor
+        temp_html, temp_image, width=width, height=height,
+        device_scale_factor=default_cfg.showcase.render_device_factor
     )
 
     # 截图返回码检查

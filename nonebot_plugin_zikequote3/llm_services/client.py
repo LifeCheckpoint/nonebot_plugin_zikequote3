@@ -1,4 +1,4 @@
-from ..imports import cfg
+from ..imports import cfg, default_cfg
 
 from openai import AsyncOpenAI
 from pathlib import Path
@@ -16,7 +16,7 @@ def create_model(group_id: int) -> Model:
     创建 LLM 模型实例，可调整该函数以支持不同模型客户端
     """
     api_key: str = Path(
-        cfg[group_id].llm.api_key_path
+        default_cfg.llm.api_key_path
     ).read_text(encoding="utf-8").strip()
 
     client = AsyncOpenAI(

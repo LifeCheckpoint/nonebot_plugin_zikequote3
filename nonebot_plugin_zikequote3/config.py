@@ -36,6 +36,7 @@ class ShowcaseConfig(BaseModel):
     page_num_limit: int = 5
     comment_show_method: Literal["no", "noai", "all"] = "noai"
     hitokoto_url: str = "https://v1.hitokoto.cn"
+    render_device_factor: float = 2.0
 
 class PermissionConfig(BaseModel):
     static_root: List[str] = Field(default_factory=list)

@@ -25,6 +25,7 @@ quote_num_per_page = 20 # 语录展示每页数量
 page_num_limit = 5 # 语录展示最大页数
 comment_show_method = "noai" # 语录评论展示方式: no | noai | all
 hitokoto_url = "https://v1.hitokoto.cn" # 获取名人名言 Hitokoto API
+render_device_factor = 2.0 # 图片渲染设备像素比
 
 [permission]
 static_root = [] # 不可变最高权限 QQ 号列表，List[int]
