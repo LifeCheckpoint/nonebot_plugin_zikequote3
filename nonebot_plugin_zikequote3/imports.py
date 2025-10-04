@@ -43,6 +43,10 @@ qimg_store = ImageStore(_data_image_root)
 from .html_capture import html_img_render, parse_md2html
 
 
+# 异常上报与日志工具
+from .utils.error_report import error_report
+
+
 # 加载 toml 配置并注入 BaseModel
 from .config import reload_config, ConfigPath
 _default_cfg_toml, default_cfg, _cfg_toml, cfg = reload_config()
