@@ -7,7 +7,7 @@ __plugin_meta__ = PluginMetadata(
 ZikeQuote3 基于 NoneBot 开发，便于群聊语录自动收集与管理，支持通过 LLM 自动收集群聊消息作为语录、手动管理语录、以及多种方式查看等功能。
     """,
     type="application",
-    homepage="https://github.com/LifeCheckpoint/ZikeQuote3",
+    homepage="https://github.com/LifeCheckpoint/nonebot_plugin_zikequote3",
     config=ConfigPath,
     supported_adapters={"~onebot.v11"},
     extra={
