@@ -14,6 +14,7 @@ import colorsys
 import nonebot_plugin_localstore as store
 import random
 import requests
+import sentry_sdk
 import tomlkit
 
 # 插件根目录
@@ -42,6 +43,14 @@ _default_cfg_toml, default_cfg, _cfg_toml, cfg = reload_config()
 def notify_reload_config():
     global _default_cfg_toml, default_cfg, _cfg_toml, cfg
     _default_cfg_toml, default_cfg, _cfg_toml, cfg = reload_config()
+
+
+# 配置 sentry
+dsn_path = Path(default_cfg.sentry.dsn_path)
+dsn_str = (
+    dsn_path if dsn_path.is_absolute() else (_plugin_root / dsn_path)
+).read_text(encoding="utf-8").strip()
+sentry_sdk.init(dsn=dsn_str if dsn_str else None, send_default_pii=True)
 
 
 # 加载消息导入

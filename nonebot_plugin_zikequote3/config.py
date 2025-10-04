@@ -48,6 +48,9 @@ class LLMConfig(BaseModel):
     temperature: float = 0.2
     max_retries: int = 3
 
+class SentryConfig(BaseModel):
+    dsn_path: str = "utils/sentry_dsn"
+
 class ConfigureConfig(BaseModel):
     nonreloadable_items: List[str] = Field(default_factory=list)
 
@@ -58,6 +61,7 @@ class ConfigSchema(BaseModel):
     showcase: ShowcaseConfig = Field(default_factory=ShowcaseConfig)
     permission: PermissionConfig = Field(default_factory=PermissionConfig)
     llm: LLMConfig = Field(default_factory=LLMConfig)
+    sentry: SentryConfig = Field(default_factory=SentryConfig)
     configure: ConfigureConfig = Field(default_factory=ConfigureConfig)
 
 # 模型转换

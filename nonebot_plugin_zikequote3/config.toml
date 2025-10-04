@@ -33,10 +33,13 @@ static_root = [] # 不可变最高权限 QQ 号列表，List[int]
 [llm]
 # 模型配置较为复杂，其它端点调整工作需到 llm_services/client.py 进行修改
 base_url = "https://openrouter.ai/api/v1"
-api_key_path = "utils/api_key" # API Key 文件路径，相对插件根目录
+api_key_path = "llm_services/api_key" # API Key 文件路径，相对插件根目录或绝对路径
 model = "deepseek/deepseek-v3.2-exp"
 temperature = 0.2
 max_retries = 3 # 请求失败重试次数
+
+[sentry]
+dsn_path = "utils/sentry_dsn" # Sentry DSN 文件路径，相对插件根目录或绝对路径，可留空表示不启用
 
 [configure]
 # 不允许进行热更新，并且应该全局应用的配置项
@@ -46,5 +49,6 @@ nonreloadable_items = [
     "general.check_intergrity",
     "permission.static_root",
     "llm.api_key_path",
+    "sentry.dsn_path",
     "configure.nonreloadable_items",
 ]
