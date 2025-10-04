@@ -2,6 +2,7 @@ from ..imports import cfg, default_cfg, _plugin_root
 
 from openai import AsyncOpenAI
 from pathlib import Path
+from pydantic import BaseModel
 from pydantic_ai.direct import model_request
 from pydantic_ai.messages import ModelRequest
 from pydantic_ai.models import Model
@@ -9,7 +10,7 @@ from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openai import OpenAIProvider
 from pydantic_ai.settings import ModelSettings
 from pydantic_ai.usage import RequestUsage
-from typing import Tuple
+from typing import Tuple, TypeVar, Type
 
 def create_model(group_id: int) -> Model:
     """
@@ -50,3 +51,15 @@ async def send_llm_request(group_id: int, model: Model, content: str) -> Tuple[s
         raise RuntimeError("模型返回格式错误")
 
     return model_response.parts[0].content, model_response.usage # type: ignore
+
+T = TypeVar('T', bound=BaseModel)
+async def send_llm_request_model(group_id: int, model: Model, content: str, response_model: Type[T]) -> Tuple[T, RequestUsage]:
+    """
+    发送单次请求到 LLM 模型并获取响应，返回 Pydantic 模型实例
+
+    Returns:
+        :return: 模型响应文本, 使用量信息
+    """
+    from ..utils.json_parser import llm_json_parse_model
+    model_response, usage = await send_llm_request(group_id, model, content)
+    return llm_json_parse_model(response_model, model_response), usage
