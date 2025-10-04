@@ -8,12 +8,12 @@ from ...imports import *
 @matcher_get_quote_setting.handle()
 async def f_get_quote_setting(event: GroupME):
     """生成当前配置预览"""
-    from ...services.settings.get_quote_setting import s_get_quote_setting
-    from ...imports import _module_html_templates_root, _module_render_cache_root
+    from ...services.settings.get_quote_setting import s_get_setting_html
+    from ...imports import _module_render_image_root
 
     try:
-        data = s_get_quote_setting(event.group_id)
-        image_data = await html_img_render(_module_html_templates_root / "CodeFrame.html", _module_render_cache_root, data=data)
+        html = s_get_setting_html(event.group_id)
+        image_data = await html_img_render(html, _module_render_image_root, )
     except Exception as e:
         logger.error(f"生成配置预览失败: {e}")
         await matcher_get_quote_setting.finish(f"生成配置预览失败啦O.O，服务器说：{e}")
