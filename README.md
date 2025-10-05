@@ -108,14 +108,33 @@ ZikeQuote3 基于 NoneBot2 开发，便于群聊语录自动收集与管理，�
         plugins = ["nonebot-plugin-zikequote3"]
         ```
 
-2. **确保系统安装 Node.js**，首次进入插件**默认自动安装前端依赖**，或者手动安装截图相关后端及其依赖：
+2. **确保系统安装 Node.js** 并安装截图 npm 依赖
+    <details close>
+    <summary>安装截图依赖</summary>
+    可通过如下方式检查：
 
         ```bash
-        cd your/bot/plugins/external/html_render/
-        npm install
+        npm --version
         ```
 
-3. 创建文件 `utils/api_key` 配置 LLM API Key，可自行修改 `utils/llm_solo.py` 使用自定义客户端、模型与参数
+    可运行脚本安装截图 npm 依赖：
+
+        ```bash
+        cd your/bot/nonebot_plugin_zikequote3
+        python utils/install_frontend.py
+        ```
+
+    或者手动安装：
+
+        ```bash
+        cd your/bot/nonebot_plugin_zikequote3/html_capture
+        npm install
+        ```
+    </details>
+
+3. 创建文件 `llm_services/api_key` 配置 LLM API Key，可修改 `llm_services/client.py` 使用自定义客户端、模型与自定义参数
+
+4. (可选) 创建文件 `utils/sentry_dsn` 可配置 Sentry 异常报错捕获平台的 dsn
 
 ## ⚙ 配置
 
@@ -137,29 +156,4 @@ ZikeQuote3 基于 NoneBot2 开发，便于群聊语录自动收集与管理，�
 
 ## 🖼️ 更新日志
 
-### V0.4.0.alpha1 BREAKING CHANGES
-
-1. ▶️ 数据后端更换为 SQLite，**不再**保留 JSON 等各类临时数据。可通过 `utils/data_migration/quote_migration` 进行数据迁移。更换后，支持自动数据备份，数据的统一性和稳定性也大幅提升
-2. 配置文件更换为 TOML，支持群际自定义配置、动态修改与热更新
-3. ▶️ 新增了跨群个人语录调用功能
-4. ▶️ 新增了命令解析功能，为常用命令提供标志
-5. 优化 LLM 配置体验，删减冗余配置依赖
-6. ▶️ 优化语录推荐算法，允许权重调整法与多样性过滤法进行
-7. ▶️ 新增语录图片储存，允许手动添加图片到语录数据库~
-8. ▶️ 回复模板标准化，也拓展啦~
-
-### V0.3.2
-
-1. 更新了自动依赖安装
-2. LLM 相关检查更加健全
-3. 更新了项目包结构
-4. 新增配置项验证
-
-### V0.3.1
-
-1. 修复了初始版本重构引发的大部分 BUG
-2. 添加了语录评论删除功能
-3. 添加了设置项显示（管理员）
-4. 细化了权限控制功能
-5. 规范了配置文件
-6. 命令现在被集中管理
+`docs/CHANGELOG.md`
