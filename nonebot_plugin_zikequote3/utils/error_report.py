@@ -5,7 +5,7 @@ import sentry_sdk
 logger = logging.getLogger(__name__)
 
 @contextmanager
-def exception_report(error_message: str, not_raise: bool = False):
+def exception_report(error_message: str = "", not_raise: bool = False, ignore_all: bool = False):
     """
     用于捕获代码块中的异常的上下文管理器
 
@@ -17,8 +17,16 @@ def exception_report(error_message: str, not_raise: bool = False):
     try:
         yield
     except Exception as e:
-        logger.error(f"操作异常 / {error_message}: {e}", stack_info=True)
+        if ignore_all:
+            return
+        
+        if error_message == "":
+            logger.error(f"操作异常: {e}", stack_info=True)
+        else:
+            logger.error(f"操作异常 / {error_message}: {e}", stack_info=True)
+            
         sentry_sdk.capture_exception(e)
+        
         if not not_raise:
             raise
         else:
