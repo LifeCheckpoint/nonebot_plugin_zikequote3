@@ -67,3 +67,12 @@ async def s_update_personal_info_api(group_id: str, qq_id: str, bot: Bot):
             db.dao.get_group_nickname_dao().set_current_group_nickname(qq_id, group_id, pinfo.card)
             logger.info(f"用户 {qq_id} 在群 {group_id} 的群名片缓存已更新: {current_card} -> {pinfo.card}")
     
+async def s_update_user_avatar(qq_id: str):
+    """
+    更新用户头像，注意不要频繁调用引起堵塞
+    """
+    from .get_avatar import get_user_avatar
+
+    with exception_report(f"更新用户 {qq_id} 头像"):
+        avatar_bytes = await get_user_avatar(qq_id)
+        db.dao.get_user_dao().update_user(qq_id, avatar_bytes)

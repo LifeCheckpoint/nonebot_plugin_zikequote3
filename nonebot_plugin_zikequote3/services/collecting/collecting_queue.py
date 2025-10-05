@@ -8,13 +8,21 @@ async def s_queue_put(group_id: str, msg_id: str, qq_id: str, content: str, bot:
         bool: 是否达到收录阈值
     """
     from ..status.group_info_update import s_update_group_info_api
+    from ..status.get_avatar import get_user_avatar
     
     with exception_report("检查群组存在性"):
-        exists = db.dao.get_group_dao().group_exists(group_id)
+        g_exists = db.dao.get_group_dao().group_exists(group_id)
     
-    if not exists:
+    if not g_exists:
         with exception_report(f"创建群组 {group_id}"):
             await s_update_group_info_api(group_id, bot)
+
+    with exception_report("检查用户存在性"):
+        u_exists = db.dao.get_user_dao().user_exists(qq_id)
+
+    if not u_exists:
+        with exception_report(f"创建用户 {qq_id}"):
+            db.dao.get_user_dao().create_user(qq_id, await get_user_avatar(qq_id))
 
     with exception_report("消息入队"):
         db.dao.get_msg_queue_dao().create_msg(
