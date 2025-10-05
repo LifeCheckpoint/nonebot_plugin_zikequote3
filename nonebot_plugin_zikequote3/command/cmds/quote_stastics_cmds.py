@@ -1,5 +1,6 @@
 from ...imports import *
 from ..comand_definition import *
+from ...msgtexts import general as mt
 
 
 @matcher_rank.handle()
@@ -17,13 +18,16 @@ async def f_rank(event: GroupME, arg: Message = CommandArg()):
     else:
         max_showcase_number = cfg[event.group_id].showcase.max_rank_user_num
 
-    # 获取详细信息 HTML
-    time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    html = s_get_ranking_html(str(event.group_id), time, max_showcase_number)
-    
-    # 渲染图片
-    img = await html_img_render(html, module_render_image_root, width=800, height=200)
-    await matcher_rank.finish(MsgSeg.image(img))    
+    try:
+        # 获取详细信息 HTML
+        time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        html = s_get_ranking_html(str(event.group_id), time, max_showcase_number)
+        
+        # 渲染图片
+        img = await html_img_render(html, module_render_image_root, width=800, height=200)
+        await matcher_rank.finish(MsgSeg.image(img))
+    except Exception as e:
+        await matcher_rank.finish(mt.failure("获取语录排行", detial=str(e)))
 
 @matcher_quote_list.handle()
 async def f_quote_list(event: GroupME, arg: Message = CommandArg()):
@@ -48,7 +52,7 @@ async def f_quote_list(event: GroupME, arg: Message = CommandArg()):
             # 输入昵称，尝试搜索
             users = s_search_users_by_name(key, str(event.group_id), exact=True)
             if not users:
-                pass # TODO
+                await matcher_quote_list.finish(mt.failure("获取语录列表", entity_name=key, detial="找不到匹配的用户~昵称有没有输入完整呢？"))
                 return
             if len(users) > 1:
                 pass # TODO
@@ -59,13 +63,17 @@ async def f_quote_list(event: GroupME, arg: Message = CommandArg()):
         qq_id = str(at_one)
     
     if not s_user_exists(qq_id):
-        pass # TODO
+        await matcher_quote_list.finish(mt.failure("获取语录列表", qq_id, detial="用户不存在呢"))
         return
     
-    # 获取详细信息 HTML
-    time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    html = s_get_listing_html(str(event.group_id), qq_id, time)
+    try:
+        # 获取详细信息 HTML
+        time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        html = s_get_listing_html(str(event.group_id), qq_id, time)
 
-    # 渲染图片
-    img = await html_img_render(html, module_render_image_root, width=800, height=200)
-    await matcher_quote_list.finish(MsgSeg.image(img))
+        # 渲染图片
+        img = await html_img_render(html, module_render_image_root, width=800, height=200)
+        await matcher_quote_list.finish(MsgSeg.image(img))
+    except Exception as e:
+        await matcher_quote_list.finish(mt.failure("获取语录列表", entity_name=qq_id, detial=str(e)))
+    
