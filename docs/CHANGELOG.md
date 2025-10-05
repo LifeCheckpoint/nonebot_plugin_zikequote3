@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+> **计划功能**
+> 语录群际共享，命令解析
+
 ## \[0.4.0alpha1\] - 2025-10-?? \[BREAKING CHANGES\]
 
 ### Added
