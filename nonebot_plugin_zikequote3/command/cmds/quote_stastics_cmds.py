@@ -36,22 +36,27 @@ async def f_quote_list(event: GroupME, arg: Message = CommandArg()):
 
     # 解析参数，获取目标用户 QQ 号
     key = arg.extract_plain_text().strip()
+    at_segs: List[MsgSeg] = event.get_message()["at"]
+    at_one: str | int | None = at_segs[0].data.get("qq") if at_segs else None
 
-    if key == "" or key.isnumeric():
-        # 输入 QQ 号或空
-        qq_id = str(event.user_id) if key == "" else key
+    if not at_one or at_one == "all":
+        # 非@用户，使用参数
+        if key == "" or key.isnumeric():
+            # 输入 QQ 号或空
+            qq_id = str(event.user_id) if key == "" else key
+        else:
+            # 输入昵称，尝试搜索
+            users = s_search_users_by_name(key, str(event.group_id), exact=True)
+            if not users:
+                pass # TODO
+                return
+            if len(users) > 1:
+                pass # TODO
+                return
+            qq_id = users[0]
     else:
-        # 输入昵称，尝试搜索
-        users = s_search_users_by_name(key, str(event.group_id), exact=True)
-        if not users:
-            pass # TODO
-            return
-        
-        if len(users) > 1:
-            pass # TODO
-            return
-        
-        qq_id = users[0]
+        # @用户，使用第一个@
+        qq_id = str(at_one)
     
     if not s_user_exists(qq_id):
         pass # TODO
