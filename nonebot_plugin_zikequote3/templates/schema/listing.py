@@ -42,7 +42,7 @@ def render_list(
     Returns:
         渲染后的HTML字符串
     """
-    inline_css = read_resource_file("css/list.css")
+    inline_css = read_resource_file("css/listing.css")
     
     # 准备分页数据
     sections_data = []
@@ -61,7 +61,7 @@ def render_list(
         })
     
     return render_template(
-        "htmls/list.html.jinja2",
+        "htmls/listing.html.jinja2",
         inline_css=inline_css,
         title=title,
         description=description,

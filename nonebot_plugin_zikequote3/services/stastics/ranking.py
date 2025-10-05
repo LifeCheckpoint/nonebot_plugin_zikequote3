@@ -65,10 +65,9 @@ def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int) -> st
     ranking_data = ranking_data[:max_showcase_number]
 
     with exception_report("获取语录排行数据"):
-        html = rank.render_rank(
+        return rank.render_rank(
             group_name=group_name,
             time=time,
             stats=stats_data,
             ranking=ranking_data,
         )
-        return html
