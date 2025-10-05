@@ -10,7 +10,6 @@ async def f_collecting_listener(event: GroupME, bot: Bot):
     from ...services.collecting.llm_selection import s_llm_selection
     from ...services.collecting.save_selection_result import s_save_selection_result
     from ...services.status.personal_info_update import s_update_personal_info_api
-    import random as ran
 
     # 验证收录条件
     msg = event.get_plaintext().strip()
@@ -29,7 +28,7 @@ async def f_collecting_listener(event: GroupME, bot: Bot):
         return # TODO
 
     # 以一定概率更新个人信息
-    if ran.random() < 0.1:
+    if random.random() < cfg[event.group_id].collecting.update_personal_info_probability:
         try:
             await s_update_personal_info_api(str(event.group_id), str(event.user_id), bot)
         except Exception as e:

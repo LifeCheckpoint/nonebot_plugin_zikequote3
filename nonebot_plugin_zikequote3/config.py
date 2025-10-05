@@ -27,6 +27,7 @@ class CollectingConfig(BaseModel):
     enable_image_collection: bool = True
     img_max_sidelength: int = 3840
     img_max_size_mb: float = 5
+    update_personal_info_probability: float = 0.05
 
 class FetchingConfig(BaseModel):
     enable_cross_group_fetching: bool = False
