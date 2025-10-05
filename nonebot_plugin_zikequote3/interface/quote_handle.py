@@ -121,53 +121,6 @@ def get_random_quote(
 
     return result
 
-def get_quote_rank(group_id: int, filter: Callable[[QuoteInfoV2], bool] = lambda quote: True, top_n: int = cfg.max_rank_show) -> Dict[str, Any]:
-    """
-    获取语录排行
-
-    `group_id`: 群组 ID
-    `filter`: 过滤函数，返回 True 的语录会被选中
-    """
-    quote_list = get_typed_quote_list(group_id, filter)
-
-    # 统计聊天语录基本信息
-    current_quote_num = len(quote_list)
-    author_ids = set(quote.author_id for quote in quote_list)
-    author_num = len(author_ids)
-    avg_quote_per_user = current_quote_num / author_num if author_num > 0 else 0
-
-    # 统计语录作者语录个数
-    author_quote_count = {}
-    for quote in quote_list:
-        if quote.author_id not in author_quote_count:
-            author_quote_count[quote.author_id] = 0
-        author_quote_count[quote.author_id] += 1
-    sorted_quote_count = sorted(author_quote_count.items(), key=lambda x: x[1], reverse=True)
-    top_quote_count = sorted_quote_count[:top_n]
-
-    # 通过与最多语录的用户进行比较计算百分占比
-    top_quote_info = []
-    if len(top_quote_count) > 0:
-        top1_quote_num = top_quote_count[0][1]
-        for author_id, count in top_quote_count:
-            author_card = next((quote.author_card for quote in quote_list if quote.author_id == author_id), None)
-            top_quote_info.append({
-                "author": author_card,
-                "count": count,
-                "percentage": f"{(count / top1_quote_num * 100):.2f}"
-            })
-
-    # 返回排行
-    return {
-        "group_name": group_id,
-        "time": datetime.now().strftime("%Y-%m-%d %H:%M"),
-        "stats": {
-            "total_quotes": current_quote_num,
-            "contributors": author_num,
-            "average_quotes": f"{avg_quote_per_user:.2f}"
-        },
-        "ranking": top_quote_info
-    }
 
 def get_formatted_quote_list(quotes: List[QuoteInfoV2]) -> Dict[str, Any]:
     """
