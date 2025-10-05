@@ -28,6 +28,7 @@ _module_templates_root = _plugin_root / "templates"
 _data_db_path = store.get_data_dir("ZikeQuote3") / "zikequote3.db"
 _data_image_root = store.get_data_dir("ZikeQuote3") / "quote_images"
 
+
 # 载入全局数据库对象
 from .database.connection_manager import ConnectionManager
 db = ConnectionManager(_data_db_path)

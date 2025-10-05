@@ -11,6 +11,7 @@ async def f_collecting_listener(event: GroupME, bot: Bot):
     from ...services.collecting.collecting_queue import s_queue_put, s_queue_clear
     from ...services.collecting.llm_selection import s_llm_selection
     from ...services.collecting.save_selection_result import s_save_selection_result
+    from ...services.reviewing.add_review import s_add_review, AUTHOR_AI
     from ...services.status.personal_info_update import s_update_personal_info_api
 
     # 验证收录条件
@@ -41,8 +42,15 @@ async def f_collecting_listener(event: GroupME, bot: Bot):
         response, usage = await s_llm_selection(str(event.group_id))
         logger.info(f"筛选到 {response.num_quotes} 条语录，输入 {usage.input_tokens} tokens，输出 {usage.output_tokens} tokens，总计 {usage.total_tokens} tokens")
     
-    # 最终语录入库，清空队列
+    # 最终语录入库
     with exception_report(ignore_all=True):
         s_save_selection_result(str(event.group_id), response)
+    
+    # 清空队列
+    with exception_report(ignore_all=True):
         s_queue_clear(str(event.group_id))
     
+    # 为每条语录添加系统评论
+    for quote in response.quotes:
+        with exception_report(ignore_all=True):
+            s_add_review(AUTHOR_AI, quote.id, quote.comment)
