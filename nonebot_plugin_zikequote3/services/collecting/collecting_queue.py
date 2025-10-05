@@ -28,4 +28,11 @@ def s_queue_clear(group_id: str):
     """
     with exception_report("清空收录队列"):
         db.dao.get_msg_queue_dao().clear_group_queue(group_id)
-    
+
+
+def s_get_queue_length(group_id: str) -> int:
+    """
+    获取当前收录队列长度
+    """
+    with exception_report("获取收录队列长度"):
+        return db.dao.get_queue_count_dao().get_group_count(group_id)

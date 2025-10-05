@@ -19,6 +19,7 @@ class Stats(BaseModel):
     pending_quotes: int
     contributors: int
     average_quotes: float
+    total_shows: int
 
 
 def render_rank(
@@ -50,7 +51,8 @@ def render_rank(
         'total_quotes': stats.total_quotes,
         'pending_quotes': stats.pending_quotes,
         'contributors': stats.contributors,
-        'average_quotes': stats.average_quotes
+        'average_quotes': stats.average_quotes,
+        'total_shows': stats.total_shows,
     }
     
     # 准备排行榜数据

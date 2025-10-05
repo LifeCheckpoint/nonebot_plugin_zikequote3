@@ -10,6 +10,7 @@
         - pending_quotes: 待统计数量
         - contributors: 人数
         - average_quotes: 平均语录数量
+        - total_shows: 总展示次数
     - ranking: 排行榜详情列表
         - author: 用户名称
         - count: 语录数量
@@ -48,8 +49,16 @@
                     <div class="stat-label">贡献者</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number">{{ stats.average_quotes }}</div>
+                    <div class="stat-number">{{ stats.average_quotes | format('%.2f') }}</div>
                     <div class="stat-label">平均语录</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">#{{ ranking[0].author if ranking else '?' }}</div>
+                    <div class="stat-label">您的语录有点多</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">#{{ total_shows }}</div>
+                    <div class="stat-label">总展示次数</div>
                 </div>
             </div>
             

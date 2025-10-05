@@ -14,14 +14,22 @@ matcher_collecting_listener = on_message(
 # region 语录统计命令
 # quote_stastics_cmds
 
-_rank_cmds = ("语录rank", "语录排行", "quote_rank", "语录信息", "quote_info")
+_rank_cmds = (
+    "语录rank", "语录ranking", "语录排行", "语录排行榜",
+    "语录统计", "语录统计信息", "语录群排行", "排行语录",
+    "统计语录", "quote_rank", "quote_info", "quote_statistics",
+    "quote_stats",
+)
 matcher_rank = on_command(
     _rank_cmds[0],
     aliases=set(_rank_cmds[1:]),
     priority=10, block=True, permission=permission_check(PMS.GET_QUOTE)
 )
 
-_quote_list_cmds = ("语录列表", "语录list", "语录列表", "quote_list", "列语录")
+_quote_list_cmds = (
+    "语录列表", "语录list", "语录列表", "列语录",
+    "个人语录", "个人语录列表", "语录个人列表", "quote_list"
+)
 matcher_quote_list = on_command(
     _quote_list_cmds[0],
     aliases=set(_quote_list_cmds[1:]),

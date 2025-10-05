@@ -419,6 +419,24 @@ class QuoteDAO(BaseDAO[Quote]):
             cursor.execute(sql, (author_id,))
             result = cursor.fetchone()
             return result[0] if result else 0
+        
+    def count_quotes_by_group_and_author(self, group_id: str, author_id: str) -> int:
+        """
+        统计群组内指定作者的语录数量
+        
+        Args:
+            group_id: 群号
+            author_id: 作者QQ号
+            
+        Returns:
+            int: 语录数量
+        """
+        sql = f"SELECT COUNT(*) FROM {self.table_name} WHERE group_id = ? AND author_id = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (group_id, author_id))
+            result = cursor.fetchone()
+            return result[0] if result else 0
     
     def get_quote_statistics_by_group(self, group_id: str) -> Dict[str, Any]:
         """
