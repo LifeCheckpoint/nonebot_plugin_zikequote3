@@ -9,11 +9,10 @@ from ...imports import *
 async def f_get_quote_setting(event: GroupME):
     """生成当前配置预览"""
     from ...services.settings.get_quote_setting import s_get_setting_html
-    from ...imports import _module_render_image_root
 
     try:
         html = s_get_setting_html(event.group_id)
-        image_data = await html_img_render(html, _module_render_image_root, )
+        image_data = await html_img_render(html, module_render_image_root, )
     except Exception as e:
         logger.error(f"生成配置预览失败: {e}")
         await matcher_get_quote_setting.finish(f"生成配置预览失败啦O.O，服务器说：{e}")

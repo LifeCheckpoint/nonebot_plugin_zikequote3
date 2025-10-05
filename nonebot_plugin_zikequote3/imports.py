@@ -19,25 +19,25 @@ import tomlkit
 
 # 插件根目录
 _plugin_root = Path(__file__).parent
-_module_database_root = _plugin_root / "database"
-_module_html_capture_root = _plugin_root / "html_capture"
-_module_render_html_root = _plugin_root / "templates" / "output" / "rendered_html"
-_module_render_image_root = _plugin_root / "templates" / "output" / "rendered_image"
-_module_templates_root = _plugin_root / "templates"
+module_database_root = _plugin_root / "database"
+module_html_capture_root = _plugin_root / "html_capture"
+module_render_html_root = _plugin_root / "templates" / "output" / "rendered_html"
+module_render_image_root = _plugin_root / "templates" / "output" / "rendered_image"
+module_templates_root = _plugin_root / "templates"
 
-_data_db_path = store.get_data_dir("ZikeQuote3") / "zikequote3.db"
-_data_image_root = store.get_data_dir("ZikeQuote3") / "quote_images"
+data_db_path = store.get_data_dir("ZikeQuote3") / "zikequote3.db"
+data_image_root = store.get_data_dir("ZikeQuote3") / "quote_images"
 
 
 # 载入全局数据库对象
 from .database.connection_manager import ConnectionManager
-db = ConnectionManager(_data_db_path)
+db = ConnectionManager(data_db_path)
 db.initialize_db() # 初始化，保证完整性
 
 
 # 载入图像存储管理器
 from .database.image_store import ImageStore
-qimg_store = ImageStore(_data_image_root)
+qimg_store = ImageStore(data_image_root)
 
 
 # HTML 截图工具

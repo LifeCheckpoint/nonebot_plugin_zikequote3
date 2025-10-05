@@ -1,5 +1,4 @@
 from ...imports import *
-from ...imports import _module_render_image_root
 from ..comand_definition import *
 
 
@@ -23,7 +22,7 @@ async def f_rank(event: GroupME, arg: Message = CommandArg()):
     html = s_get_ranking_html(str(event.group_id), time, max_showcase_number)
     
     # 渲染图片
-    img = await html_img_render(html, _module_render_image_root, width=800, height=200)
+    img = await html_img_render(html, module_render_image_root, width=800, height=200)
     await matcher_rank.finish(MsgSeg.image(img))    
 
 @matcher_quote_list.handle()

@@ -9,7 +9,7 @@ def check_npm_command():
 
 def verify_installation() -> bool:
     """检查 node_modules 目录确认依赖是否安装成功"""
-    return (_module_html_capture_root / "node_modules").is_dir()
+    return (module_html_capture_root / "node_modules").is_dir()
 
 
 def install_frontend_dependencies():
@@ -20,8 +20,8 @@ def install_frontend_dependencies():
     
     logger.info("正在进行 ZikeQuote3 Node.js 依赖安装...")
 
-    if not _module_html_capture_root.is_dir():
-        raise FileNotFoundError(f"无法找到目录 '{_module_html_capture_root}'")
+    if not module_html_capture_root.is_dir():
+        raise FileNotFoundError(f"无法找到目录 '{module_html_capture_root}'")
 
     try:
         check_npm_command()
@@ -31,7 +31,7 @@ def install_frontend_dependencies():
         raise e
 
     try:
-        subprocess.run(['npm', 'install'], check=True, cwd=_module_html_capture_root, shell=True)
+        subprocess.run(['npm', 'install'], check=True, cwd=module_html_capture_root, shell=True)
 
         if verify_installation():
             logger.info("Node.js 依赖安装成功。")
@@ -50,12 +50,12 @@ def install_frontend_dependencies():
 
 if __name__ == "__main__":
     # 直接执行脚本时进行安装
-    global _module_html_capture_root
-    _module_html_capture_root = Path(__file__).parent.parent / "html_capture"
+    global module_html_capture_root
+    module_html_capture_root = Path(__file__).parent.parent / "html_capture"
     try:
         install_frontend_dependencies()
     except Exception as e:
         print(e)
 else:
     # 作为模块导入，使用配置好的路径
-    from ..imports import _module_html_capture_root
+    from ..imports import module_html_capture_root
