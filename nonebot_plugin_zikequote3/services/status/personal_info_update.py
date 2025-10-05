@@ -28,7 +28,7 @@ async def s_update_personal_info_api(group_id: str, qq_id: str, bot: Bot):
     """
     通过接口 API 更新个人信息，带缓存机制
     """
-    with error_report(f"获取用户 {qq_id} 在群 {group_id} 的信息"):
+    with exception_report(f"获取用户 {qq_id} 在群 {group_id} 的信息"):
         info = await bot.get_group_member_info(
             group_id=int(group_id),
             user_id=int(qq_id),
@@ -55,11 +55,11 @@ async def s_update_personal_info_api(group_id: str, qq_id: str, bot: Bot):
             shut_up_timestamp=info.get("shut_up_timestamp"),
         )
 
-    with error_report(f"更新用户 {qq_id} 在群 {group_id} 的昵称 / 群名片缓存"):
+    with exception_report(f"更新用户 {qq_id} 在群 {group_id} 的昵称 / 群名片缓存"):
         current_nickname = db.dao.get_user_nickname_dao().get_current_nickname(qq_id)
         current_card = db.dao.get_group_nickname_dao().get_current_group_nickname(qq_id, group_id)
     
-    with error_report(f"检查并更新用户 {qq_id} 在群 {group_id} 的昵称 / 群名片缓存"):
+    with exception_report(f"检查并更新用户 {qq_id} 在群 {group_id} 的昵称 / 群名片缓存"):
         if current_nickname != pinfo.nickname:
             db.dao.get_user_nickname_dao().set_current_nickname(qq_id, pinfo.nickname)
             logger.info(f"用户 {qq_id} 的昵称缓存已更新: {current_nickname} -> {pinfo.nickname}")

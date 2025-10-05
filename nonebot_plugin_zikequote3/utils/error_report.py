@@ -5,7 +5,7 @@ import sentry_sdk
 logger = logging.getLogger(__name__)
 
 @contextmanager
-def error_report(error_message: str, not_raise: bool = False):
+def exception_report(error_message: str, not_raise: bool = False):
     """
     用于捕获代码块中的异常的上下文管理器
 

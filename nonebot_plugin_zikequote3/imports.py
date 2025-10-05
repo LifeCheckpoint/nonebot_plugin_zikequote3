@@ -44,7 +44,7 @@ from .html_capture import html_img_render, parse_md2html
 
 
 # 异常上报与日志工具
-from .utils.error_report import error_report
+from .utils.error_report import exception_report
 
 
 # 加载 toml 配置并注入 BaseModel
