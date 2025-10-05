@@ -152,6 +152,24 @@ class UserNicknameDAO(BaseDAO[UserNickname]):
         with self.connection_manager.cursor() as cursor:
             cursor.execute(sql, (qq_id, name))
             return cursor.rowcount > 0
+        
+    def search_user_by_nickname(self, name: str) -> List[UserNickname]:
+        """
+        通过昵称匹配搜索用户
+        
+        Args:
+            name: 昵称模式，建议使用 %name% 形式进行通配
+            
+        Returns:
+            List[UserNickname]: 匹配的用户昵称列表
+        """
+        sql = "SELECT * FROM user_nicknames WHERE name LIKE ?"
+        pattern = name
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (pattern,))
+            rows = cursor.fetchall()
+            return [self._row_to_model(row) for row in rows]
     
     def clear_user_nicknames(self, qq_id: str) -> bool:
         """
@@ -373,6 +391,25 @@ class GroupNicknameDAO(BaseDAO[GroupNickname]):
         with self.connection_manager.cursor() as cursor:
             cursor.execute(sql, (group_id,))
             return True
+        
+    def search_users_by_nickname_in_group(self, name: str, group_id: str) -> List[GroupNickname]:
+        """
+        通过昵称匹配搜索群组内用户
+        
+        Args:
+            name: 昵称模式，建议使用 %name% 形式进行通配
+            group_id: 群号
+            
+        Returns:
+            List[GroupNickname]: 匹配的群名片列表
+        """
+        sql = "SELECT * FROM group_nicknames WHERE name LIKE ? AND group_id = ?"
+        pattern = name
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (pattern, group_id))
+            rows = cursor.fetchall()
+            return [self._row_to_model(row) for row in rows]
     
     def get_group_nickname_statistics(self, group_id: str) -> Dict[str, Any]:
         """

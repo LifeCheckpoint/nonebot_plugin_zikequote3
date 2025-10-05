@@ -1,18 +1,18 @@
 {# 
     语录列表模板
-    
+
     - inline_css: 内联CSS样式
-    
+
     - title: 列表标题
     - description: 语录信息描述
     - addition: 附加信息
-    - sections: 分页语录列表
-        - title: 分页标题
-        - color: 分页颜色
-        - boxes: 该页语录列表
-            - quote: 语录内容
-            - comment: 语录首条评论
-            - comment_author_name: 语录首条评论作者
+    - quotes: 全量语录列表
+        - quote: 语录内容
+        - comment: 语录首条评论
+        - comment_author_name: 语录首条评论作者
+    - items_per_page: 每页条目数量
+    - section_colors: 分页标题背景色循环列表
+    - page_title_template: 分页标题模板（变量支持 {page_number} 以及 {total_pages}）
 #}
 
 <!DOCTYPE html>
@@ -33,12 +33,23 @@
             <p class="description">{{ addition }}</p>
         </header>
 
+        {% set paginated_quotes = quotes | batch(items_per_page, fill_with=None) %}
+        {% set total_pages = paginated_quotes | length %}
+
         <main class="main-content">
-            {% for section in sections %}
+            {% for page in paginated_quotes %}
+            {% if section_colors %}
+                {% set section_color = section_colors[loop.index0 % (section_colors | length)] %}
+            {% else %}
+                {% set section_color = primary_color %}
+            {% endif %}
+
             <section class="section">
-                <h2 class="section-title" style="background: {{ section.color }};">{{ section.title }}</h2>
+                <h2 class="section-title" style="background: {{ section_color }};">
+                    {{ page_title_template.format(page_number=loop.index, total_pages=total_pages) }}
+                </h2>
                 <div class="quotes-grid">
-                    {% for box in section.boxes %}
+                    {% for box in page if box %}
                     {% set random_theme = ['theme-purple', 'theme-blue', 'theme-green', 'theme-pink', 'theme-orange', 'theme-teal', 'theme-indigo'] | random %}
                     <div class="quote-item {{ random_theme }}" style="border-left-color: var(--accent-color);">
                         <div class="quote-text">{{ box.quote }}</div>

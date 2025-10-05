@@ -30,4 +30,37 @@ async def f_quote_list(event: GroupME, arg: Message = CommandArg()):
     """
     语录列表
     """
+    from ...services.users.get_user import s_user_exists, s_search_users_by_name
+    from ...services.stastics.listing import s_get_listing_html
+    from datetime import datetime
+
+    # 解析参数，获取目标用户 QQ 号
+    key = arg.extract_plain_text().strip()
+
+    if key == "" or key.isnumeric():
+        # 输入 QQ 号或空
+        qq_id = str(event.user_id) if key == "" else key
+    else:
+        # 输入昵称，尝试搜索
+        users = s_search_users_by_name(key, str(event.group_id), exact=True)
+        if not users:
+            pass # TODO
+            return
+        
+        if len(users) > 1:
+            pass # TODO
+            return
+        
+        qq_id = users[0]
     
+    if not s_user_exists(qq_id):
+        pass # TODO
+        return
+    
+    # 获取详细信息 HTML
+    time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    html = s_get_listing_html(str(event.group_id), qq_id, time)
+
+    # 渲染图片
+    img = await html_img_render(html, module_render_image_root, width=800, height=200)
+    await matcher_quote_list.finish(MsgSeg.image(img))
