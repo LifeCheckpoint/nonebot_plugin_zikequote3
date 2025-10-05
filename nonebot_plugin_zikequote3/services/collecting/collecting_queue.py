@@ -1,12 +1,21 @@
 from ...imports import *
 
-def s_queue_put(group_id: str, msg_id: str, qq_id: str, content: str) -> bool:
+async def s_queue_put(group_id: str, msg_id: str, qq_id: str, content: str, bot: Bot) -> bool:
     """
     将消息放入收录队列
 
     Returns:
         bool: 是否达到收录阈值
     """
+    from ..status.group_info_update import s_update_group_info_api
+    
+    with exception_report("检查群组存在性"):
+        exists = db.dao.get_group_dao().group_exists(group_id)
+    
+    if not exists:
+        with exception_report(f"创建群组 {group_id}"):
+            await s_update_group_info_api(group_id, bot)
+
     with exception_report("消息入队"):
         db.dao.get_msg_queue_dao().create_msg(
             msg_id=msg_id,

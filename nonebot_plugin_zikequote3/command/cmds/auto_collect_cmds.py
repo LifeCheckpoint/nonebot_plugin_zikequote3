@@ -21,11 +21,12 @@ async def f_collecting_listener(event: GroupME, bot: Bot):
     
     # 加入队列并获取是否达到阈值
     with exception_report(ignore_all=True):
-        is_thresold = s_queue_put(
+        is_thresold = await s_queue_put(
             group_id=str(event.group_id),
             msg_id=str(event.message_id),
             qq_id=str(event.user_id),
             content=msg,
+            bot=bot,
         )
 
     # 以一定概率更新个人信息
