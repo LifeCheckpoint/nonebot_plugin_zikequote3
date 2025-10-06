@@ -18,7 +18,7 @@ async def f_rank(event: GroupME, arg: Message = CommandArg()):
     else:
         max_showcase_number = cfg[event.group_id].showcase.max_rank_user_num
 
-    try:
+    async with exception_finish_failure(matcher_quote_list, "获取语录排行"):
         # 获取详细信息 HTML
         time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         html = s_get_ranking_html(str(event.group_id), time, max_showcase_number)
@@ -26,54 +26,37 @@ async def f_rank(event: GroupME, arg: Message = CommandArg()):
         # 渲染图片
         img = await html_img_render(html, module_render_image_root, width=800, height=200)
         await matcher_rank.finish(MsgSeg.image(img))
-    except Exception as e:
-        await matcher_rank.finish(mt.failure("获取语录排行", detial=str(e)))
 
 @matcher_quote_list.handle()
 async def f_quote_list(event: GroupME, arg: Message = CommandArg()):
     """
     语录列表
     """
-    from ...services.users.get_user import s_user_exists, s_search_users_by_name
+    from ...services.users.get_user import s_user_exists
+    from ...services.users.parse_user import s_parse_at_and_str_user
     from ...services.stastics.listing import s_get_listing_html
     from datetime import datetime
 
-    # 解析参数，获取目标用户 QQ 号
-    key = arg.extract_plain_text().strip()
-    at_segs: List[MsgSeg] = event.get_message()["at"]
-    at_one: str | int | None = at_segs[0].data.get("qq") if at_segs else None
+    async with exception_finish_failure(matcher_quote_list, "获取语录列表"):
+        # 解析参数，获取目标用户 QQ 号
+        key = arg.extract_plain_text().strip()
+        users = s_parse_at_and_str_user(key, event, exact=True)
 
-    if not at_one or at_one == "all":
-        # 非@用户，使用参数
-        if key == "" or key.isnumeric():
-            # 输入 QQ 号或空
-            qq_id = str(event.user_id) if key == "" else key
-        else:
-            # 输入昵称，尝试搜索
-            users = s_search_users_by_name(key, str(event.group_id), exact=True)
-            if not users:
-                await matcher_quote_list.finish(mt.failure("获取语录列表", entity_name=key, detial="找不到匹配的用户~昵称有没有输入完整呢？"))
-                return
-            if len(users) > 1:
-                pass # TODO
-                return
-            qq_id = users[0]
-    else:
-        # @用户，使用第一个@
-        qq_id = str(at_one)
+        # 尝试使用第一个有效 QQ
+        valid_first_user = None
+        for u in users:
+            if s_user_exists(u):
+                valid_first_user = u
+                break
+        
+        if not valid_first_user:
+            raise ValueError("没有找到有效的用户哦.·´¯`(>▂<)´¯`·. ")
     
-    if not s_user_exists(qq_id):
-        await matcher_quote_list.finish(mt.failure("获取语录列表", qq_id, detial="用户不存在呢"))
-        return
-    
-    try:
         # 获取详细信息 HTML
         time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        html = s_get_listing_html(str(event.group_id), qq_id, time)
+        html = s_get_listing_html(str(event.group_id), valid_first_user, time)
 
         # 渲染图片
         img = await html_img_render(html, module_render_image_root, width=800, height=200)
         await matcher_quote_list.finish(MsgSeg.image(img))
-    except Exception as e:
-        await matcher_quote_list.finish(mt.failure("获取语录列表", entity_name=qq_id, detial=str(e)))
     

@@ -1,4 +1,5 @@
-from contextlib import contextmanager
+from contextlib import contextmanager, asynccontextmanager
+from nonebot.matcher import Matcher
 import logging
 import sentry_sdk
 
@@ -32,3 +33,19 @@ def exception_report(error_message: str = "", not_raise: bool = False, ignore_al
         else:
             return
     
+
+@asynccontextmanager
+async def exception_finish_failure(matcher: type[Matcher], action: str, entity_name: str | None = None):
+    """
+    用于捕获异常并通过 matcher 反馈通用失败消息的上下文管理器
+
+    Args:
+        matcher (Matcher): NoneBot 匹配器对象
+        message (str): 反馈消息内容
+    """
+    from ..msgtexts import general as mt_g
+    try:
+        yield
+    except Exception as e:
+        await matcher.finish(mt_g.failure(action, entity_name, str(e)))
+        # finish 会抛出 Finished 异常阻断传播
