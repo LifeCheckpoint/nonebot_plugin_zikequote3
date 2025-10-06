@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 - 配置现在支持群际自定义、动态修改与热更新
 - ▶️ 新增语录图片储存，允许手动添加图片到语录数据库
 - 新增多种语录推荐算法
+- ▶️ 隐私权等相关功能考虑
 
 ### Changed
 
