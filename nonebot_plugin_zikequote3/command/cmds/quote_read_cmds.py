@@ -9,8 +9,10 @@ async def f_random_quote(event: GroupME, bot: Bot, arg: Message = CommandArg()):
     """
     from ...database.models.quotes import Quote
     from ...services.algorithm_management.common_algo_service import s_deduplicate_by_field_last
-    from ...services.quote_management.showcase.rand_quote_service import s_search_quotes_by_author_id, s_search_quotes_by_keyword, s_rand_quote_choice_by_algorithm
+    from ...services.quote_management.showcase.rand_quote_service import s_search_quotes_by_author_id, s_search_quotes_by_keyword, s_rand_quote_choice_by_algorithm, s_increase_quote_appearance_count
     from ...services.user_management.user_parser_service import s_parse_at_and_str_user
+    from ...services.quote_management.showcase.quote_image_service import s_get_quote_image_data
+    from msgtexts.quote_read import send_quote
     
     async with exception_finish_failure(matcher_random_quote, "获取随机语录"):
         key = arg.extract_plain_text().strip()
@@ -40,12 +42,20 @@ async def f_random_quote(event: GroupME, bot: Bot, arg: Message = CommandArg()):
             await matcher_random_quote.finish("没有找到符合条件的语录哦~")
 
         # 发送语录
-        # TODO: 包含图片语录的图像读取与发送
-        pass
-
+        text_msg = MsgSeg.text(send_quote(result.author_id, result.content))
+        if result.image_content_uuid == None:
+            await matcher_random_quote.send(text_msg)
+        else:
+            try:
+                image_data = s_get_quote_image_data(result.image_content_uuid)
+                full_msg = text_msg + MsgSeg.image(image_data)
+            except FileNotFoundError:
+                full_msg = text_msg + MsgSeg.text("\n（语录图片文件已丢失 O.O）")
+            await matcher_random_quote.send(full_msg)
+        
         # 更新语录出现次数
-        pass
-    
+        s_increase_quote_appearance_count(result.quote_id)
+
 
 @matcher_quote_card.handle()
 async def f_quote_card(event: GroupME, arg: Message = CommandArg()):

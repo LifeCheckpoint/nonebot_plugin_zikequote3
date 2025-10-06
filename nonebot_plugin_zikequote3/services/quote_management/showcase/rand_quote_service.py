@@ -1,6 +1,13 @@
 from ....imports import *
 from ....database.models.quotes import Quote
 
+def s_increase_quote_appearance_count(quote_id: str):
+    """
+    增加语录出现次数统计
+    """
+    with exception_report("增加语录展示次数"):
+        db.dao.get_quote_dao().increment_show_time(quote_id)
+
 def s_search_quotes_by_keyword(group_id: str, keyword: str, limit: Optional[int] = None):
     """
     通过关键词搜索语录
