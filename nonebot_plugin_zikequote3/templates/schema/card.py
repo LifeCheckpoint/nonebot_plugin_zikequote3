@@ -16,6 +16,7 @@ class Comment(BaseModel):
 def render_card(
     quote_id: str,
     quote: str,
+    image_uri: Optional[str],
     author_name: str,
     comments: Optional[List[Comment]] = None,
     primary_color: str = "#667eea",
@@ -27,6 +28,7 @@ def render_card(
     Args:
         quote_id: 语录ID
         quote: 语录内容
+        image_uri: 语录图片URI
         author_name: 作者姓名
         comments: 评论列表
         primary_color: 主色调
@@ -52,6 +54,7 @@ def render_card(
         inline_css=inline_css,
         quote_id=quote_id,
         quote=quote,
+        image=image_uri,
         author_name=author_name,
         comments=comments_data,
         primary_color=primary_color,

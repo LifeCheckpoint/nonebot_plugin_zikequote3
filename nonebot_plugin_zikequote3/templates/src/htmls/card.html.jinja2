@@ -5,6 +5,7 @@
 
     - quote_id: 语录ID
     - quote: 语录内容
+    - image: 语录配图 URI，可选
     - author_name: 作者姓名
     - comments: 评论
         - content: 评论内容
@@ -33,6 +34,12 @@
             <div class="quote-icon">"</div>
             <div class="quote-text">{{ quote }}</div>
         </div>
+
+        {% if image %}
+        <div class="quote-image">
+            <img src="{{ image }}" alt="语录配图不见啦？(⊙x⊙;)">
+        </div>
+        {% endif %}
         
         <div class="quote-author">
             <div class="author-name">{{ author_name }}</div>
