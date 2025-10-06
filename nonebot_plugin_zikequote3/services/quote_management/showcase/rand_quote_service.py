@@ -64,7 +64,7 @@ def s_rand_quote_choice_by_algorithm(quotes: List[Quote], algorithm_cmd: str = "
     return next((q for q in quotes if q.quote_id == chosen_quote_id), None)
 
 
-def s_get_random_quote(key: str, event: GroupME):
+def s_get_random_quote(key: str, event: GroupME, filter_: Optional[Callable[[Quote], bool]] = None) -> Quote | None:
     """
     获取群内随机语录，并处理自增等逻辑
     """
@@ -90,9 +90,12 @@ def s_get_random_quote(key: str, event: GroupME):
                 quotes_pool.extend(s_search_quotes_by_author_id(str(event.group_id), u))
         quotes_pool.extend(s_search_quotes_by_keyword(str(event.group_id), key))
 
-    with exception_report("语录去重"):
+    with exception_report("语录去重过滤"):
         filter_key_q: Callable[[Quote], str] = lambda q: q.quote_id
         quotes_pool = s_deduplicate_by_field_last(quotes_pool, filter_key_q)
+
+        if filter_ is not None:
+            quotes_pool = [q for q in quotes_pool if filter_(q)]
 
     with exception_report("通过算法随机选择语录"):
         result = s_rand_quote_choice_by_algorithm(quotes_pool, cfg[event.group_id].fetching.algorithm)
