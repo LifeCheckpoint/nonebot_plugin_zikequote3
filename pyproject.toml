@@ -32,7 +32,7 @@ license = "MIT"
 Homepage = "https://github.com/LifeCheckpoint/nonebot_plugin_zikequote3"
 
 [tool.nonebot]
-plugins = ["ZikeQuote3"]
+plugins = ["nonebot_plugin_zikequote3"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
