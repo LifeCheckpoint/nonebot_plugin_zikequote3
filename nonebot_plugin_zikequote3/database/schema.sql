@@ -2,6 +2,10 @@
 -- 该文件在每次加载数据库时都会执行一次以确保完整性
 -- 因此任何情况下都不要加入破坏性操作
 
+BEGIN;
+
+PRAGMA user_version = 1;
+
 -- 保存基本用户信息的表
 CREATE TABLE IF NOT EXISTS users (
     qq_id TEXT PRIMARY KEY,
@@ -76,7 +80,7 @@ CREATE TABLE IF NOT EXISTS images (
     file_path TEXT NOT NULL,
     time_stamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     checksum_sha256 TEXT NOT NULL
-)
+);
 
 -- 保存暂存信息的表，暂存当前尚未进行语录收集的聊天记录
 CREATE TABLE IF NOT EXISTS msgs_queue (
@@ -209,5 +213,11 @@ CREATE TABLE IF NOT EXISTS group_configs (
     FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
 );
 
+COMMIT;
+
+BEGIN;
+
 -- 索引优化
 ANALYZE;
+
+COMMIT;
