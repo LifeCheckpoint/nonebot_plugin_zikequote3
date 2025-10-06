@@ -3,7 +3,15 @@
 All notable changes to this project will be documented in this file.
 
 > **计划功能**
-> 语录群际共享，命令解析，LLM 关键词标注
+>
+> - 语录群际共享
+> - 命令解析
+> - LLM 关键词标注
+> - 向量化数据库与语义化查询
+> - 截图方案调整
+> - 图片储存检查
+> - 其它依托于 LLM 的大型统计 / 语义化功能
+> - 更精细的权限配置
 
 ## \[0.4.0alpha1\] - 2025-10-?? \[BREAKING CHANGES\] ▶️
 
@@ -16,7 +24,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- 数据后端由 Json 更换为 SQLite，可通过 `utils/data_migration/quote_migration` 进行数据迁移。更换后，数据的一致性和稳定性将得到提升。同时配备了对应的 DAO 模型
+- 数据后端由 Json 更换为 SQLite，可通过 `utils/data_migration/quote_migration` 进行数据迁移。更换后，数据的一致性和稳定性将得到提升。同时配备了对应的 DAO 模型与迁移预留接口
 - 配置文件更换为 TOML
 - 优化 LLM 配置体验，支持更便捷清晰的自定义
 - ▶️ 回复信息模板化
