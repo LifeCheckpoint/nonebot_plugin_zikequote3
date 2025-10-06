@@ -3,20 +3,20 @@
 All notable changes to this project will be documented in this file.
 
 > **计划功能**
-> 语录群际共享，命令解析
+> 语录群际共享，命令解析，LLM 关键词标注
 
-## \[0.4.0alpha1\] - 2025-10-?? \[BREAKING CHANGES\]
+## \[0.4.0alpha1\] - 2025-10-?? \[BREAKING CHANGES\] ▶️
 
 ### Added
 
 - ▶️ 新增定期数据备份功能
 - 配置现在支持群际自定义、动态修改与热更新
 - ▶️ 新增语录图片储存，允许手动添加图片到语录数据库
-- ▶️ 新增多种语录推荐算法
+- 新增多种语录推荐算法
 
 ### Changed
 
-- ▶️ 数据后端由 Json 更换为 SQLite，可通过 `utils/data_migration/quote_migration` 进行数据迁移。更换后，数据的一致性和稳定性将得到提升。同时配备了对应的 DAO 模型
+- 数据后端由 Json 更换为 SQLite，可通过 `utils/data_migration/quote_migration` 进行数据迁移。更换后，数据的一致性和稳定性将得到提升。同时配备了对应的 DAO 模型
 - 配置文件更换为 TOML
 - 优化 LLM 配置体验，支持更便捷清晰的自定义
 - ▶️ 回复信息模板化
