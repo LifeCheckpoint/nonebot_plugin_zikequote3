@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from ....imports import *
 from ....database.models.quotes import Quote
 
@@ -8,6 +10,7 @@ def s_increase_quote_appearance_count(quote_id: str):
     with exception_report("增加语录展示次数"):
         db.dao.get_quote_dao().increment_show_time(quote_id)
 
+
 def s_search_quotes_by_keyword(group_id: str, keyword: str, limit: Optional[int] = None):
     """
     通过关键词搜索语录
@@ -16,6 +19,7 @@ def s_search_quotes_by_keyword(group_id: str, keyword: str, limit: Optional[int]
         quotes = db.dao.get_quote_dao().get_quotes_by_group(group_id, limit=limit)
         return [q for q in quotes if keyword in q.content]
 
+
 def s_search_quotes_by_author_id(group_id: str, author_id: str, limit: Optional[int] = None):
     """
     通过作者 QQ 搜索语录
@@ -23,6 +27,7 @@ def s_search_quotes_by_author_id(group_id: str, author_id: str, limit: Optional[
     with exception_report("通过作者搜索语录"):
         quotes = db.dao.get_quote_dao().get_quotes_by_group_and_author(group_id, author_id, limit=limit)
         return quotes
+
 
 def s_rand_quote_choice_by_algorithm(quotes: List[Quote], algorithm_cmd: str = "IFW --lambda 1.0") -> Quote | None:
     """
@@ -57,3 +62,81 @@ def s_rand_quote_choice_by_algorithm(quotes: List[Quote], algorithm_cmd: str = "
     )[0]
 
     return next((q for q in quotes if q.quote_id == chosen_quote_id), None)
+
+
+def s_get_random_quote(key: str, event: GroupME):
+    """
+    获取群内随机语录，并处理自增等逻辑
+    """
+    from ....services.algorithm_management.common_algo_service import s_deduplicate_by_field_last
+    from ....services.quote_management.showcase.basic_quote_service import s_get_quote_by_group
+    from ....services.quote_management.showcase.rand_quote_service import s_search_quotes_by_author_id, s_search_quotes_by_keyword, s_rand_quote_choice_by_algorithm
+    from ....services.user_management.user_parser_service import s_parse_at_and_str_user
+
+    quotes_pool: List[Quote] = []
+
+    # 尝试从昵称、QQ 等解析目标用户，如果解析到多个用户则取并集
+    # 解析结果也将和语录内容查询结果合并
+    # TODO: 通过参数控制解析范围
+
+    with exception_report("解析用户参数"):
+        union_users = s_parse_at_and_str_user(key, event, exact=False, empty_parse_to_self=False, multiple_at=True, parse_at_all=True)
+        for u in union_users:
+            with exception_report(not_raise=True):
+                if u == "all":
+                    # @全体，视为获取群内所有语录
+                    quotes_pool = s_get_quote_by_group(str(event.group_id))
+                    break
+                quotes_pool.extend(s_search_quotes_by_author_id(str(event.group_id), u))
+        quotes_pool.extend(s_search_quotes_by_keyword(str(event.group_id), key))
+
+    with exception_report("语录去重"):
+        filter_key_q: Callable[[Quote], str] = lambda q: q.quote_id
+        quotes_pool = s_deduplicate_by_field_last(quotes_pool, filter_key_q)
+
+    with exception_report("通过算法随机选择语录"):
+        result = s_rand_quote_choice_by_algorithm(quotes_pool, cfg[event.group_id].fetching.algorithm)
+
+    return result
+
+
+def s_get_quote_card_html(group_id: str, quote: Quote) -> str:
+    """
+    获取渲染好的语录卡 HTML 图片
+    """
+    from ....services.quote_management.showcase.quote_image_service import s_get_quote_image_data, to_data_uri
+    from ....templates import card
+    from ....templates.schema.card import Comment
+    
+    with exception_report("获取语录作者信息"):
+        author = db.dao.get_group_nickname_dao().get_current_group_nickname(group_id, quote.author_id)
+        if author is None:
+            author = db.dao.get_user_nickname_dao().get_current_nickname(quote.author_id)
+            if author is None:
+                raise ValueError("无法获取语录作者昵称")
+            else:
+                author = author.name
+
+    with exception_report("获取语录相关评论"):
+        reviews = db.dao.get_review_dao().get_reviews_by_quote(quote.quote_id)
+    
+    with exception_report("转换评论数据"):
+        comments = [Comment(
+            comment_id=r.review_id,
+            author_name=db.dao.get_group_nickname_dao().get_current_group_nickname(r.author_id, group_id) or "佚名",
+            content=r.content,
+        ) for r in reviews]
+
+    if quote.image_content_uuid is not None:
+        with exception_report("获取语录图片"):
+            image_data = to_data_uri(s_get_quote_image_data(quote.image_content_uuid))
+    
+    with exception_report("渲染语录卡"):
+        return card.render_card(
+            quote_id=quote.quote_id,
+            quote=quote.content,
+            image_uri=image_data if quote.image_content_uuid else None,
+            author_name=author,
+            comments=comments
+        )
+    

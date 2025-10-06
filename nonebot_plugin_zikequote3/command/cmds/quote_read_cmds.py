@@ -3,86 +3,58 @@ from ..comand_definition import *
 
 
 @matcher_random_quote.handle()
-async def f_random_quote(event: GroupME, bot: Bot, arg: Message = CommandArg()):
+async def f_random_quote(event: GroupME, arg: Message = CommandArg()):
     """
     随机语录
     """
-    from ...database.models.quotes import Quote
-    from ...services.algorithm_management.common_algo_service import s_deduplicate_by_field_last
-    from ...services.quote_management.showcase.basic_quote_service import s_get_quote_by_group
+    from ...services.quote_management.showcase.rand_quote_service import s_get_random_quote, s_increase_quote_appearance_count
     from ...services.quote_management.showcase.quote_image_service import s_get_quote_image_data
-    from ...services.quote_management.showcase.rand_quote_service import s_search_quotes_by_author_id, s_search_quotes_by_keyword, s_rand_quote_choice_by_algorithm, s_increase_quote_appearance_count
-    from ...services.user_management.user_parser_service import s_parse_at_and_str_user
     from msgtexts.quote_read import send_quote
     
     key = arg.extract_plain_text().strip()
-    quotes_pool: List[Quote] = []
-    
     async with exception_finish_failure(matcher_random_quote, "获取随机语录"):
+        q_result = s_get_random_quote(key, event)
 
-        # 尝试从昵称、QQ 等解析目标用户，如果解析到多个用户则取并集
-        # 解析结果也将和语录内容查询结果合并
-        # TODO: 通过参数控制解析范围
-
-        union_users = s_parse_at_and_str_user(key, event, exact=False, empty_parse_to_self=False, multiple_at=True, parse_at_all=True)
-        for u in union_users:
-            with exception_report(not_raise=True):
-                if u == "all":
-                    # @全体，视为获取群内所有语录
-                    quotes_pool = s_get_quote_by_group(str(event.group_id))
-                    break
-                quotes_pool.extend(s_search_quotes_by_author_id(str(event.group_id), u))
-        quotes_pool.extend(s_search_quotes_by_keyword(str(event.group_id), key))
-
-        # 去重
-        filter_key_q: Callable[[Quote], str] = lambda q: q.quote_id
-        quotes_pool = s_deduplicate_by_field_last(quotes_pool, filter_key_q)
-
-        # 通过指定算法对语录池进行随机选择
-        result = s_rand_quote_choice_by_algorithm(quotes_pool, cfg[event.group_id].fetching.algorithm)
-
-        if not result:
+        if q_result is None:
             await matcher_random_quote.finish("没有找到符合条件的语录哦~")
 
         # 发送语录
-        text_msg = MsgSeg.text(send_quote(result.author_id, result.content))
-        if result.image_content_uuid == None:
+        text_msg = MsgSeg.text(send_quote(q_result.author_id, q_result.content))
+        if q_result.image_content_uuid == None:
             await matcher_random_quote.send(text_msg)
         else:
             try:
-                image_data = s_get_quote_image_data(result.image_content_uuid)
+                image_data = s_get_quote_image_data(q_result.image_content_uuid)
                 full_msg = text_msg + MsgSeg.image(image_data)
             except FileNotFoundError:
                 full_msg = text_msg + MsgSeg.text("\n（语录图片文件已丢失 O.O）")
             await matcher_random_quote.send(full_msg)
         
         # 更新语录出现次数
-        s_increase_quote_appearance_count(result.quote_id)
+        s_increase_quote_appearance_count(q_result.quote_id)
 
 
 @matcher_quote_card.handle()
 async def f_quote_card(event: GroupME, arg: Message = CommandArg()):
     """
-    语录卡生成
+    随机语录卡，基本与随机语录逻辑一致
     """
-    key = arg.extract_plain_text().strip()
-    if key == "":
-        result: QuoteInfoV2 = get_random_quote(event.group_id) # type: ignore
-    else:
-        filt: Callable[[QuoteInfoV2], bool] = lambda quote: key in quote.quote or key in quote.author_name or key in quote.author_card
-        result: QuoteInfoV2 = get_random_quote(event.group_id, filt) # type: ignore
+    from ...services.quote_management.showcase.rand_quote_service import s_get_random_quote, s_increase_quote_appearance_count, s_get_quote_card_html
 
-    if not result:
-        await mfinish(matcher_quote_card, msg_quote_not_found, key=key)
-    else:
-        # 生成图片
-        try:
-            image_data = await html_img_render(cfg.path.templates / "card.html", cfg.path.templates, data=asdict(result), width=630, height=120)
-            send_msg = await matcher_quote_card.send(MsgSeg.image(image_data))
-            add_mapping(event.group_id, send_msg["message_id"], result.quote_id)
-        except Exception as e:
-            print(f"生成语录卡失败：{e}")
-            await mfinish(matcher_quote_card, msg_quote_card_failed, error=str(e))
+    key = arg.extract_plain_text().strip()
+    async with exception_finish_failure(matcher_quote_card, "获取语录卡"):
+        q_result = s_get_random_quote(key, event)
+
+        if q_result is None:
+            await matcher_quote_card.finish("没有找到符合条件的语录哦~")
+
+        # 发送语录
+        quote_card_html = s_get_quote_card_html(str(event.group_id), q_result)
+        quote_card = await html_img_render(quote_card_html, module_render_image_root, width=800, height=120)
+        await matcher_quote_card.send(MsgSeg.image(quote_card))
+        
+        # 更新语录出现次数
+        s_increase_quote_appearance_count(q_result.quote_id)
 
 
 @matcher_quote_search.handle()
