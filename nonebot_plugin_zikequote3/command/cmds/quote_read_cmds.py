@@ -43,6 +43,10 @@ async def f_random_quote(event: GroupME, bot: Bot, arg: Message = CommandArg()):
         # TODO: 包含图片语录的图像读取与发送
         pass
 
+        # 更新语录出现次数
+        pass
+    
+
 @matcher_quote_card.handle()
 async def f_quote_card(event: GroupME, arg: Message = CommandArg()):
     """
