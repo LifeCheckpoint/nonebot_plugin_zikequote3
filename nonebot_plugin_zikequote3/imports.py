@@ -8,6 +8,7 @@ from nonebot.params import CommandArg, ArgPlainText
 from nonebot.plugin import PluginMetadata
 from nonebot.typing import T_State
 from pathlib import Path
+from pydantic import BaseModel, Field
 from typing import Optional, Union, Literal, Callable, Any, Dict, List, Tuple
 import asyncio
 import colorsys
@@ -16,6 +17,7 @@ import random
 import requests
 import sentry_sdk
 import tomlkit
+import typer
 
 # 插件根目录
 _plugin_root = Path(__file__).parent

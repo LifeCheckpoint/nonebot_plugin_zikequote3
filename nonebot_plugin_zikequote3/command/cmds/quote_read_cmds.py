@@ -1,6 +1,5 @@
 from ...imports import *
 from ..comand_definition import *
-from ...utils.hitokoto import get_hitokoto
 
 
 @matcher_random_quote.handle()
@@ -8,19 +7,41 @@ async def f_random_quote(event: GroupME, bot: Bot, arg: Message = CommandArg()):
     """
     随机语录
     """
-    key = arg.extract_plain_text().strip() # 默认为搜索名字+内容
-    if key == "":
-        result: QuoteInfoV2 = get_random_quote(event.group_id) # type: ignore
-    else:
-        filt: Callable[[QuoteInfoV2], bool] = lambda quote: key in quote.quote or key in quote.author_name or key in quote.author_card
-        result: QuoteInfoV2 = get_random_quote(event.group_id, filt) # type: ignore
+    from ...database.models.quotes import Quote
+    from ...services.algorithm_management.common_algo_service import s_deduplicate_by_field_last
+    from ...services.quote_management.showcase.rand_quote_service import s_search_quotes_by_author_id, s_search_quotes_by_keyword, s_rand_quote_choice_by_algorithm
+    from ...services.user_management.user_parser_service import s_parse_at_and_str_user
+    
+    async with exception_finish_failure(matcher_random_quote, "获取随机语录"):
+        key = arg.extract_plain_text().strip()
+        
+        quotes_pool: List[Quote] = []
 
-    if not result:
-        await mfinish(matcher_random_quote, msg_quote_not_found, key=key)
-    else:
-        send_msg = await msend(matcher_random_quote, msg_send_quote, author=result.author_name, quote=result.quote)
-        add_mapping(event.group_id, send_msg["message_id"], result.quote_id)
+        # 尝试从昵称、QQ 等解析目标用户，如果解析到多个用户则取并集
+        # 解析结果也将和语录内容查询结果合并
+        # TODO: 通过参数控制解析范围
 
+        union_users = s_parse_at_and_str_user(key, event, exact=False, empty_parse_to_self=False, multiple_at=True, parse_at_all=True)
+        for u in union_users:
+            with exception_report(not_raise=True):
+                if u == "all":
+                    break
+                quotes_pool.extend(s_search_quotes_by_author_id(str(event.group_id), u))
+        quotes_pool.extend(s_search_quotes_by_keyword(str(event.group_id), key))
+
+        # 去重
+        filter_key_q: Callable[[Quote], str] = lambda q: q.quote_id
+        quotes_pool = s_deduplicate_by_field_last(quotes_pool, filter_key_q)
+
+        # 通过指定算法对语录池进行随机选择
+        result = s_rand_quote_choice_by_algorithm(quotes_pool, cfg[event.group_id].fetching.algorithm)
+
+        if not result:
+            await matcher_random_quote.finish("没有找到符合条件的语录哦~")
+
+        # 发送语录
+        # TODO: 包含图片语录的图像读取与发送
+        pass
 
 @matcher_quote_card.handle()
 async def f_quote_card(event: GroupME, arg: Message = CommandArg()):

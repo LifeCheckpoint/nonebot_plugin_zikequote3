@@ -20,7 +20,7 @@ update_personal_info_probability = 0.05 # 收到消息时更新个人信息的�
 
 [fetching]
 enable_cross_group_fetching = false # 允许跨群抓取调用者个人语录
-algorithm = "freq" # 语录推荐算法: freq | diversity (TODO)
+algorithm = "IFW --lambda 1.0" # 语录推荐算法命令，有 IFW 和 LogIFW 等，可参见文档设置参数
 
 [showcase]
 max_rank_user_num = 40 # 语录榜单展示最大用户数

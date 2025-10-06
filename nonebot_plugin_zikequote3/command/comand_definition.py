@@ -74,7 +74,7 @@ matcher_del_comment = on_command(
 # region 语录读取命令
 # quote_read_cmds
 
-_random_quote_cmds = ("语录", "quote", "随机语录", "来句语录")
+_random_quote_cmds = ("语录", "quote", "随机语录")
 matcher_random_quote = on_command(
     _random_quote_cmds[0],
     aliases=set(_random_quote_cmds[1:]),

@@ -1,12 +1,13 @@
 from contextlib import contextmanager, asynccontextmanager
 from nonebot.matcher import Matcher
+from nonebot.exception import FinishedException
 import logging
 import sentry_sdk
 
 logger = logging.getLogger(__name__)
 
 @contextmanager
-def exception_report(error_message: str = "", not_raise: bool = False, ignore_all: bool = False):
+def exception_report(error_message: str = "", not_raise: bool = False, ignore_all: bool = False, force_raise_nonebot_finished: bool = True):
     """
     用于捕获代码块中的异常的上下文管理器
 
@@ -30,6 +31,8 @@ def exception_report(error_message: str = "", not_raise: bool = False, ignore_al
         
         if not not_raise:
             raise
+        elif force_raise_nonebot_finished and isinstance(e, FinishedException):
+            raise
         else:
             return
     
@@ -39,6 +42,8 @@ async def exception_finish_failure(matcher: type[Matcher], action: str, entity_n
     """
     用于捕获异常并通过 matcher 反馈通用失败消息的上下文管理器
 
+    注意，如果已经抛出了一个 Finished 异常，则可能是已经正常结束事件，因此不会重复发送失败消息
+
     Args:
         matcher (Matcher): NoneBot 匹配器对象
         message (str): 反馈消息内容
@@ -47,5 +52,9 @@ async def exception_finish_failure(matcher: type[Matcher], action: str, entity_n
     try:
         yield
     except Exception as e:
-        await matcher.finish(mt_g.failure(action, entity_name, str(e)))
-        # finish 会抛出 Finished 异常阻断传播
+        if not isinstance(e, FinishedException):
+            # 非正常结束事件，会告知用户发生异常并向上游传递结束标志
+            await matcher.finish(mt_g.failure(action, entity_name, str(e)))
+        else:
+            # 已经是正常结束事件，直接向上游传递已有的结束标志
+            raise

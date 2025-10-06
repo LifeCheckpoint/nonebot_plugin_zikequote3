@@ -42,6 +42,9 @@ async def f_quote_list(event: GroupME, arg: Message = CommandArg()):
         key = arg.extract_plain_text().strip()
         users = s_parse_at_and_str_user(key, event, exact=True)
 
+        if len(users) > 1:
+            await matcher_quote_list.send("找到多个用户，仅使用第一个有效用户进行查询哦~")
+
         # 尝试使用第一个有效 QQ
         valid_first_user = None
         for u in users:

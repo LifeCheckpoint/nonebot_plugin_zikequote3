@@ -31,7 +31,7 @@ class CollectingConfig(BaseModel):
 
 class FetchingConfig(BaseModel):
     enable_cross_group_fetching: bool = False
-    algorithm: Literal["freq", "diversity"] = "freq"
+    algorithm: str = "IFW --lambda 1.0"
 
 class ShowcaseConfig(BaseModel):
     max_rank_user_num: int = 40
