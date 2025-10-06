@@ -9,15 +9,16 @@ async def f_random_quote(event: GroupME, bot: Bot, arg: Message = CommandArg()):
     """
     from ...database.models.quotes import Quote
     from ...services.algorithm_management.common_algo_service import s_deduplicate_by_field_last
+    from ...services.quote_management.showcase.basic_quote_service import s_get_quote_by_group
+    from ...services.quote_management.showcase.quote_image_service import s_get_quote_image_data
     from ...services.quote_management.showcase.rand_quote_service import s_search_quotes_by_author_id, s_search_quotes_by_keyword, s_rand_quote_choice_by_algorithm, s_increase_quote_appearance_count
     from ...services.user_management.user_parser_service import s_parse_at_and_str_user
-    from ...services.quote_management.showcase.quote_image_service import s_get_quote_image_data
     from msgtexts.quote_read import send_quote
     
+    key = arg.extract_plain_text().strip()
+    quotes_pool: List[Quote] = []
+    
     async with exception_finish_failure(matcher_random_quote, "获取随机语录"):
-        key = arg.extract_plain_text().strip()
-        
-        quotes_pool: List[Quote] = []
 
         # 尝试从昵称、QQ 等解析目标用户，如果解析到多个用户则取并集
         # 解析结果也将和语录内容查询结果合并
@@ -27,6 +28,8 @@ async def f_random_quote(event: GroupME, bot: Bot, arg: Message = CommandArg()):
         for u in union_users:
             with exception_report(not_raise=True):
                 if u == "all":
+                    # @全体，视为获取群内所有语录
+                    quotes_pool = s_get_quote_by_group(str(event.group_id))
                     break
                 quotes_pool.extend(s_search_quotes_by_author_id(str(event.group_id), u))
         quotes_pool.extend(s_search_quotes_by_keyword(str(event.group_id), key))
