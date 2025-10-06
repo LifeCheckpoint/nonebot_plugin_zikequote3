@@ -1,4 +1,4 @@
-from ...imports import *
+from ....imports import *
 from pydantic import BaseModel, Field
 
 class QuotePickupItem(BaseModel):
@@ -15,8 +15,8 @@ async def s_llm_selection(group_id: str):
     """
     使用 LLM 对收集队列中的消息进行筛选
     """
-    from ...llm_services.client import create_model, send_llm_request_json2model
-    from ...llm_services.prompts import quote_pickup
+    from ....llm_services.client import create_model, send_llm_request_json2model
+    from ....llm_services.prompts import quote_pickup
 
     with exception_report("获取缓存队列消息"):
         # 获取消息，并转换为元组列表

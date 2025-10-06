@@ -4,7 +4,7 @@ def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int) -> st
     """
     获取语录排行 HTML
     """
-    from ...services.collecting.collecting_queue import s_get_queue_length
+    from ..quote_management.collection.queue_service import s_get_queue_length
     from ...templates import rank
     from ...templates.schema.rank import Stats, RankingItem
 

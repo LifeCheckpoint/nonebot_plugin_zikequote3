@@ -1,4 +1,4 @@
-from ...imports import *
+from ....imports import *
 
 async def s_queue_put(group_id: str, msg_id: str, qq_id: str, content: str, bot: Bot) -> bool:
     """
@@ -7,8 +7,8 @@ async def s_queue_put(group_id: str, msg_id: str, qq_id: str, content: str, bot:
     Returns:
         bool: 是否达到收录阈值
     """
-    from ..status.group_info_update import s_update_group_info_api
-    from ..status.get_avatar import get_user_avatar
+    from ...user_management.group_info_service import s_update_group_info_api
+    from ...user_management.avatar_service import get_user_avatar
     
     with exception_report("检查群组存在性"):
         g_exists = db.dao.get_group_dao().group_exists(group_id)

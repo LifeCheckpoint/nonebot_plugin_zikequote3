@@ -8,7 +8,7 @@ async def f_rank(event: GroupME, arg: Message = CommandArg()):
     """
     展示群内语录排行图片
     """
-    from ...services.stastics.ranking import s_get_ranking_html
+    from ...services.statistics_management.group_ranking_service import s_get_ranking_html
     from datetime import datetime
 
     # 解析参数，获取展示数量
@@ -32,9 +32,9 @@ async def f_quote_list(event: GroupME, arg: Message = CommandArg()):
     """
     语录列表
     """
-    from ...services.users.get_user import s_user_exists
-    from ...services.users.parse_user import s_parse_at_and_str_user
-    from ...services.stastics.listing import s_get_listing_html
+    from ...services.user_management.user_service import s_user_exists
+    from ...services.user_management.user_parser_service import s_parse_at_and_str_user
+    from ...services.statistics_management.personal_listing_service import s_get_listing_html
     from datetime import datetime
 
     async with exception_finish_failure(matcher_quote_list, "获取语录列表"):

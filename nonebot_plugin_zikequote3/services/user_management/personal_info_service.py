@@ -71,7 +71,7 @@ async def s_update_user_avatar(qq_id: str):
     """
     更新用户头像，注意不要频繁调用引起堵塞
     """
-    from .get_avatar import get_user_avatar
+    from .avatar_service import get_user_avatar
 
     with exception_report(f"更新用户 {qq_id} 头像"):
         avatar_bytes = await get_user_avatar(qq_id)

@@ -17,7 +17,7 @@ def s_parse_at_and_str_user(
         multiple_at (bool): 是否允许返回多个 @ 用户，默认为 False
         parse_at_all (bool): 是否将 @所有人 解析为 "all"，默认为 False
     """
-    from .get_user import s_search_users_by_name
+    from .user_service import s_search_users_by_name
 
     key = key.strip()
     at_segs: List[MsgSeg] = event.get_message()["at"]

@@ -8,11 +8,11 @@ async def f_collecting_listener(event: GroupME, bot: Bot):
 
     此事件不会向用户界面提供任何反馈
     """
-    from ...services.collecting.collecting_queue import s_queue_put, s_queue_clear
-    from ...services.collecting.llm_selection import s_llm_selection
-    from ...services.collecting.save_selection_result import s_save_selection_result
-    from ...services.reviewing.add_review import s_add_review, AUTHOR_AI
-    from ...services.status.personal_info_update import s_update_personal_info_api
+    from ...services.quote_management.collection.queue_service import s_queue_put, s_queue_clear
+    from ...services.quote_management.collection.llm_selection_service import s_llm_selection
+    from ...services.quote_management.collection.save_service import s_save_selection_result
+    from ...services.review_management.review_service import s_add_review, AUTHOR_AI
+    from ...services.user_management.personal_info_service import s_update_personal_info_api
 
     # 验证收录条件
     msg = event.get_plaintext().strip()

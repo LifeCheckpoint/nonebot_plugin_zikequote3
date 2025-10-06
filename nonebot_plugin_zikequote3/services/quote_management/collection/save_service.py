@@ -1,5 +1,5 @@
-from ...imports import *
-from .llm_selection import LLMSelectionResponse
+from ....imports import *
+from .llm_selection_service import LLMSelectionResponse
 
 def s_save_selection_result(group_id: str, response: LLMSelectionResponse):
     for quote in response.quotes:

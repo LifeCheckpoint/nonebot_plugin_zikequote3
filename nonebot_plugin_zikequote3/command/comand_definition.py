@@ -1,5 +1,5 @@
 from ..imports import on_message, on_command
-from ..services.permissions.permission import permission_check, PMS
+from ..services.permission_management.permission_service import permission_check, PMS
 
 
 # region 自动收集事件
