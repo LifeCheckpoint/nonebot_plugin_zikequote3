@@ -62,34 +62,34 @@ async def f_quote_search(event: GroupME, arg: Message = CommandArg()):
     """
     语录搜索
     """
-    key = arg.extract_plain_text().strip()
-    if key == "":
-        await mfinish(matcher_quote_search, msg_quote_search_empty)
+    # key = arg.extract_plain_text().strip()
+    # if key == "":
+    #     await mfinish(matcher_quote_search, msg_quote_search_empty)
 
-    # 精确匹配
-    filt: Callable[[QuoteInfoV2], bool] = lambda quote: key in quote.quote
-    quotes = get_typed_quote_list(event.group_id, filter=filt)
+    # # 精确匹配
+    # filt: Callable[[QuoteInfoV2], bool] = lambda quote: key in quote.quote
+    # quotes = get_typed_quote_list(event.group_id, filter=filt)
 
-    if not quotes:
-        await mfinish(matcher_quote_search, msg_quote_not_found, key=key)
+    # if not quotes:
+    #     await mfinish(matcher_quote_search, msg_quote_not_found, key=key)
 
-    # 获取用户所有格式化的语录列表
-    data = get_formatted_quote_list(quotes)
+    # # 获取用户所有格式化的语录列表
+    # data = get_formatted_quote_list(quotes)
 
-    time_text = datetime.now().strftime("%Y-%m-%d %H:%M")
-    author_stat = f"{len(quotes)} 条搜索结果" + f"（最新 {cfg.quote_list_page_limit} 页）" if len(quotes) > cfg.quote_list_num_perpage * cfg.quote_list_page_limit else ""
-    addition_text = get_hitokoto()[0] or "桃李不言，下自成蹊"
+    # time_text = datetime.now().strftime("%Y-%m-%d %H:%M")
+    # author_stat = f"{len(quotes)} 条搜索结果" + f"（最新 {cfg.quote_list_page_limit} 页）" if len(quotes) > cfg.quote_list_num_perpage * cfg.quote_list_page_limit else ""
+    # addition_text = get_hitokoto()[0] or "桃李不言，下自成蹊"
 
-    data = data | {
-        "title": f"包含{key}的语录",
-        "description": f"{time_text} / {author_stat}",
-        "addition": addition_text,
-    }
+    # data = data | {
+    #     "title": f"包含{key}的语录",
+    #     "description": f"{time_text} / {author_stat}",
+    #     "addition": addition_text,
+    # }
 
-    # 生成图片
-    try:
-        image_data = await html_img_render(cfg.path.templates / "list.html", cfg.path.templates, data=data, width=800, height=200)
-        await matcher_quote_search.send(MsgSeg.image(image_data))
-    except Exception as e:
-        print(f"生成语录搜索列表失败：{e}")
-        await mfinish(matcher_quote_search, msg_quote_list_generate_failed, error=str(e))
+    # # 生成图片
+    # try:
+    #     image_data = await html_img_render(cfg.path.templates / "list.html", cfg.path.templates, data=data, width=800, height=200)
+    #     await matcher_quote_search.send(MsgSeg.image(image_data))
+    # except Exception as e:
+    #     print(f"生成语录搜索列表失败：{e}")
+    #     await mfinish(matcher_quote_search, msg_quote_list_generate_failed, error=str(e))
