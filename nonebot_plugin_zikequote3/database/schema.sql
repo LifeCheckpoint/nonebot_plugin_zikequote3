@@ -36,14 +36,13 @@ CREATE TABLE IF NOT EXISTS group_nicknames (
     FOREIGN KEY (group_id) REFERENCES groups(group_id)
 );
 
--- 保存用户群组关系的表，包含权限配置
+-- 保存用户群组关系的表
 CREATE TABLE IF NOT EXISTS group_members (
     group_id TEXT NOT NULL,
     qq_id TEXT NOT NULL,
-    permission_group TEXT NOT NULL DEFAULT 'normal',
     PRIMARY KEY (group_id, qq_id),
     FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE,
-    FOREIGN KEY (qq_id) REFERENCES users(qq_id) ON DELETE CASCADE,
+    FOREIGN KEY (qq_id) REFERENCES users(qq_id) ON DELETE CASCADE
 );
 
 -- 保存语录的表

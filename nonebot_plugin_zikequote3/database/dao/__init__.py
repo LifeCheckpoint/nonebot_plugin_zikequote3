@@ -14,7 +14,6 @@ from .review_dao import ReviewDAO
 from .group_member_dao import GroupMemberDAO
 from .msg_queue_dao import MsgQueueDAO, QueueGroupMessageCountDAO
 from .nickname_dao import UserNicknameDAO, GroupNicknameDAO
-from .permission_dao import PermissionGroupDAO
 from .group_configs_dao import GroupConfigsDAO
 from .image_dao import ImageDAO
 from .msgid_quoteid_map_dao import MappingDAO
@@ -47,7 +46,6 @@ class DAOFactory:
         self.queue_count_dao = QueueGroupMessageCountDAO(connection_manager)
         self.user_nickname_dao = UserNicknameDAO(connection_manager)
         self.group_nickname_dao = GroupNicknameDAO(connection_manager)
-        self.permission_dao = PermissionGroupDAO(connection_manager)
         self.group_configs_dao = GroupConfigsDAO(connection_manager)
         self.image_dao = ImageDAO(connection_manager)
         self.mapping_dao = MappingDAO(connection_manager)
@@ -87,10 +85,6 @@ class DAOFactory:
     def get_group_nickname_dao(self) -> GroupNicknameDAO:
         """获取群名片DAO"""
         return self.group_nickname_dao
-    
-    def get_permission_dao(self) -> PermissionGroupDAO:
-        """获取权限组DAO"""
-        return self.permission_dao
     
     def get_group_configs_dao(self) -> GroupConfigsDAO:
         """获取群配置DAO"""

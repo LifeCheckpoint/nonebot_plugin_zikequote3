@@ -596,7 +596,6 @@ if __name__ == "__main__":
     """
     ## 使用指南
 
-    在最上面的 sys.path.append(...) 中，修改为 nonebot_plugin_zikequote3 插件的绝对路径。
     修改 main() 函数中的 json_data_path 和 db_path 变量为 JSON 数据目录和目标数据库路径。
     运行脚本进行数据迁移。
     """
