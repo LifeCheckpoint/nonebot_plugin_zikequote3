@@ -309,7 +309,7 @@ class QuoteMigration:
                 avatar=user_data['avatar']
             )
             
-            if self.user_dao.create_user(user_create):
+            if self.user_dao._create_user(user_create):
                 success_count += 1
             else:
                 self.logger.warning(f"创建用户失败: {user_id}")
@@ -341,7 +341,7 @@ class QuoteMigration:
                 name=group_data['name']
             )
             
-            if self.group_dao.create_group(group_create):
+            if self.group_dao._create_group(group_create):
                 success_count += 1
             else:
                 self.logger.warning(f"创建群组失败: {group_id}")
@@ -374,7 +374,7 @@ class QuoteMigration:
                     current_using=is_current,
                     name=nickname
                 )
-                if self.user_nickname_dao.add_nickname(nickname_create):
+                if self.user_nickname_dao._add_nickname(nickname_create):
                     user_nickname_count += 1
                 else:
                     self.logger.warning(f"创建用户昵称失败: {user_id} - {nickname}")
@@ -402,7 +402,7 @@ class QuoteMigration:
                         current_using=is_current,
                         name=card
                     )
-                    if self.group_nickname_dao.add_group_nickname(nickname_create):
+                    if self.group_nickname_dao._add_group_nickname(nickname_create):
                         group_nickname_count += 1
                     else:
                         self.logger.warning(f"创建群名片失败: 群 {group_id} 用户 {user_id} - {card}")
@@ -447,7 +447,7 @@ class QuoteMigration:
                 total_show_time=quote_data['total_show_time']
             )
             
-            if self.quote_dao.create_quote(quote_create):
+            if self.quote_dao._create_quote(quote_create):
                 success_count += 1
             else:
                 self.logger.warning(f"创建语录失败: {quote_data['quote_id']}")
@@ -475,7 +475,7 @@ class QuoteMigration:
             )
             
             try:
-                if self.review_dao.create_review(review_create):
+                if self.review_dao._create_review(review_create):
                     success_count += 1
                 else:
                     self.logger.warning(f"创建评论失败: {review_data['review_id']}")
@@ -511,7 +511,7 @@ class QuoteMigration:
                     permission_group='normal'
                 )
                 
-                if self.group_member_dao.create_group_member(member_create):
+                if self.group_member_dao._create_group_member(member_create):
                     success_count += 1
                 else:
                     self.logger.warning(f"创建群成员关系失败: 群 {group_id} 用户 {user_id}")
