@@ -6,7 +6,7 @@ from .base_dao import BaseDAO
 from ..models.msgid_quoteid_map import MsgQuoteID, MsgQuoteIDCreate
 
 
-class MsgQuoteIDDAO(BaseDAO[MsgQuoteID]):
+class MappingDAO(BaseDAO[MsgQuoteID]):
     """
     消息ID与语录ID映射数据访问对象，处理消息ID与语录ID映射相关的数据库操作
     """

@@ -15,6 +15,7 @@ from .nickname_dao import UserNicknameDAO, GroupNicknameDAO
 from .permission_dao import PermissionGroupDAO
 from .group_configs_dao import GroupConfigsDAO
 from .image_dao import ImageDAO
+from .msgid_quoteid_map_dao import MappingDAO
 from ..connection_manager import ConnectionManager
 
 
@@ -45,7 +46,7 @@ class DAOFactory:
         self.permission_dao = PermissionGroupDAO(connection_manager)
         self.group_configs_dao = GroupConfigsDAO(connection_manager)
         self.image_dao = ImageDAO(connection_manager)
-        self.image_dao = ImageDAO(connection_manager)
+        self.mapping_dao = MappingDAO(connection_manager)
     
     def get_user_dao(self) -> UserDAO:
         """获取用户DAO"""
@@ -95,21 +96,6 @@ class DAOFactory:
         """获取图片DAO"""
         return self.image_dao
 
-
-# 导出所有DAO类
-__all__ = [
-    "BaseDAO",
-    "UserDAO",
-    "GroupDAO",
-    "QuoteDAO",
-    "ReviewDAO",
-    "GroupMemberDAO",
-    "MsgQueueDAO",
-    "QueueGroupMessageCountDAO",
-    "UserNicknameDAO",
-    "GroupNicknameDAO",
-    "PermissionGroupDAO",
-    "GroupConfigsDAO",
-    "ImageDAO",
-    "DAOFactory"
-]
+    def get_mapping_dao(self) -> MappingDAO:
+        """获取映射DAO"""
+        return self.mapping_dao

@@ -99,31 +99,31 @@ async def f_comment_quote(event: GroupME, bot: Bot, arg: Message = CommandArg())
     语录评论方式：
     `(reply) /评语录 评价`
     """
-    # # 判断 reply
-    # reply = event.reply
-    # content = arg.extract_plain_text().strip()
-    # if reply == None or content == "":
-    #     await mfinish(matcher_comment_quote, msg_comment_quote_reply_args_missing)
-    #     return
-
-    # # 获取语录 ID
-    # quote_id = get_mapping(event.group_id, reply.message_id)
-    # if quote_id == None:
-    #     await mfinish(matcher_comment_quote, quote_not_found)
-    #     return
+    from ...services.quote_management.mapping_service import s_get_mapping_by_msgid
+    from ...services.review_management.review_service import s_add_review
     
-    # # 添加评论
-    # result = add_comment(event.group_id, quote_id, QuoteV2Comment(
-    #     content=content,
-    #     author_id=event.sender.user_id or -1,
-    #     author_name=await get_group_member_cardname(event.group_id, event.sender.user_id or -1, bot) or event.sender.nickname or "",
-    #     time_stamp=event.time,
-    # ))
+    # 判断 reply
+    reply = event.reply
+    content = arg.extract_plain_text().strip()
+    if reply == None or content == "":
+        await matcher_comment_quote.finish("请回复一条语录并输入评论内容哦~")
 
-    # if result:
-    #     await mfinish(matcher_comment_quote, msg_comment_quote_success)
-    # else:
-    #     await mfinish(matcher_comment_quote, msg_comment_quote_failed)
+    async with exception_finish_failure(matcher_comment_quote, "添加评论"):
+        # 获取语录 ID
+        quote_id = s_get_mapping_by_msgid(str(reply.message_id))
+        if quote_id is None:
+            raise ValueError("未找到对应语录，无法评论呢~")
+        
+        # 添加评论
+        s_add_review(
+            user_id=str(event.sender.user_id),
+            quote_id=quote_id,
+            content=content,
+        )
+
+        await matcher_comment_quote.send("评论添加成功~(≧▽≦)")
+    
+    # TODO: 添加消息映射
 
 
 @matcher_del_comment.handle()
