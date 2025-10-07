@@ -44,7 +44,6 @@ CREATE TABLE IF NOT EXISTS group_members (
     PRIMARY KEY (group_id, qq_id),
     FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE,
     FOREIGN KEY (qq_id) REFERENCES users(qq_id) ON DELETE CASCADE,
-    FOREIGN KEY (permission_group) REFERENCES permission_groups(group_name) ON DELETE SET DEFAULT
 );
 
 -- 保存语录的表
@@ -100,28 +99,6 @@ CREATE TABLE IF NOT EXISTS queue_group_message_counts (
     FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
 );
 
--- 权限组
-CREATE TABLE IF NOT EXISTS permission_groups (
-    group_name TEXT PRIMARY KEY,
-    be_collected BOOLEAN DEFAULT TRUE NOT NULL,
-    get_quote BOOLEAN DEFAULT TRUE NOT NULL,
-    add_quote BOOLEAN DEFAULT TRUE NOT NULL,
-    search_quote BOOLEAN DEFAULT TRUE NOT NULL,
-    review_quote BOOLEAN DEFAULT TRUE NOT NULL,
-    update_quote_self BOOLEAN DEFAULT TRUE NOT NULL,
-    update_quote_group BOOLEAN DEFAULT FALSE NOT NULL,
-    delete_review_self BOOLEAN DEFAULT TRUE NOT NULL,
-    delete_review_group BOOLEAN DEFAULT FALSE NOT NULL,
-    delete_quote_self BOOLEAN DEFAULT TRUE NOT NULL,
-    delete_quote_group BOOLEAN DEFAULT FALSE NOT NULL,
-    modify_settings BOOLEAN DEFAULT FALSE NOT NULL,
-    common_operations BOOLEAN DEFAULT TRUE NOT NULL,
-    ban_others BOOLEAN DEFAULT FALSE NOT NULL,
-    op_others BOOLEAN DEFAULT FALSE NOT NULL,
-    banop_others BOOLEAN DEFAULT FALSE NOT NULL,
-    others BOOLEAN DEFAULT FALSE NOT NULL
-);
-
 -- 消息 ID 与语录 ID 映射表
 CREATE TABLE IF NOT EXISTS msgid_quoteid_map (
     msg_id TEXT PRIMARY KEY,
@@ -135,85 +112,6 @@ CREATE TABLE IF NOT EXISTS group_configs (
     toml_config TEXT NOT NULL,
     FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
 );
-
-COMMIT;
-
--- 添加权限组
-BEGIN TRANSACTION;
-
-WITH new_permissions (
-    group_name,
-    be_collected, get_quote, add_quote, search_quote, review_quote,
-    update_quote_self, update_quote_group,
-    delete_review_self, delete_review_group,
-    delete_quote_self, delete_quote_group,
-    modify_settings, common_operations,
-    ban_others, op_others, banop_others, others
-) AS (
-    VALUES
-        -- normal 默认
-        (
-            'normal',
-            TRUE, TRUE, TRUE, TRUE, TRUE,
-            TRUE, FALSE,
-            TRUE, FALSE,
-            TRUE, FALSE,
-            FALSE, TRUE,
-            FALSE, FALSE, FALSE, FALSE
-        ),
-        -- ban 完全封禁
-        (
-            'ban',
-            FALSE, FALSE, FALSE, FALSE, FALSE,
-            FALSE, FALSE,
-            FALSE, FALSE,
-            FALSE, FALSE,
-            FALSE, FALSE,
-            FALSE, FALSE, FALSE, FALSE
-        ),
-        -- ban_cud 不能添加、修改、删除或评论
-        (
-            'ban_cud',
-            TRUE, TRUE, FALSE, TRUE, FALSE,
-            FALSE, FALSE,
-            FALSE, FALSE,
-            FALSE, FALSE,
-            FALSE, FALSE,
-            FALSE, FALSE, FALSE, FALSE
-        ),
-        -- op 管理员
-        (
-            'op',
-            TRUE, TRUE, TRUE, TRUE, TRUE,
-            TRUE, TRUE,  -- 可修改群内其他语录
-            TRUE, TRUE,  -- 可删除群内其他评论
-            TRUE, TRUE,  -- 可删除群内其他语录
-            FALSE, TRUE,
-            TRUE, FALSE, FALSE, FALSE  -- 可 ban 普通用户
-        ),
-        -- root 最高权限
-        (
-            'root',
-            TRUE, TRUE, TRUE, TRUE, TRUE,
-            TRUE, TRUE,
-            TRUE, TRUE,
-            TRUE, TRUE,
-            TRUE, TRUE, -- 可修改设置
-            TRUE, TRUE, TRUE, TRUE -- 可设置他人 op
-        )
-)
-INSERT INTO permission_groups (
-    group_name,
-    be_collected, get_quote, add_quote, search_quote, review_quote,
-    update_quote_self, update_quote_group,
-    delete_review_self, delete_review_group,
-    delete_quote_self, delete_quote_group,
-    modify_settings, common_operations,
-    ban_others, op_others, banop_others, others
-)
-SELECT *
-FROM new_permissions
-WHERE NOT EXISTS (SELECT 1 FROM permission_groups);
 
 COMMIT;
 

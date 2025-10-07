@@ -1,12 +1,11 @@
 from ..imports import on_message, on_command
-from ..services.permission_management.permission_service import permission_check, PMS
 
 
 # region 自动收集事件
 # auto_collect_cmds
 
 matcher_collecting_listener = on_message(
-    priority=15, block=False, permission=permission_check(PMS.BE_COLLECTED)
+    priority=15, block=False
 )
 
 # endregion
@@ -22,7 +21,7 @@ _rank_cmds = (
 matcher_rank = on_command(
     _rank_cmds[0],
     aliases=set(_rank_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.GET_QUOTE)
+    priority=10, block=True
 )
 
 _quote_list_cmds = (
@@ -32,7 +31,7 @@ _quote_list_cmds = (
 matcher_quote_list = on_command(
     _quote_list_cmds[0],
     aliases=set(_quote_list_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.GET_QUOTE)
+    priority=10, block=True
 )
 
 # endregion
@@ -44,7 +43,7 @@ _add_quote_cmds = ("加语录", "添加语录", "新增语录", "语录添加")
 matcher_add_quote = on_command(
     _add_quote_cmds[0],
     aliases=set(_add_quote_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.ADD_QUOTE)
+    priority=10, block=True
 )
 
 _add_quote_image_cmds = (
@@ -57,14 +56,14 @@ _add_quote_image_cmds = (
 matcher_add_quote_image = on_command(
     _add_quote_image_cmds[0],
     aliases=set(_add_quote_image_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.ADD_QUOTE)
+    priority=10, block=True
 )
 
 _remove_quote_cmds = ("删语录", "删除语录", "语录删除")
 matcher_remove_quote = on_command(
     _remove_quote_cmds[0],
     aliases=set(_remove_quote_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.DELETE_QUOTE_GROUP)
+    priority=10, block=True
 )
 
 _remove_quote_image_cmds = (
@@ -75,21 +74,21 @@ _remove_quote_image_cmds = (
 matcher_remove_quote_image = on_command(
     _remove_quote_image_cmds[0],
     aliases=set(_remove_quote_image_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.DELETE_QUOTE_GROUP)
+    priority=10, block=True
 )
 
 _comment_quote_cmds = ("评语录", "评论语录", "评价语录", "评")
 matcher_comment_quote = on_command(
     _comment_quote_cmds[0],
     aliases=set(_comment_quote_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.REVIEW_QUOTE)
+    priority=10, block=True
 )
 
 _del_comment_cmds = ("删评论", "删除评论", "删除语录评论", "删除语录评价", "删语评")
 matcher_del_comment = on_command(
     _del_comment_cmds[0],
     aliases=set(_del_comment_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.DELETE_REVIEW_GROUP)
+    priority=10, block=True
 )
 
 # endregion
@@ -105,14 +104,14 @@ _random_quote_cmds = (
 matcher_random_quote = on_command(
     _random_quote_cmds[0],
     aliases=set(_random_quote_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.GET_QUOTE)
+    priority=10, block=True
 )
 
 _quote_card_cmds = ("语录卡", "语录卡片", "语录card")
 matcher_quote_card = on_command(
     _quote_card_cmds[0],
     aliases=set(_quote_card_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.GET_QUOTE)
+    priority=10, block=True
 )
 
 _quote_search_cmds = (
@@ -123,7 +122,7 @@ _quote_search_cmds = (
 matcher_quote_search = on_command(
     _quote_search_cmds[0],
     aliases=set(_quote_search_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.GET_QUOTE)
+    priority=10, block=True
 )
 
 _quote_image_fetching_cmds = (
@@ -135,7 +134,7 @@ _quote_image_fetching_cmds = (
 matcher_quote_image_fetching = on_command(
     _quote_image_fetching_cmds[0],
     aliases=set(_quote_image_fetching_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.GET_QUOTE)
+    priority=10, block=True
 )
 
 # endregion
@@ -151,7 +150,7 @@ _update_quote_cmds = (
 matcher_update_quote = on_command(
     _update_quote_cmds[0],
     aliases=set(_update_quote_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.COMMON_OPERATIONS)
+    priority=10, block=True
 )
 
 # endregion
@@ -166,7 +165,7 @@ _get_quote_setting_cmds = (
 matcher_get_quote_setting = on_command(
     _get_quote_setting_cmds[0],
     aliases=set(_get_quote_setting_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.MODIFY_SETTINGS)
+    priority=10, block=True
 )
 
 _modify_quote_setting_cmds = (
@@ -177,7 +176,7 @@ _modify_quote_setting_cmds = (
 matcher_modify_quote_setting = on_command(
     _modify_quote_setting_cmds[0],
     aliases=set(_modify_quote_setting_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.MODIFY_SETTINGS)
+    priority=10, block=True
 )
 
 _batch_modify_quote_setting_cmds = (
@@ -188,7 +187,7 @@ _batch_modify_quote_setting_cmds = (
 matcher_batch_modify_quote_setting = on_command(
     _batch_modify_quote_setting_cmds[0],
     aliases=set(_batch_modify_quote_setting_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.MODIFY_SETTINGS)
+    priority=10, block=True
 )
 
 _reset_quote_setting_cmds = (
@@ -198,7 +197,7 @@ _reset_quote_setting_cmds = (
 matcher_reset_quote_setting = on_command(
     _reset_quote_setting_cmds[0],
     aliases=set(_reset_quote_setting_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.MODIFY_SETTINGS)
+    priority=10, block=True
 )
 
 _reload_quote_setting_cmds = (
@@ -208,7 +207,7 @@ _reload_quote_setting_cmds = (
 matcher_reload_quote_setting = on_command(
     _reload_quote_setting_cmds[0],
     aliases=set(_reload_quote_setting_cmds[1:]),
-    priority=10, block=True, permission=permission_check(PMS.MODIFY_SETTINGS)
+    priority=10, block=True
 )
 
 # endregion

@@ -4,7 +4,8 @@
 """
 
 import sys
-sys.path.append(r"D:\wroot\nonebot-plugin-zikequote3\nonebot_plugin_zikequote3")
+import pathlib
+sys.path.append(str(pathlib.Path(__file__).parent.parent.parent))
 
 import json
 import logging
@@ -253,7 +254,6 @@ class QuoteMigration:
                         self.users_data[comment_author_id] = {
                             'qq_id': comment_author_id,
                             'avatar': None,
-                            'permission_group': 'normal'
                         }
                     
                     # 为评论生成随机的10位整数ID
@@ -508,7 +508,6 @@ class QuoteMigration:
                 member_create = GroupMemberCreate(
                     qq_id=user_id,
                     group_id=group_id,
-                    permission_group='normal'
                 )
                 
                 if self.group_member_dao._create_group_member(member_create):
@@ -578,9 +577,9 @@ def main():
     )
     
     # JSON数据目录路径
-    json_data_path = r"C:\Users\24352\AppData\Local\nonebot2\ZikeQuote3\quotes"
+    json_data_path = r""
     # 数据库路径
-    db_path = r"C:\Users\24352\AppData\Local\nonebot2\ZikeQuote3\quotes\zikequote3.db"
+    db_path = r""
     
     # 创建迁移器并运行
     migration = QuoteMigration(json_data_path, db_path)
