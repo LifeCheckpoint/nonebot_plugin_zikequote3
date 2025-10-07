@@ -21,11 +21,16 @@ import typer
 
 # 插件根目录
 _plugin_root = Path(__file__).parent
+module_command_root = _plugin_root / "command"
 module_database_root = _plugin_root / "database"
 module_html_capture_root = _plugin_root / "html_capture"
+module_llm_services_root = _plugin_root / "llm_services"
 module_render_html_root = _plugin_root / "templates" / "output" / "rendered_html"
 module_render_image_root = _plugin_root / "templates" / "output" / "rendered_image"
+module_resources_root = _plugin_root / "resources"
+module_services_root = _plugin_root / "services"
 module_templates_root = _plugin_root / "templates"
+module_utils_root = _plugin_root / "utils"
 
 data_db_path = store.get_data_dir("ZikeQuote3") / "zikequote3.db"
 data_image_root = store.get_data_dir("ZikeQuote3") / "quote_images"

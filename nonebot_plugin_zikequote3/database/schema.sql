@@ -1,9 +1,9 @@
 -- 初始化数据库 Schema
 -- 该文件在每次加载数据库时都会执行一次以确保完整性
 -- 因此任何情况下都不要加入破坏性操作
+-- 以下所有操作均幂等
 
--- 以下所有操作均幂等，且自动被游标事务化
-
+BEGIN TRANSACTION;
 PRAGMA user_version = 1;
 
 -- 保存基本用户信息的表
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS group_nicknames (
     FOREIGN KEY (group_id) REFERENCES groups(group_id)
 );
 
--- 保存用户群组关系的表
+-- 保存用户群组关系的表，包含权限配置
 CREATE TABLE IF NOT EXISTS group_members (
     group_id TEXT NOT NULL,
     qq_id TEXT NOT NULL,
@@ -129,8 +129,18 @@ CREATE TABLE IF NOT EXISTS msgid_quoteid_map (
     FOREIGN KEY (quote_id) REFERENCES quotes(quote_id) ON DELETE CASCADE
 );
 
+-- 群聊自定义配置表
+CREATE TABLE IF NOT EXISTS group_configs (
+    group_id TEXT PRIMARY KEY,
+    toml_config TEXT NOT NULL,
+    FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
+);
+
+COMMIT;
+
 -- 添加权限组
 BEGIN TRANSACTION;
+
 WITH new_permissions (
     group_name,
     be_collected, get_quote, add_quote, search_quote, review_quote,
@@ -204,14 +214,12 @@ INSERT INTO permission_groups (
 SELECT *
 FROM new_permissions
 WHERE NOT EXISTS (SELECT 1 FROM permission_groups);
+
 COMMIT;
 
--- 群聊自定义配置表
-CREATE TABLE IF NOT EXISTS group_configs (
-    group_id TEXT PRIMARY KEY,
-    toml_config TEXT NOT NULL,
-    FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
-);
+BEGIN TRANSACTION;
 
 -- 索引优化
 ANALYZE;
+
+COMMIT;
