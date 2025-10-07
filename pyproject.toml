@@ -24,7 +24,6 @@ dependencies = [
   "sentry-sdk>=2.39.0",
   "typer>=0.19.2",
   "nonebot-plugin-access-control-api>=1.2.1",
-  "nonebot-plugin-access-control>=1.2.4",
 ]
 requires-python = ">=3.12"
 readme = "README.md"
