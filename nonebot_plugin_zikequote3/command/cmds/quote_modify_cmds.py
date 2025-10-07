@@ -62,33 +62,33 @@ async def f_remove_quote(event: GroupME, bot: Bot, arg: Message = CommandArg()):
     1. `(reply) /删语录`
     2. `/删语录 语录ID`
     """
-    # 判断权限
-    if is_quote_manager(event.sender.user_id):
-        await mfinish(matcher_remove_quote, msg_no_permission, event="删语录")
+    # # 判断权限
+    # if is_quote_manager(event.sender.user_id):
+    #     await mfinish(matcher_remove_quote, msg_no_permission, event="删语录")
     
-    # 判断 reply
-    reply = event.reply
-    key = arg.extract_plain_text().strip()
-    if reply == None and key == "":
-        await mfinish(matcher_remove_quote, msg_remove_quote_reply_args_missing)
-        return
+    # # 判断 reply
+    # reply = event.reply
+    # key = arg.extract_plain_text().strip()
+    # if reply == None and key == "":
+    #     await mfinish(matcher_remove_quote, msg_remove_quote_reply_args_missing)
+    #     return
     
-    # 获取语录 ID
-    if reply != None:
-        quote_id = get_mapping(event.group_id, reply.message_id)
-    else:
-        quote_id = int(key) if key.isdigit() else None
+    # # 获取语录 ID
+    # if reply != None:
+    #     quote_id = get_mapping(event.group_id, reply.message_id)
+    # else:
+    #     quote_id = int(key) if key.isdigit() else None
         
-    if quote_id == None:
-        await mfinish(matcher_remove_quote, quote_not_found)
-        return
+    # if quote_id == None:
+    #     await mfinish(matcher_remove_quote, quote_not_found)
+    #     return
     
-    # 删除语录
-    result = remove_quote(event.group_id, quote_id)
-    if result:
-        await mfinish(matcher_remove_quote, msg_remove_quote_success)
-    else:
-        await mfinish(matcher_remove_quote, msg_remove_quote_failed)
+    # # 删除语录
+    # result = remove_quote(event.group_id, quote_id)
+    # if result:
+    #     await mfinish(matcher_remove_quote, msg_remove_quote_success)
+    # else:
+    #     await mfinish(matcher_remove_quote, msg_remove_quote_failed)
 
 
 @matcher_comment_quote.handle()
@@ -99,31 +99,31 @@ async def f_comment_quote(event: GroupME, bot: Bot, arg: Message = CommandArg())
     语录评论方式：
     `(reply) /评语录 评价`
     """
-    # 判断 reply
-    reply = event.reply
-    content = arg.extract_plain_text().strip()
-    if reply == None or content == "":
-        await mfinish(matcher_comment_quote, msg_comment_quote_reply_args_missing)
-        return
+    # # 判断 reply
+    # reply = event.reply
+    # content = arg.extract_plain_text().strip()
+    # if reply == None or content == "":
+    #     await mfinish(matcher_comment_quote, msg_comment_quote_reply_args_missing)
+    #     return
 
-    # 获取语录 ID
-    quote_id = get_mapping(event.group_id, reply.message_id)
-    if quote_id == None:
-        await mfinish(matcher_comment_quote, quote_not_found)
-        return
+    # # 获取语录 ID
+    # quote_id = get_mapping(event.group_id, reply.message_id)
+    # if quote_id == None:
+    #     await mfinish(matcher_comment_quote, quote_not_found)
+    #     return
     
-    # 添加评论
-    result = add_comment(event.group_id, quote_id, QuoteV2Comment(
-        content=content,
-        author_id=event.sender.user_id or -1,
-        author_name=await get_group_member_cardname(event.group_id, event.sender.user_id or -1, bot) or event.sender.nickname or "",
-        time_stamp=event.time,
-    ))
+    # # 添加评论
+    # result = add_comment(event.group_id, quote_id, QuoteV2Comment(
+    #     content=content,
+    #     author_id=event.sender.user_id or -1,
+    #     author_name=await get_group_member_cardname(event.group_id, event.sender.user_id or -1, bot) or event.sender.nickname or "",
+    #     time_stamp=event.time,
+    # ))
 
-    if result:
-        await mfinish(matcher_comment_quote, msg_comment_quote_success)
-    else:
-        await mfinish(matcher_comment_quote, msg_comment_quote_failed)
+    # if result:
+    #     await mfinish(matcher_comment_quote, msg_comment_quote_success)
+    # else:
+    #     await mfinish(matcher_comment_quote, msg_comment_quote_failed)
 
 
 @matcher_del_comment.handle()
@@ -136,28 +136,28 @@ async def f_del_comment(event: GroupME, bot: Bot, arg: Message = CommandArg()):
 
     除管理员外，只有评论作者可以删除自己的评论
     """
-    # 获取评论 ID
-    key = arg.extract_plain_text().strip()
-    if key == "":
-        await mfinish(matcher_del_comment, msg_remove_quote_reply_args_missing)
-        return
+    # # 获取评论 ID
+    # key = arg.extract_plain_text().strip()
+    # if key == "":
+    #     await mfinish(matcher_del_comment, msg_remove_quote_reply_args_missing)
+    #     return
     
-    if not key.isdigit():
-        await mfinish(matcher_del_comment, msg_remove_quote_id_invalid)
-        return
+    # if not key.isdigit():
+    #     await mfinish(matcher_del_comment, msg_remove_quote_id_invalid)
+    #     return
     
-    # 判断权限
-    if is_quote_manager(event.sender.user_id):
-        filt: Callable[[QuoteInfoV2], bool] = lambda q: any([(comment.comment_id == int(key) and comment.author_id == event.sender.user_id) for comment in q.comments])
-        quotes = get_typed_quote_list(event.group_id, filter=filt)
+    # # 判断权限
+    # if is_quote_manager(event.sender.user_id):
+    #     filt: Callable[[QuoteInfoV2], bool] = lambda q: any([(comment.comment_id == int(key) and comment.author_id == event.sender.user_id) for comment in q.comments])
+    #     quotes = get_typed_quote_list(event.group_id, filter=filt)
 
-        if len(quotes) == 0:
-            await mfinish(matcher_del_comment, msg_no_permission, event="删评论")
-            return
+    #     if len(quotes) == 0:
+    #         await mfinish(matcher_del_comment, msg_no_permission, event="删评论")
+    #         return
 
-    # 删除评论
-    result = remove_quote(event.group_id, int(key))
-    if result:
-        await mfinish(matcher_del_comment, msg_remove_quote_success)
-    else:
-        await mfinish(matcher_del_comment, msg_remove_quote_failed)
+    # # 删除评论
+    # result = remove_quote(event.group_id, int(key))
+    # if result:
+    #     await mfinish(matcher_del_comment, msg_remove_quote_success)
+    # else:
+    #     await mfinish(matcher_del_comment, msg_remove_quote_failed)
