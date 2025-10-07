@@ -1,16 +1,33 @@
 from ...imports import *
 from ..comand_definition import *
-from ...interface.message_handle import read_msg_and_pickup
 
 
 @matcher_update_quote.handle()
 async def f_update_quote(event: GroupME):
     """
     强制更新语录
-    """
-    await msend(matcher_update_quote, msg_quote_on_update)
-    result = await read_msg_and_pickup(event.group_id)
-    if result:
-        await mfinish(matcher_update_quote, msg_quote_update_success)
-    else:
-        await mfinish(matcher_update_quote, msg_quote_update_failed)
+
+    与自动收集命令流程类似
+    """    
+    from ...services.quote_management.collection.queue_service import s_queue_clear
+    from ...services.quote_management.collection.llm_selection_service import s_llm_selection
+    from ...services.quote_management.collection.save_service import s_save_selection_result
+    from ...services.review_management.review_service import s_add_review, AUTHOR_AI
+
+    async with exception_finish_failure(matcher_update_quote, "语录强制更新"):
+        # LLM 筛选
+        response, usage = await s_llm_selection(str(event.group_id))
+        logger.info(f"筛选到 {response.num_quotes} 条语录，输入 {usage.input_tokens} tokens，输出 {usage.output_tokens} tokens，总计 {usage.total_tokens} tokens")
+    
+        # 最终语录入库
+        s_save_selection_result(str(event.group_id), response)
+    
+        # 清空队列
+        s_queue_clear(str(event.group_id))
+    
+        # 为每条语录添加系统评论
+        for quote in response.quotes:
+            with exception_report(ignore_all=True):
+                s_add_review(AUTHOR_AI, quote.id, quote.comment)
+
+        await matcher_update_quote.finish(f"本次语录更新完成，共新增 {response.num_quotes} 条语录~")
