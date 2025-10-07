@@ -1,45 +1,55 @@
 from ...imports import *
 from ..comand_definition import *
-from ...interface.message_handle import (
-    get_group_member_cardname,
-    get_mapping
-)
 
 
 @matcher_add_quote.handle()
 async def f_add_quote(event: GroupME, bot: Bot):
     """
     添加语录
-
-    语录添加方式有两种，通过是否有 reply 进行判断：
-    1. `(reply) /加语录`
-    2. `/加语录 @某人 语录内容`
     """
-    # 判断 reply
+    from ...services.quote_management.addtion.add_quote_service import s_add_quote
+    from ...services.quote_management.showcase.quote_image_service import s_get_image_data_from_file_or_url, s_image_info_register
+    from ...msgtexts.quote_modify import add_quote_success
+    
     reply = event.reply
+    if reply == None:
+        await matcher_add_quote.finish("您还没有回复想要加的语录呢(^///^)")
+    
+    if reply.sender.user_id == bot.self_id:
+        await matcher_add_quote.finish("呀呀呀，怎么在添加我的语录呢？(>_<)")    
+    
+    if reply.message.only("image"):
+        # TODO: 修改数据模型以支持纯图片语录
+        await matcher_add_quote.finish("暂不支持纯图片语录哦~")
 
-    if reply != None:
-        reply_msg = reply.message.extract_plain_text().strip()
-        if reply_msg == "":
-            await mfinish(matcher_add_quote, msg_add_quote_reply_args_missing)
+    if reply.message.extract_plain_text().strip() == "":
+        await matcher_add_quote.finish("语录内容不能为空哦~")
+
+    # 检查图片数据存在性
+    img = None
+    if reply.message.count("image") >= 1:
+        async with exception_finish_failure(matcher_add_quote, "获取将要添加的图片数据"):
+            picseg_data = reply.message.get("image")[0].data
+            img_url_or_file = picseg_data["url"] if "url" in picseg_data else picseg_data["file"]
+            img = await s_get_image_data_from_file_or_url(img_url_or_file)
+
+    async with exception_finish_failure(matcher_add_quote, "添加语录"):
+        if img is not None:
+            uuid = await s_image_info_register(img, img_url_or_file)
+        else:
+            uuid = None
         
-        try:
-            add_quote(event.group_id, QuoteInfoV2(
-                quote_id = reply.message_id,
-                author_id = reply.sender.user_id or -1,
-                author_name = reply.sender.nickname or "",
-                author_card = await get_group_member_cardname(event.group_id, reply.sender.user_id or -1, bot) or "",
-                time_stamp = event.time,
-                quote = reply_msg,
-            ))
-        except Exception as e:
-            await mfinish(matcher_add_quote, msg_add_quote_failed, error=str(e))
-
-        await mfinish(matcher_add_quote, msg_add_quote_success, author=reply.sender.nickname)
-
-    else:
-        # 检查 At 消息段
-        # TODO
+        s_add_quote(
+            group_id=str(event.group_id),
+            author_id=str(reply.sender.user_id),
+            content=reply.message.extract_plain_text().strip(),
+            image_uuid=uuid if img is not None else None,
+        )
+    
+    await matcher_add_quote.send(add_quote_success())
+    
+    with exception_report(not_raise=True):
+        # TODO: 添加消息映射
         pass
 
 

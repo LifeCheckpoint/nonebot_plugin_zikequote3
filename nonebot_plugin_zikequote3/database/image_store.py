@@ -51,9 +51,11 @@ class ImageStore:
         
         return directory
     
-    def _determine_extension(self,
-                           image_data: Union[bytes, Path, PILImageType],
-                           filename: Optional[str] = None) -> str:
+    def _determine_extension(
+        self,
+        image_data: Union[bytes, Path, PILImageType],
+        filename: Optional[str] = None
+    ) -> str:
         """
         确定图像文件扩展名
         
@@ -92,9 +94,11 @@ class ImageStore:
         # 默认使用PNG格式
         return ".png"
     
-    def upload(self,
-               image_data: Union[bytes, Path, PILImageType],
-               filename: Optional[str] = None) -> str:
+    def upload(
+        self,
+        image_data: Union[bytes, Path, PILImageType],
+        filename: Optional[str] = None
+    ) -> str:
         """
         上传图像文件
         
