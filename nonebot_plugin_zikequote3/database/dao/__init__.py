@@ -4,6 +4,8 @@ DAO模块初始化文件
 提供所有DAO类的导入和工厂模式的统一管理
 """
 
+from typing import TYPE_CHECKING
+
 from .base_dao import BaseDAO
 from .user_dao import UserDAO
 from .group_dao import GroupDAO
@@ -16,7 +18,9 @@ from .permission_dao import PermissionGroupDAO
 from .group_configs_dao import GroupConfigsDAO
 from .image_dao import ImageDAO
 from .msgid_quoteid_map_dao import MappingDAO
-from ..connection_manager import ConnectionManager
+
+if TYPE_CHECKING:
+    from ..connection_manager import ConnectionManager
 
 
 class DAOFactory:
@@ -24,7 +28,7 @@ class DAOFactory:
     DAO工厂类，统一管理所有DAO实例
     """
     
-    def __init__(self, connection_manager: ConnectionManager):
+    def __init__(self, connection_manager: "ConnectionManager"):
         """
         初始化DAO工厂
         

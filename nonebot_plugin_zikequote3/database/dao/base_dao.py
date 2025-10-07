@@ -1,16 +1,18 @@
-from typing import Generic, TypeVar
+from __future__ import annotations
+
 import logging
+from typing import TYPE_CHECKING, Generic, TypeVar
 
-from ..connection_manager import ConnectionManager
+T = TypeVar("T")
 
-T = TypeVar('T')
+if TYPE_CHECKING:
+    from ..connection_manager import ConnectionManager
 
 class BaseDAO(Generic[T]):
     """
     数据访问对象基类
     """
-    
-    def __init__(self, connection_manager: ConnectionManager):
+    def __init__(self, connection_manager: "ConnectionManager"):
         """
         初始化 BaseDAO
         
@@ -19,3 +21,4 @@ class BaseDAO(Generic[T]):
         """
         self.connection_manager = connection_manager
         self.logger = logging.getLogger(self.__class__.__name__)
+

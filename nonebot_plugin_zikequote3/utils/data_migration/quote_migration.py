@@ -4,7 +4,7 @@
 """
 
 import sys
-sys.path.append(r"")
+sys.path.append(r"D:\wroot\nonebot-plugin-zikequote3\nonebot_plugin_zikequote3")
 
 import json
 import logging
@@ -576,9 +576,9 @@ def main():
     )
     
     # JSON数据目录路径
-    json_data_path = r""
+    json_data_path = r"C:\Users\24352\AppData\Local\nonebot2\ZikeQuote3\quotes"
     # 数据库路径
-    db_path = r""
+    db_path = r"C:\Users\24352\AppData\Local\nonebot2\ZikeQuote3\quotes\zikequote3.db"
     
     # 创建迁移器并运行
     migration = QuoteMigration(json_data_path, db_path)
@@ -591,3 +591,11 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    """
+    ## 使用指南
+
+    在最上面的 sys.path.append(...) 中，修改为 nonebot_plugin_zikequote3 插件的绝对路径。
+    修改 main() 函数中的 json_data_path 和 db_path 变量为 JSON 数据目录和目标数据库路径。
+    运行脚本进行数据迁移。
+    """
