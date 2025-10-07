@@ -2,7 +2,7 @@
 -- 该文件在每次加载数据库时都会执行一次以确保完整性
 -- 因此任何情况下都不要加入破坏性操作
 
-BEGIN;
+-- 以下所有操作均幂等，且自动被游标事务化
 
 PRAGMA user_version = 1;
 
@@ -213,11 +213,5 @@ CREATE TABLE IF NOT EXISTS group_configs (
     FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
 );
 
-COMMIT;
-
-BEGIN;
-
 -- 索引优化
 ANALYZE;
-
-COMMIT;
