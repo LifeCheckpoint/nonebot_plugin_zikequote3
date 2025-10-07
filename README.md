@@ -58,7 +58,7 @@ ZikeQuote3 基于 NoneBot2 开发，便于群聊语录自动收集与管理，�
 
 ## 🔧 安装
 
-1. 确保您已经安装了 NoneBot2，然后安装插件本体
+1. 确保您已经安装了 NoneBot2，然后**安装插件本体**
     <details close>
     <summary>手动安装</summary>
     下载该仓库后，进入命令行并使用
@@ -107,7 +107,17 @@ ZikeQuote3 基于 NoneBot2 开发，便于群聊语录自动收集与管理，�
         plugins = ["nonebot-plugin-zikequote3"]
         ```
 
-2. **确保系统安装 Node.js** 并安装截图 npm 依赖
+2. **推荐安装权限控制主插件** `nonebot-plugin-access-control`，然后设置默认权限
+    <details>
+    <summary>权限控制主插件安装方式</summary>
+        与常规插件安装方式类似，例如
+
+        pip install nonebot-plugin-access-control
+    </details>
+
+    可以参照其<a herf="https://github.com/bot-ssttkkl/nonebot-plugin-access-control">文档</a>进行权限配置，具体配置项可见本插件文档或本插件根目录下的 `nonebot_plugin_zikequote3\services\permission_management\permission_node_definition.py`
+
+3. **确保系统安装 Node.js** 并安装截图 npm 依赖
     <details close>
     <summary>安装截图依赖</summary>
     可通过如下方式检查：
@@ -131,9 +141,9 @@ ZikeQuote3 基于 NoneBot2 开发，便于群聊语录自动收集与管理，�
         ```
     </details>
 
-3. 创建文件 `llm_services/api_key` 配置 LLM API Key，可修改 `llm_services/client.py` 使用自定义客户端、模型与自定义参数
+4. 创建文件 `llm_services/api_key` 配置 LLM API Key，可修改 `llm_services/client.py` 使用自定义客户端、模型与自定义参数
 
-4. (可选) 创建文件 `utils/sentry_dsn` 可配置 Sentry 异常报错捕获平台的 dsn
+5. (可选) 创建文件 `utils/sentry_dsn` 可配置 Sentry 异常报错捕获平台的 dsn
 
 ## ⚙ 配置
 
