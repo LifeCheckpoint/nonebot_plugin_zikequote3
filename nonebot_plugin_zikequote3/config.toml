@@ -2,8 +2,6 @@
 # 如有修改，注意调整 `config.py` 中的配置模型
 
 [general]
-enable_zikequote3 = true # 总开关
-enable_groups = [] # 启用插件的群列表
 check_intergrity = true # 启动时检查 Node.js 依赖完整性
 
 [collecting]
@@ -19,7 +17,7 @@ img_max_size_mb = 5 # 允许收集的图片最大体积，单位 MB
 update_personal_info_probability = 0.05 # 收到消息时更新个人信息的概率
 
 [fetching]
-enable_cross_group_fetching = false # 允许跨群抓取调用者个人语录
+# enable_cross_group_fetching = false # 允许跨群抓取调用者个人语录
 algorithm = "IFW --lambda 1.0" # 语录推荐算法命令，有 IFW 和 LogIFW 等，可参见文档设置参数
 
 [showcase]
@@ -29,9 +27,6 @@ page_num_limit = 5 # 语录展示最大页数
 comment_show_method = "noai" # 语录评论展示方式: no | noai | all
 hitokoto_url = "https://v1.hitokoto.cn" # 获取名人名言 Hitokoto API
 render_device_factor = 2.0 # 图片渲染设备像素比
-
-[permission]
-static_root = [] # 不可变最高权限 QQ 号列表，List[int]
 
 [llm]
 # 模型配置较为复杂，其它端点调整工作需到 llm_services/client.py 进行修改
@@ -47,10 +42,7 @@ dsn_path = "utils/sentry_dsn" # Sentry DSN 文件路径，相对插件根目录�
 [configure]
 # 不允许进行热更新，并且应该全局应用的配置项
 nonreloadable_items = [
-    "general.enable_zikequote3",
-    "general.enable_groups",
     "general.check_intergrity",
-    "permission.static_root",
     "llm.api_key_path",
     "sentry.dsn_path",
     "configure.nonreloadable_items",

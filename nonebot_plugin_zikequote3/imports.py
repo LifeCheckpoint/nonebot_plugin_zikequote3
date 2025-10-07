@@ -12,14 +12,17 @@ from pydantic import BaseModel, Field
 from typing import Optional, Union, Literal, Callable, Any, Dict, List, Tuple
 import asyncio
 import colorsys
-import nonebot_plugin_localstore as store
 import random
 import requests
 import sentry_sdk
 import tomlkit
 import typer
 
-# 插件根目录
+
+# 插件目录配置
+require("nonebot_plugin_localstore")
+import nonebot_plugin_localstore as store
+
 _plugin_root = Path(__file__).parent
 module_command_root = _plugin_root / "command"
 module_database_root = _plugin_root / "database"
@@ -53,6 +56,13 @@ from .html_capture import html_img_render, parse_md2html
 
 # 异常上报与日志工具
 from .utils.error_report import exception_report, exception_finish_failure
+
+
+# 权限配置插件载入与权限服务创建
+require("nonebot_plugin_access_control_api")
+from nonebot_plugin_access_control_api.service import create_plugin_service
+from .services.permission_management.permission_node_definition import PermissionServiceNodes
+perm_nodes = PermissionServiceNodes(create_plugin_service("my_quote_plugin"))
 
 
 # 加载 toml 配置并注入 BaseModel

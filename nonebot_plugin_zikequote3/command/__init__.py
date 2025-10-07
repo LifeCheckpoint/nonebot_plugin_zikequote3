@@ -9,7 +9,7 @@ async def f_startup():
     """
     from ..imports import default_cfg
 
-    if not default_cfg.general.enable_zikequote3 or not default_cfg.general.check_intergrity:
+    if not default_cfg.general.check_intergrity:
         return
 
     if verify_installation():

@@ -13,9 +13,7 @@ class ConfigPath(BaseModel):
 # 具体配置模型
 
 class GeneralConfig(BaseModel):
-    enable_zikequote3: bool = True
     check_intergrity: bool = True
-    enable_groups: List[int] = Field(default_factory=list)
 
 class CollectingConfig(BaseModel):
     enable_auto_collect: bool = True
@@ -30,7 +28,7 @@ class CollectingConfig(BaseModel):
     update_personal_info_probability: float = 0.05
 
 class FetchingConfig(BaseModel):
-    enable_cross_group_fetching: bool = False
+    # enable_cross_group_fetching: bool = False
     algorithm: str = "IFW --lambda 1.0"
 
 class ShowcaseConfig(BaseModel):
@@ -40,9 +38,6 @@ class ShowcaseConfig(BaseModel):
     comment_show_method: Literal["no", "noai", "all"] = "noai"
     hitokoto_url: str = "https://v1.hitokoto.cn"
     render_device_factor: float = 2.0
-
-class PermissionConfig(BaseModel):
-    static_root: List[str] = Field(default_factory=list)
 
 class LLMConfig(BaseModel):
     base_url: str = "https://openrouter.ai/api/v1"
@@ -62,7 +57,6 @@ class ConfigSchema(BaseModel):
     collecting: CollectingConfig = Field(default_factory=CollectingConfig)
     fetching: FetchingConfig = Field(default_factory=FetchingConfig)
     showcase: ShowcaseConfig = Field(default_factory=ShowcaseConfig)
-    permission: PermissionConfig = Field(default_factory=PermissionConfig)
     llm: LLMConfig = Field(default_factory=LLMConfig)
     sentry: SentryConfig = Field(default_factory=SentryConfig)
     configure: ConfigureConfig = Field(default_factory=ConfigureConfig)

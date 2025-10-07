@@ -1,4 +1,4 @@
-from ..imports import on_message, on_command
+from ..imports import on_message, on_command, perm_nodes
 
 
 # region 自动收集事件
@@ -7,6 +7,8 @@ from ..imports import on_message, on_command
 matcher_collecting_listener = on_message(
     priority=15, block=False
 )
+perm_nodes.n_becollected_llm.patch_matcher(matcher_collecting_listener)
+
 
 # endregion
 
@@ -23,6 +25,8 @@ matcher_rank = on_command(
     aliases=set(_rank_cmds[1:]),
     priority=10, block=True
 )
+perm_nodes.n_ranking.patch_matcher(matcher_rank)
+
 
 _quote_list_cmds = (
     "语录列表", "语录list", "语录列表", "列语录",
@@ -33,6 +37,8 @@ matcher_quote_list = on_command(
     aliases=set(_quote_list_cmds[1:]),
     priority=10, block=True
 )
+perm_nodes.n_listing.patch_matcher(matcher_quote_list)
+
 
 # endregion
 
@@ -45,6 +51,8 @@ matcher_add_quote = on_command(
     aliases=set(_add_quote_cmds[1:]),
     priority=10, block=True
 )
+perm_nodes.n_quote_add.patch_matcher(matcher_add_quote)
+
 
 _add_quote_image_cmds = (
     "加语录图", "加语录图片", "加语录图像", "语录加图", "语录加图片", "语录加图像",
@@ -58,6 +66,8 @@ matcher_add_quote_image = on_command(
     aliases=set(_add_quote_image_cmds[1:]),
     priority=10, block=True
 )
+perm_nodes.n_quote_attachimage.patch_matcher(matcher_add_quote_image)
+
 
 _remove_quote_cmds = ("删语录", "删除语录", "语录删除")
 matcher_remove_quote = on_command(
@@ -65,6 +75,8 @@ matcher_remove_quote = on_command(
     aliases=set(_remove_quote_cmds[1:]),
     priority=10, block=True
 )
+perm_nodes.n_quote_delete.patch_matcher(matcher_remove_quote)
+
 
 _remove_quote_image_cmds = (
     "删语录图", "删语录图片", "删语录图像", "语录删图", "语录删图片", "语录删图像",
@@ -76,6 +88,8 @@ matcher_remove_quote_image = on_command(
     aliases=set(_remove_quote_image_cmds[1:]),
     priority=10, block=True
 )
+perm_nodes.n_quote_removeimage.patch_matcher(matcher_remove_quote_image)
+
 
 _comment_quote_cmds = ("评语录", "评论语录", "评价语录", "评")
 matcher_comment_quote = on_command(
@@ -83,6 +97,8 @@ matcher_comment_quote = on_command(
     aliases=set(_comment_quote_cmds[1:]),
     priority=10, block=True
 )
+perm_nodes.n_review_add.patch_matcher(matcher_comment_quote)
+
 
 _del_comment_cmds = ("删评论", "删除评论", "删除语录评论", "删除语录评价", "删语评")
 matcher_del_comment = on_command(
@@ -90,6 +106,8 @@ matcher_del_comment = on_command(
     aliases=set(_del_comment_cmds[1:]),
     priority=10, block=True
 )
+perm_nodes.n_review_delete.patch_matcher(matcher_del_comment)
+
 
 # endregion
 
@@ -106,6 +124,8 @@ matcher_random_quote = on_command(
     aliases=set(_random_quote_cmds[1:]),
     priority=10, block=True
 )
+perm_nodes.n_get_text.patch_matcher(matcher_random_quote)
+
 
 _quote_card_cmds = ("语录卡", "语录卡片", "语录card")
 matcher_quote_card = on_command(
@@ -113,6 +133,8 @@ matcher_quote_card = on_command(
     aliases=set(_quote_card_cmds[1:]),
     priority=10, block=True
 )
+perm_nodes.n_get_card.patch_matcher(matcher_quote_card)
+
 
 _quote_search_cmds = (
     "查语录", "查询语录", "语录搜索", "语录查找",
@@ -124,6 +146,8 @@ matcher_quote_search = on_command(
     aliases=set(_quote_search_cmds[1:]),
     priority=10, block=True
 )
+perm_nodes.n_search.patch_matcher(matcher_quote_search)
+
 
 _quote_image_fetching_cmds = (
     "语录查图", "语录取图", "查语录图", "取语录图",
@@ -136,6 +160,8 @@ matcher_quote_image_fetching = on_command(
     aliases=set(_quote_image_fetching_cmds[1:]),
     priority=10, block=True
 )
+perm_nodes.n_get_image.patch_matcher(matcher_quote_image_fetching)
+
 
 # endregion
 
@@ -152,6 +178,8 @@ matcher_update_quote = on_command(
     aliases=set(_update_quote_cmds[1:]),
     priority=10, block=True
 )
+perm_nodes.n_forcerefresh.patch_matcher(matcher_update_quote)
+
 
 # endregion
 
@@ -167,6 +195,8 @@ matcher_get_quote_setting = on_command(
     aliases=set(_get_quote_setting_cmds[1:]),
     priority=10, block=True
 )
+perm_nodes.n_settings_get.patch_matcher(matcher_get_quote_setting)
+
 
 _modify_quote_setting_cmds = (
     "修改语录设置", "修改语录配置", "设置语录设置", "设置语录配置", 
@@ -178,6 +208,8 @@ matcher_modify_quote_setting = on_command(
     aliases=set(_modify_quote_setting_cmds[1:]),
     priority=10, block=True
 )
+perm_nodes.n_settings_modify_group.patch_matcher(matcher_modify_quote_setting)
+
 
 _batch_modify_quote_setting_cmds = (
     "批量修改语录设置", "批量修改语录配置", "批量设置语录设置", "批量设置语录配置", 
@@ -189,6 +221,8 @@ matcher_batch_modify_quote_setting = on_command(
     aliases=set(_batch_modify_quote_setting_cmds[1:]),
     priority=10, block=True
 )
+perm_nodes.n_settings_modify_global.patch_matcher(matcher_batch_modify_quote_setting)
+
 
 _reset_quote_setting_cmds = (
     "重置语录设置", "重置语录配置", "恢复语录设置", "恢复语录配置",
@@ -199,6 +233,8 @@ matcher_reset_quote_setting = on_command(
     aliases=set(_reset_quote_setting_cmds[1:]),
     priority=10, block=True
 )
+perm_nodes.n_settings_reset_group.patch_matcher(matcher_reset_quote_setting)
+
 
 _reload_quote_setting_cmds = (
     "重载语录设置", "重载语录配置", "重新加载语录设置", "重新加载语录配置",
@@ -209,5 +245,7 @@ matcher_reload_quote_setting = on_command(
     aliases=set(_reload_quote_setting_cmds[1:]),
     priority=10, block=True
 )
+perm_nodes.n_settings_modify.patch_matcher(matcher_reload_quote_setting)
+
 
 # endregion
