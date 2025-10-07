@@ -4,3 +4,4 @@ from .quote_modify_cmds import *
 from .quote_read_cmds import *
 from .quote_statistics_cmds import *
 from .settings_cmds import *
+from .other_cmds import *

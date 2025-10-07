@@ -249,3 +249,33 @@ perm_nodes.n_settings_modify.patch_matcher(matcher_reload_quote_setting)
 
 
 # endregion
+
+# region 其他命令
+# other_cmds
+
+_get_privacy_cmds = (
+    "语录隐私政策", "语录隐私", "语录政策", "语录隐私条款",
+    "查看语录隐私政策", "查看语录隐私", "查看语录政策", "查看语录隐私条款",
+    "语录隐私政策查看", "语录隐私查看", "语录政策查看", "语录隐私条款查看",
+)
+matcher_get_privacy = on_command(
+    _get_privacy_cmds[0],
+    aliases=set(_get_privacy_cmds[1:]),
+    priority=10, block=True
+)
+perm_nodes.n_perm_s.patch_matcher(matcher_get_privacy)
+
+
+_stop_using_zikequote3_cmds = (
+    "停用语录", "停用zikequote3", "停用Zikequote3", "停用ZikeQuote3",
+    "停用语录功能",
+)
+matcher_stop_using_zikequote3 = on_command(
+    _stop_using_zikequote3_cmds[0],
+    aliases=set(_stop_using_zikequote3_cmds[1:]),
+    priority=10, block=True
+)
+perm_nodes.n_perm_s.patch_matcher(matcher_stop_using_zikequote3)
+
+
+# endregion
