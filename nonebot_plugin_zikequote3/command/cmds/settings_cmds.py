@@ -12,7 +12,7 @@ async def f_get_quote_setting(event: GroupME):
 
     async with exception_finish_failure(matcher_get_quote_setting, "生成配置预览"):
         html = s_get_setting_html(event.group_id)
-        image_data = await html_img_render(html, module_render_image_root, )
+        image_data = await html_img_render(html, module_render_image_root, width=800, height=200)
         await matcher_get_quote_setting.finish(MsgSeg.image(image_data))
 
 

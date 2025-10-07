@@ -70,7 +70,6 @@ def s_get_random_quote(key: str, event: GroupME, filter_: Optional[Callable[[Quo
     """
     from ....services.algorithm_management.common_algo_service import s_deduplicate_by_field_last
     from ....services.quote_management.showcase.basic_quote_service import s_get_quote_by_group
-    from ....services.quote_management.showcase.rand_quote_service import s_search_quotes_by_author_id, s_search_quotes_by_keyword, s_rand_quote_choice_by_algorithm
     from ....services.user_management.user_parser_service import s_parse_at_and_str_user
 
     quotes_pool: List[Quote] = []
@@ -130,6 +129,7 @@ def s_get_quote_card_html(group_id: str, quote: Quote) -> str:
             content=r.content,
         ) for r in reviews]
 
+    image_data = None
     if quote.image_content_uuid is not None:
         with exception_report("获取语录图片"):
             image_data = to_data_uri(s_get_quote_image_data(quote.image_content_uuid))
@@ -138,7 +138,7 @@ def s_get_quote_card_html(group_id: str, quote: Quote) -> str:
         return card.render_card(
             quote_id=quote.quote_id,
             quote=quote.content,
-            image_uri=image_data if quote.image_content_uuid else None,
+            image_uri=image_data,
             author_name=author,
             comments=comments
         )

@@ -45,6 +45,16 @@ CREATE TABLE IF NOT EXISTS group_members (
     FOREIGN KEY (qq_id) REFERENCES users(qq_id) ON DELETE CASCADE
 );
 
+-- 保存语录图片信息的表
+CREATE TABLE IF NOT EXISTS images (
+    uuid TEXT PRIMARY KEY,
+    original_filename TEXT,
+    stored_filename TEXT NOT NULL,
+    file_path TEXT NOT NULL,
+    time_stamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    checksum_sha256 TEXT NOT NULL
+);
+
 -- 保存语录的表
 CREATE TABLE IF NOT EXISTS quotes (
     quote_id TEXT PRIMARY KEY,
@@ -68,16 +78,6 @@ CREATE TABLE IF NOT EXISTS reviews (
     content TEXT NOT NULL,
     FOREIGN KEY (author_id) REFERENCES users(qq_id),
     FOREIGN KEY (quote_id) REFERENCES quotes(quote_id) ON DELETE CASCADE
-);
-
--- 保存语录图片信息的表
-CREATE TABLE IF NOT EXISTS images (
-    uuid TEXT PRIMARY KEY,
-    original_filename TEXT,
-    stored_filename TEXT NOT NULL,
-    file_path TEXT NOT NULL,
-    time_stamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    checksum_sha256 TEXT NOT NULL
 );
 
 -- 保存暂存信息的表，暂存当前尚未进行语录收集的聊天记录

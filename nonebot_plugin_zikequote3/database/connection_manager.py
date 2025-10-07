@@ -144,7 +144,7 @@ class ConnectionManager:
                 current_version = 1
             logging.info("数据库初始化完成，版本: %s", current_version)
 
-        # 逐步执行迁移
+        # 若有迁移，逐步执行
         migrations = self._collect_sequential_migrations(migrations_dir)
         target_version = current_version
         for end, _ in migrations.values():

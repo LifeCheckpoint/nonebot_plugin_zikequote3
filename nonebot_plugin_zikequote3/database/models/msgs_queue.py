@@ -9,6 +9,7 @@ class MsgQueueBase(BaseModel):
 
 class MsgQueueCreate(MsgQueueBase):
     """创建消息队列记录模型"""
+    # FIXME: 创建时可选时间戳，而不是必须默认时间戳
     pass
 
 class MsgQueue(MsgQueueBase):

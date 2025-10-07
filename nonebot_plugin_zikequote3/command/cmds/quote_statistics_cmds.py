@@ -18,7 +18,7 @@ async def f_rank(event: GroupME, arg: Message = CommandArg()):
     else:
         max_showcase_number = cfg[event.group_id].showcase.max_rank_user_num
 
-    async with exception_finish_failure(matcher_quote_list, "获取语录排行"):
+    async with exception_finish_failure(matcher_rank, "获取语录排行"):
         # 获取详细信息 HTML
         time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         html = s_get_ranking_html(str(event.group_id), time, max_showcase_number)

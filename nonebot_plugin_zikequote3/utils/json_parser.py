@@ -14,12 +14,16 @@ def llm_json_parse_model(model_type: Type[T], json_str: str) -> T:
     
     Returns:
         对应的 Pydantic 模型实例
+    
+    Raises:
+        json.JSONDecodeError: 如果 JSON 格式错误
+        pydantic.ValidationError: 如果数据无法转换为指定的 Pydantic 模型
     """
     json_str = json_str.strip()
     
     # 清理可能的代码块标记
     code_block_markers = [
-        "```json", "```Json", "```JSON", "```Json", "```"
+        "```json", "```Json", "```JSON", "```"
     ]
     for marker in code_block_markers:
         if json_str.startswith(marker) and json_str.endswith("```"):

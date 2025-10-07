@@ -17,7 +17,7 @@ def ifw(
         1.0, "--lambda", "-l", min=0.0, max=5.0,
         help="正则化幂变换系数，默认 1.0，高则均匀"
     ),
-    a_: int = typer.Option(
+    a_: float = typer.Option(
         1.0, "--a", "-a", min=0.1,
         help="冷启动平滑稀疏，默认 1，高则启动时方差大"
     )

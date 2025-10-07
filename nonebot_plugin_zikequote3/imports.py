@@ -75,10 +75,10 @@ def notify_reload_config():
 
 
 # 配置 sentry
-dsn_path = Path(default_cfg.sentry.dsn_path)
+dsn_path = Path(default_cfg.sentry.dsn_path) if default_cfg.sentry.dsn_path else None
 dsn_str = (
     dsn_path if dsn_path.is_absolute() else (_plugin_root / dsn_path)
-).read_text(encoding="utf-8").strip()
+).read_text(encoding="utf-8").strip() if dsn_path and dsn_path.is_file() else None
 sentry_sdk.init(dsn=dsn_str if dsn_str else None, send_default_pii=True)
 
 
