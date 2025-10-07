@@ -111,7 +111,10 @@ class ConnectionManager:
         初始化数据库。如果是首次运行，执行 schema.sql；
         否则根据 PRAGMA user_version 自动执行增量迁移脚本。
         """
-        from ..imports import module_database_root
+        if not schema_file:
+            from ..imports import module_database_root
+        else:
+            module_database_root = schema_file.parent
 
         schema_file = (
             schema_file

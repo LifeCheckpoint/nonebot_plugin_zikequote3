@@ -540,6 +540,8 @@ class QuoteMigration:
             self.logger.info("数据库表结构初始化完成")
         except Exception as e:
             self.logger.error(f"数据库表结构初始化失败: {e}")
+            import traceback
+            traceback.print_exc()
             return False
         
         # 加载JSON数据
