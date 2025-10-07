@@ -8,6 +8,7 @@ async def f_add_quote(event: GroupME, bot: Bot):
     添加语录
     """
     from ...services.quote_management.addtion.add_quote_service import s_add_quote
+    from ...services.quote_management.mapping_service import s_create_mapping_from_msgid_to_quoteid
     from ...services.quote_management.showcase.quote_image_service import s_get_image_data_from_file_or_url, s_image_info_register
     from ...msgtexts.quote_modify import add_quote_success
     
@@ -39,7 +40,7 @@ async def f_add_quote(event: GroupME, bot: Bot):
         else:
             uuid = None
         
-        s_add_quote(
+        qid = s_add_quote(
             group_id=str(event.group_id),
             author_id=str(reply.sender.user_id),
             content=reply.message.extract_plain_text().strip(),
@@ -48,19 +49,15 @@ async def f_add_quote(event: GroupME, bot: Bot):
     
     await matcher_add_quote.send(add_quote_success())
     
+    # 添加消息映射
     with exception_report(not_raise=True):
-        # TODO: 添加消息映射
-        pass
+        s_create_mapping_from_msgid_to_quoteid(str(reply.message_id), qid)
 
 
 @matcher_remove_quote.handle()
 async def f_remove_quote(event: GroupME, bot: Bot, arg: Message = CommandArg()):
     """
     删除语录
-
-    语录删除方式：
-    1. `(reply) /删语录`
-    2. `/删语录 语录ID`
     """
     # # 判断权限
     # if is_quote_manager(event.sender.user_id):
