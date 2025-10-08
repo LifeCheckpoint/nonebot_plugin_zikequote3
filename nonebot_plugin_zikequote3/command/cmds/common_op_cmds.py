@@ -28,6 +28,6 @@ async def f_update_quote(event: GroupME):
         # 为每条语录添加系统评论
         for quote in response.quotes:
             with exception_report(ignore_all=True):
-                s_add_review(AUTHOR_AI, quote.id, quote.comment)
+                s_add_review(AUTHOR_AI, quote.msg_id, quote.comment)
 
         await matcher_update_quote.finish(f"本次语录更新完成，共新增 {response.num_quotes} 条语录~")

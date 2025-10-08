@@ -2,9 +2,10 @@ from ....imports import *
 from pydantic import BaseModel, Field
 
 class QuotePickupItem(BaseModel):
-    id: str = Field(..., description="消息 ID")
+    msg_id: str = Field(..., description="消息 ID")
     quote: str = Field(..., description="语录内容")
     comment: str = Field(..., description="简要评述")
+    quote_id: Optional[str] = Field(None, description="语录 ID，仅在已存在语录时有值")
 
 class LLMSelectionResponse(BaseModel):
     num_quotes: int = Field(..., description="筛选出的语录数量")

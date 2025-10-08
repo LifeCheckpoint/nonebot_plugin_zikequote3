@@ -46,13 +46,15 @@ async def f_collecting_listener(event: GroupME, bot: Bot):
     
     # 最终语录入库
     with exception_report(ignore_all=True):
-        s_save_selection_result(str(event.group_id), response)
+        response_with_qid = s_save_selection_result(str(event.group_id), response)
+    
+    # 为每条语录添加系统评论
+    for quote in response_with_qid.quotes:
+        if quote.quote_id is not None:
+            with exception_report(ignore_all=True):
+                s_add_review(AUTHOR_AI, quote.quote_id, quote.comment)
     
     # 清空队列
     with exception_report(ignore_all=True):
         s_queue_clear(str(event.group_id))
     
-    # 为每条语录添加系统评论
-    for quote in response.quotes:
-        with exception_report(ignore_all=True):
-            s_add_review(AUTHOR_AI, quote.id, quote.comment)
