@@ -1,16 +1,15 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+from datetime import datetime
+from nonebot import logger
 from pathlib import Path
 from typing import Optional
-import logging
-import sqlite3
 import re
+import shutil
+import sqlite3
 
 from .dao import DAOFactory
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
 
 class ConnectionManager:
     """
@@ -45,7 +44,7 @@ class ConnectionManager:
             yield cursor
             conn.commit()
         except sqlite3.Error as e:
-            logging.error(f"Database error: {e}")
+            logger.error(f"Database error: {e}")
             conn.rollback()
             raise
 
@@ -54,7 +53,7 @@ class ConnectionManager:
         if self._conn:
             self._conn.close()
             self._conn = None
-            logging.info("Database connection closed.")
+            logger.info("Database connection closed.")
 
     # Schema 初始化与迁移相关方法
 
@@ -72,7 +71,22 @@ class ConnectionManager:
         script = file_path.read_text(encoding="utf-8")
         with self.cursor() as cursor:
             cursor.executescript(script)
-        logging.info("执行 SQL 脚本完成: %s", file_path.name)
+        logger.info("执行 SQL 脚本完成: %s", file_path.name)
+
+    def _backup_database(self) -> Optional[Path]:
+        """
+        数据库创建备份。
+        """
+        if not self.db_path.exists():
+            logger.warning("数据库文件不存在，跳过备份: %s", self.db_path)
+            return None
+
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        backup_filename = f"zikequote3.{timestamp}.db.bak"
+        backup_path = self.db_path.parent / backup_filename
+        shutil.copy2(self.db_path, backup_path)
+        logger.info("数据库备份已创建: %s", backup_path)
+        return backup_path
 
     def _collect_sequential_migrations(self, migrations_dir: Path):
         """
@@ -88,14 +102,14 @@ class ConnectionManager:
         for path in sorted(migrations_dir.glob("*.sql")):
             match = pattern.match(path.name)
             if not match:
-                logging.debug("忽略无法解析的迁移文件: %s", path.name)
+                logger.debug("忽略无法解析的迁移文件: %s", path.name)
                 continue
             start, end = map(int, match.groups())
             if end != start + 1:
-                logging.warning("忽略非连续迁移文件 (%s): 仅支持 vN_to_vN+1", path.name)
+                logger.warning("忽略非连续迁移文件 (%s): 仅支持 vN_to_vN+1", path.name)
                 continue
             if start in migrations:
-                logging.warning("检测到重复的起始版本迁移文件，将忽略: %s", path.name)
+                logger.warning("检测到重复的起始版本迁移文件，将忽略: %s", path.name)
                 continue
             migrations[start] = (end, path)
         return migrations
@@ -131,24 +145,28 @@ class ConnectionManager:
             raise FileNotFoundError("无法找到数据库 schema 文件")
 
         current_version = self._get_user_version()
-        logging.info("当前数据库版本: %s", current_version)
+        logger.info("当前数据库版本: %s", current_version)
 
         # 首次安装：执行 schema.sql
         if current_version == 0:
-            logging.info("未检测到数据库版本，执行初始 Schema...")
+            logger.info("未检测到数据库版本，执行初始 Schema...")
             self._run_sql_script(schema_file)
             current_version = self._get_user_version()
             if current_version == 0:
-                logging.warning("schema.sql 未设置 PRAGMA user_version，自动设为 1")
+                logger.warning("schema.sql 未设置 PRAGMA user_version，自动设为 1")
                 self._set_user_version(1)
                 current_version = 1
-            logging.info("数据库初始化完成，版本: %s", current_version)
+            logger.info("数据库初始化完成，版本: %s", current_version)
 
         # 若有迁移，逐步执行
         migrations = self._collect_sequential_migrations(migrations_dir)
         target_version = current_version
         for end, _ in migrations.values():
             target_version = max(target_version, end)
+
+        if current_version < target_version:
+            logger.info("检测到数据库迁移需求，开始执行备份...")
+            self._backup_database()
 
         while current_version < target_version:
             next_info = migrations.get(current_version)
@@ -157,15 +175,15 @@ class ConnectionManager:
                     f"缺少从版本 {current_version} 升级到 {current_version + 1} 的迁移脚本"
                 )
             next_version, migration_file = next_info
-            logging.info("执行迁移: %s -> %s (%s)", current_version, next_version, migration_file.name)
+            logger.info("执行迁移: %s -> %s (%s)", current_version, next_version, migration_file.name)
             self._run_sql_script(migration_file)
             applied_version = self._get_user_version()
             if applied_version != next_version:
-                logging.warning(
+                logger.warning(
                     "迁移脚本未更新 user_version，自动设为 %s", next_version
                 )
                 self._set_user_version(next_version)
                 applied_version = next_version
             current_version = applied_version
 
-        logging.info("数据库 Schema 已更新至最新版本: %s", current_version)
+        logger.info("数据库 Schema 已更新至最新版本: %s", current_version)
