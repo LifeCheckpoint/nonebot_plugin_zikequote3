@@ -37,7 +37,7 @@ def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int) -> st
         authors = db.dao.get_group_member_dao().get_members_by_group(group_id)
         
         for author in authors:
-            with service_exception("处理单个用户排行数据", not_raise=True):
+            with service_exception("处理单个用户排行数据", raise_again=False):
                 # 获取昵称，顺序获取防止失败
                 name = db.dao.get_group_nickname_dao().get_current_group_nickname(author.qq_id, group_id)
                 if name is None:

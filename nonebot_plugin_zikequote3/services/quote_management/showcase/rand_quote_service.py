@@ -84,7 +84,7 @@ def s_get_random_quote(key: str, event: GroupME, filter_: Optional[Callable[[Quo
     with service_exception("解析用户参数"):
         union_users = s_parse_at_and_str_user(key, event, exact=False, empty_parse_to_self=False, multiple_at=True, parse_at_all=True)
         for u in union_users:
-            with service_exception(not_raise=True):
+            with service_exception(raise_again=False):
                 if u == "all":
                     # @全体，视为获取群内所有语录
                     quotes_pool = s_get_quote_by_group(str(event.group_id))
