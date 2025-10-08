@@ -13,20 +13,21 @@ requires-python = ">=3.12"
 readme = "README.md"
 license = { text = "MIT" }
 dependencies = [
-  "nonebot2>=2.0.0",
-  "nonebot-adapter-onebot>=2.0.0",
-  "nonebot-plugin-localstore>=0.7.0",
-  "pydantic>=2.0.0",
-  "openai>=1.76.0",
-  "requests>=2.26.0",
-  "pillow>=11.3.0",
   "jinja2>=3.1.6",
   "markdown>=3.9",
-  "pymdown-extensions>=10.16.1",
-  "pydantic-ai>=1.0.14",
-  "sentry-sdk>=2.39.0",
-  "typer>=0.19.2",
+  "nonebot-adapter-onebot>=2.0.0",
   "nonebot-plugin-access-control-api>=1.2.1",
+  "nonebot-plugin-localstore>=0.7.0",
+  "nonebot2>=2.0.0",
+  "openai>=1.76.0",
+  "pillow>=11.3.0",
+  "pydantic-ai>=1.0.14",
+  "pydantic>=2.0.0",
+  "pymdown-extensions>=10.16.1",
+  "requests>=2.26.0",
+  "sentry-sdk>=2.39.0",
+  "tomlkit>=0.13.3",
+  "typer>=0.19.2",
 ]
 
 [project.optional-dependencies]
@@ -34,7 +35,6 @@ dev = [
   "pytest>=8.3.5",
   "pytest-asyncio>=1.0.0",
   "nonebug>=0.4.3",
-  "tomlkit>=0.13.3",
 ]
 
 [project.urls]
