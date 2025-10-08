@@ -15,7 +15,7 @@ def api_request_error(error: Optional[str] = None) -> str:
     Returns:
         渲染后的消息
     """
-    return render_template("quote_read/api_request_error.jinja2", error=error)
+    return render_template("api_request_error.jinja2", error=error)
 
 
 def send_quote(author: str, quote: str) -> str:
@@ -29,7 +29,7 @@ def send_quote(author: str, quote: str) -> str:
     Returns:
         渲染后的消息
     """
-    return render_template("quote_read/send_quote.jinja2", author=author, quote=quote)
+    return render_template("send_quote.jinja2", author=author, quote=quote)
 
 
 def quote_not_found(key: Optional[str] = None) -> str:
@@ -42,7 +42,7 @@ def quote_not_found(key: Optional[str] = None) -> str:
     Returns:
         渲染后的消息
     """
-    return render_template("quote_read/quote_not_found.jinja2", key=key)
+    return render_template("quote_not_found.jinja2", key=key)
 
 
 def quote_search_empty() -> str:
@@ -52,7 +52,7 @@ def quote_search_empty() -> str:
     Returns:
         渲染后的消息
     """
-    return render_template("quote_read/quote_search_empty.jinja2")
+    return render_template("quote_search_empty.jinja2")
 
 
 __all__ = [

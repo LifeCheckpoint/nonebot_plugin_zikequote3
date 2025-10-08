@@ -11,7 +11,7 @@ def add_quote_reply_args_missing() -> str:
     Returns:
         渲染后的消息
     """
-    return render_template("quote_modify/add_quote_reply_args_missing.jinja2")
+    return render_template("add_quote_reply_args_missing.jinja2")
 
 
 def add_quote_failed() -> str:
@@ -21,7 +21,7 @@ def add_quote_failed() -> str:
     Returns:
         渲染后的消息
     """
-    return render_template("quote_modify/add_quote_failed.jinja2")
+    return render_template("add_quote_failed.jinja2")
 
 
 def add_quote_success() -> str:
@@ -31,7 +31,7 @@ def add_quote_success() -> str:
     Returns:
         渲染后的消息
     """
-    return render_template("quote_modify/add_quote_success.jinja2")
+    return render_template("add_quote_success.jinja2")
 
 
 def remove_quote_reply_args_missing() -> str:
@@ -41,7 +41,7 @@ def remove_quote_reply_args_missing() -> str:
     Returns:
         渲染后的消息
     """
-    return render_template("quote_modify/remove_quote_reply_args_missing.jinja2")
+    return render_template("remove_quote_reply_args_missing.jinja2")
 
 
 def remove_quote_success() -> str:
@@ -51,7 +51,7 @@ def remove_quote_success() -> str:
     Returns:
         渲染后的消息
     """
-    return render_template("quote_modify/remove_quote_success.jinja2")
+    return render_template("remove_quote_success.jinja2")
 
 
 def remove_quote_failed() -> str:
@@ -61,7 +61,7 @@ def remove_quote_failed() -> str:
     Returns:
         渲染后的消息
     """
-    return render_template("quote_modify/remove_quote_failed.jinja2")
+    return render_template("remove_quote_failed.jinja2")
 
 
 def remove_quote_id_invalid() -> str:
@@ -71,7 +71,7 @@ def remove_quote_id_invalid() -> str:
     Returns:
         渲染后的消息
     """
-    return render_template("quote_modify/remove_quote_id_invalid.jinja2")
+    return render_template("remove_quote_id_invalid.jinja2")
 
 
 def comment_quote_reply_args_missing() -> str:
@@ -81,7 +81,7 @@ def comment_quote_reply_args_missing() -> str:
     Returns:
         渲染后的消息
     """
-    return render_template("quote_modify/comment_quote_reply_args_missing.jinja2")
+    return render_template("comment_quote_reply_args_missing.jinja2")
 
 
 def comment_quote_success() -> str:
@@ -91,7 +91,7 @@ def comment_quote_success() -> str:
     Returns:
         渲染后的消息
     """
-    return render_template("quote_modify/comment_quote_success.jinja2")
+    return render_template("comment_quote_success.jinja2")
 
 
 def comment_quote_failed() -> str:
@@ -101,7 +101,7 @@ def comment_quote_failed() -> str:
     Returns:
         渲染后的消息
     """
-    return render_template("quote_modify/comment_quote_failed.jinja2")
+    return render_template("comment_quote_failed.jinja2")
 
 
 def quote_not_found() -> str:
@@ -111,7 +111,7 @@ def quote_not_found() -> str:
     Returns:
         渲染后的消息
     """
-    return render_template("quote_modify/quote_not_found.jinja2")
+    return render_template("quote_not_found.jinja2")
 
 
 __all__ = [

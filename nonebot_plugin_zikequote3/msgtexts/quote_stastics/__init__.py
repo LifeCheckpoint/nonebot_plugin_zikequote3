@@ -14,7 +14,7 @@ def quote_list_not_found(key: str) -> str:
     Returns:
         渲染后的消息
     """
-    return render_template("quote_stastics/quote_list_not_found.jinja2", key=key)
+    return render_template("quote_list_not_found.jinja2", key=key)
 
 
 def quote_list_ambiguous(key: str, num: int) -> str:
@@ -28,7 +28,7 @@ def quote_list_ambiguous(key: str, num: int) -> str:
     Returns:
         渲染后的消息
     """
-    return render_template("quote_stastics/quote_list_ambiguous.jinja2", key=key, num=num)
+    return render_template("quote_list_ambiguous.jinja2", key=key, num=num)
 
 
 __all__ = [

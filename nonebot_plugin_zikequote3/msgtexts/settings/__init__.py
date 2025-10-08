@@ -11,7 +11,7 @@ def quote_setting_showing_failed() -> str:
     Returns:
         渲染后的消息
     """
-    return render_template("settings/quote_setting_showing_failed.jinja2")
+    return render_template("quote_setting_showing_failed.jinja2")
 
 
 def quote_setting_update_failed() -> str:
@@ -21,7 +21,7 @@ def quote_setting_update_failed() -> str:
     Returns:
         渲染后的消息
     """
-    return render_template("settings/quote_setting_update_failed.jinja2")
+    return render_template("quote_setting_update_failed.jinja2")
 
 
 def quote_setting_reload_failed() -> str:
@@ -31,7 +31,7 @@ def quote_setting_reload_failed() -> str:
     Returns:
         渲染后的消息
     """
-    return render_template("settings/quote_setting_reload_failed.jinja2")
+    return render_template("quote_setting_reload_failed.jinja2")
 
 
 __all__ = [

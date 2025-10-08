@@ -13,7 +13,7 @@ def success(action: str, entity_name: Optional[str] = None, detial: Optional[str
         渲染后的消息
     """
     return render_template(
-        "general/success.jinja2",
+        "success.jinja2",
         action=action, entity_name=entity_name, detial=detial
     )
 
@@ -25,7 +25,7 @@ def failure(action: str, entity_name: Optional[str] = None, detial: Optional[str
         渲染后的消息
     """
     return render_template(
-        "general/failure.jinja2",
+        "failure.jinja2",
         action=action, entity_name=entity_name, detial=detial
     )
 

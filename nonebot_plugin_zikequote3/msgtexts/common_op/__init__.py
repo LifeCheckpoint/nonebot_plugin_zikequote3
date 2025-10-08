@@ -11,7 +11,7 @@ def quote_on_update() -> str:
     Returns:
         渲染后的消息
     """
-    return render_template("common_op/quote_on_update.jinja2")
+    return render_template("quote_on_update.jinja2")
 
 
 def quote_update_success() -> str:
@@ -21,7 +21,7 @@ def quote_update_success() -> str:
     Returns:
         渲染后的消息
     """
-    return render_template("common_op/quote_update_success.jinja2")
+    return render_template("quote_update_success.jinja2")
 
 
 def quote_update_failed() -> str:
@@ -31,7 +31,7 @@ def quote_update_failed() -> str:
     Returns:
         渲染后的消息
     """
-    return render_template("common_op/quote_update_failed.jinja2")
+    return render_template("quote_update_failed.jinja2")
 
 
 __all__ = [
