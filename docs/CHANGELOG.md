@@ -11,17 +11,17 @@ All notable changes to this project will be documented in this file.
 > - 截图方案调整
 > - 图片储存检查
 > - 其它依托于 LLM 的大型统计 / 语义化功能
-> - 更精细的权限配置
 
 ## \[0.4.0alpha1\] - 2025-10-?? \[BREAKING CHANGES\] ▶️
 
 ### Added
 
 - ▶️ 新增定期数据备份功能
+- 现在支持较为精细的权限配置
 - 配置现在支持群际自定义、动态修改与热更新
 - ▶️ 新增语录图片储存，允许手动添加图片到语录数据库
 - 新增多种语录推荐算法
-- ▶️ 隐私权等相关功能考虑
+- 隐私权等相关告知
 
 ### Changed
 
