@@ -63,7 +63,7 @@ from .utils.error_report import service_exception, service_exception_a, event_ex
 require("nonebot_plugin_access_control_api")
 from nonebot_plugin_access_control_api.service import create_plugin_service
 from .services.permission_management.permission_node_definition import PermissionServiceNodes
-perm_nodes = PermissionServiceNodes(create_plugin_service("my_quote_plugin"))
+perm_nodes = PermissionServiceNodes(create_plugin_service("zikequote3"))
 
 
 # 加载 toml 配置并注入 BaseModel
