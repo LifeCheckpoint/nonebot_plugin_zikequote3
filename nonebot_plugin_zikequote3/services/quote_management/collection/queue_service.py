@@ -43,6 +43,9 @@ def s_queue_clear(group_id: str):
     """
     清空收录队列
     """
+    with exception_report("重置收录计数"):
+        db.dao.get_queue_count_dao().reset_count(group_id)
+    
     with exception_report("清空收录队列"):
         db.dao.get_msg_queue_dao().clear_group_queue(group_id)
 

@@ -17,6 +17,7 @@ async def s_llm_selection(group_id: str):
     """
     from ....llm_services.client import create_model, send_llm_request_json2model
     from ....llm_services.prompts import quote_pickup
+    from ....services.user_management.user_service import s_get_user_current_display_name
 
     with exception_report("获取缓存队列消息"):
         # 获取消息，并转换为元组列表
@@ -30,7 +31,7 @@ async def s_llm_selection(group_id: str):
 
         messages_tuple = [(
             msg.msg_id,
-            db.dao.get_group_nickname_dao().get_current_group_nickname(str(msg.qq_id), group_id) or str(msg.qq_id),
+            s_get_user_current_display_name(str(msg.qq_id), group_id),
             msg.content
         ) for msg in messages]
     
@@ -41,11 +42,13 @@ async def s_llm_selection(group_id: str):
         prompt = quote_pickup.quote_pickup(int(group_id), messages_tuple)
     
     with exception_report("LLM 语录筛选请求"):
+        logger.debug(f"LLM Selection Prompt: {prompt}")
         response, usage = await send_llm_request_json2model(
-            int(group_id),
-            model,
-            prompt,
-            LLMSelectionResponse
+            group_id=int(group_id),
+            model=model,
+            content=prompt,
+            response_model=LLMSelectionResponse
         )
+        logger.debug(f"LLM Selection Raw Response: {response}")
         return response, usage
     
