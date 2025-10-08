@@ -21,7 +21,7 @@ async def s_update_group_info_api(group_id: str, bot: Bot):
     """
     通过接口 API 更新 / 创建群组信息，带缓存机制
     """
-    with exception_report(f"获取群 {group_id} 的信息"):
+    async with service_exception_a(f"获取群 {group_id} 的信息"):
         info = await bot.get_group_info(
             group_id=int(group_id),
             no_cache=False
@@ -37,6 +37,6 @@ async def s_update_group_info_api(group_id: str, bot: Bot):
             max_member_count=info.get("max_member_count"),
         )
 
-    with exception_report(f"更新群 {group_id} 的名称"):
+    async with service_exception_a(f"更新群 {group_id} 的名称"):
         db.dao.get_group_dao().update_or_create_group(group_id, ginfo.group_name)
         logger.info(f"群 {group_id} 创建 / 名称更新为 {ginfo.group_name}")

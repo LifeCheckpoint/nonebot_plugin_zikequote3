@@ -56,7 +56,7 @@ from .html_capture import html_img_render, parse_md2html
 
 
 # 异常上报与日志工具
-from .utils.error_report import exception_report, exception_finish_failure
+from .utils.error_report import service_exception, service_exception_a, event_exception_a, event_exception, event_exception_failmsg_a
 
 
 # 权限配置插件载入与权限服务创建

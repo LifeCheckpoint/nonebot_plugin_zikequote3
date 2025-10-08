@@ -19,9 +19,8 @@ async def f_collecting_listener(event: GroupME, bot: Bot):
     if not msg or msg == "" or len(msg) > cfg[event.group_id].collecting.msg_max_length:
         return
     
-    # 加入队列并获取是否达到阈值
     is_thresold = None
-    with exception_report(ignore_all=True):
+    async with event_exception_a("收录与阈值检查", operation="finish"):
         is_thresold = await s_queue_put(
             group_id=str(event.group_id),
             msg_id=str(event.message_id),
@@ -30,31 +29,27 @@ async def f_collecting_listener(event: GroupME, bot: Bot):
             bot=bot,
         )
 
-    # 以一定概率更新个人信息
+    # 概率更新
     if random.random() < cfg[event.group_id].collecting.update_personal_info_probability:
-        with exception_report(ignore_all=True):
+        async with event_exception_a("更新个人信息", operation="finish"):
             await s_update_personal_info_api(str(event.group_id), str(event.user_id), bot)
 
     # 未达到阈值，结束流程，否则尝试触发收录
     if not is_thresold:
         return
     
-    # LLM 筛选
-    with exception_report(ignore_all=True):
+    async with event_exception_a("LLM 筛选", operation="finish"):
         response, usage = await s_llm_selection(str(event.group_id))
         logger.info(f"筛选到 {response.num_quotes} 条语录，输入 {usage.input_tokens} tokens，输出 {usage.output_tokens} tokens，总计 {usage.total_tokens} tokens")
     
-    # 最终语录入库
-    with exception_report(ignore_all=True):
+    with event_exception("入库", operation="finish"):
         response_with_qid = s_save_selection_result(str(event.group_id), response)
     
-    # 为每条语录添加系统评论
     for quote in response_with_qid.quotes:
         if quote.quote_id is not None:
-            with exception_report(ignore_all=True):
+            with event_exception("添加评论", operation="finish"):
                 s_add_review(AUTHOR_AI, quote.quote_id, quote.comment)
     
-    # 清空队列
-    with exception_report(ignore_all=True):
+    with event_exception("清空队列", operation="finish"):
         s_queue_clear(str(event.group_id))
     

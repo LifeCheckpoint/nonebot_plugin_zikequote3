@@ -7,7 +7,7 @@ def s_increase_quote_appearance_count(quote_id: str):
     """
     增加语录出现次数统计
     """
-    with exception_report("增加语录展示次数"):
+    with service_exception("增加语录展示次数"):
         db.dao.get_quote_dao().increment_show_time(quote_id)
 
 
@@ -15,7 +15,7 @@ def s_search_quotes_by_keyword(group_id: str, keyword: str, limit: Optional[int]
     """
     通过关键词搜索语录
     """
-    with exception_report("通过关键词搜索语录"):
+    with service_exception("通过关键词搜索语录"):
         quotes = db.dao.get_quote_dao().get_quotes_by_group(group_id, limit=limit)
         return [q for q in quotes if keyword in q.content]
 
@@ -24,7 +24,7 @@ def s_search_quotes_by_author_id(group_id: str, author_id: str, limit: Optional[
     """
     通过作者 QQ 搜索语录
     """
-    with exception_report("通过作者搜索语录"):
+    with service_exception("通过作者搜索语录"):
         quotes = db.dao.get_quote_dao().get_quotes_by_group_and_author(group_id, author_id, limit=limit)
         return quotes
 
@@ -47,10 +47,10 @@ def s_rand_quote_choice_by_algorithm(quotes: List[Quote], algorithm_cmd: str = "
     if len(quotes) == 1:
         return quotes[0]
 
-    with exception_report("解析算法命令参数"):
+    with service_exception("解析算法命令参数"):
         schema = parse_command(rsap, algorithm_cmd)
 
-    with exception_report("语录随机选择计算"):
+    with service_exception("语录随机选择计算"):
         if isinstance(schema, IFW):
             id_weights = s_ifw(quotes, schema)
         elif isinstance(schema, LogIFW):
@@ -81,10 +81,10 @@ def s_get_random_quote(key: str, event: GroupME, filter_: Optional[Callable[[Quo
     # 解析结果也将和语录内容查询结果合并
     # TODO: 通过参数控制解析范围
 
-    with exception_report("解析用户参数"):
+    with service_exception("解析用户参数"):
         union_users = s_parse_at_and_str_user(key, event, exact=False, empty_parse_to_self=False, multiple_at=True, parse_at_all=True)
         for u in union_users:
-            with exception_report(not_raise=True):
+            with service_exception(not_raise=True):
                 if u == "all":
                     # @全体，视为获取群内所有语录
                     quotes_pool = s_get_quote_by_group(str(event.group_id))
@@ -92,14 +92,14 @@ def s_get_random_quote(key: str, event: GroupME, filter_: Optional[Callable[[Quo
                 quotes_pool.extend(s_search_quotes_by_author_id(str(event.group_id), u))
         quotes_pool.extend(s_search_quotes_by_keyword(str(event.group_id), key))
 
-    with exception_report("语录去重过滤"):
+    with service_exception("语录去重过滤"):
         filter_key_q: Callable[[Quote], str] = lambda q: q.quote_id
         quotes_pool = s_deduplicate_by_field_last(quotes_pool, filter_key_q)
 
         if filter_ is not None:
             quotes_pool = [q for q in quotes_pool if filter_(q)]
 
-    with exception_report("通过算法随机选择语录"):
+    with service_exception("通过算法随机选择语录"):
         result = s_rand_quote_choice_by_algorithm(quotes_pool, cfg[event.group_id].fetching.algorithm)
 
     return result
@@ -113,7 +113,7 @@ def s_get_quote_card_html(group_id: str, quote: Quote) -> str:
     from ....templates import card
     from ....templates.schema.card import Comment
     
-    with exception_report("获取语录作者信息"):
+    with service_exception("获取语录作者信息"):
         author = db.dao.get_group_nickname_dao().get_current_group_nickname(group_id, quote.author_id)
         if author is None:
             author = db.dao.get_user_nickname_dao().get_current_nickname(quote.author_id)
@@ -122,10 +122,10 @@ def s_get_quote_card_html(group_id: str, quote: Quote) -> str:
             else:
                 author = author.name
 
-    with exception_report("获取语录相关评论"):
+    with service_exception("获取语录相关评论"):
         reviews = db.dao.get_review_dao().get_reviews_by_quote(quote.quote_id)
     
-    with exception_report("转换评论数据"):
+    with service_exception("转换评论数据"):
         comments = [Comment(
             comment_id=r.review_id,
             author_name=db.dao.get_group_nickname_dao().get_current_group_nickname(r.author_id, group_id) or "佚名",
@@ -134,10 +134,10 @@ def s_get_quote_card_html(group_id: str, quote: Quote) -> str:
 
     image_data = None
     if quote.image_content_uuid is not None:
-        with exception_report("获取语录图片"):
+        with service_exception("获取语录图片"):
             image_data = to_data_uri(s_get_quote_image_data(quote.image_content_uuid))
     
-    with exception_report("渲染语录卡"):
+    with service_exception("渲染语录卡"):
         return card.render_card(
             quote_id=quote.quote_id,
             quote=quote.content,

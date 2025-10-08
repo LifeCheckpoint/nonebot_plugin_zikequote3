@@ -10,7 +10,7 @@ async def f_get_quote_setting(event: GroupME):
     """生成当前配置预览"""
     from ...services.config_management.setting_service import s_get_setting_html
 
-    async with exception_finish_failure(matcher_get_quote_setting, "生成配置预览"):
+    async with event_exception_failmsg_a(matcher_get_quote_setting, "生成配置预览"):
         html = s_get_setting_html(event.group_id)
         image_data = await html_img_render(html, module_render_image_root, width=800, height=200)
         await matcher_get_quote_setting.finish(MsgSeg.image(image_data))
@@ -24,7 +24,7 @@ async def f_modify_quote_setting(event: GroupME, arg: Message = CommandArg()):
 
     args = arg.extract_plain_text().strip().split(" ", 2)
 
-    async with exception_finish_failure(matcher_modify_quote_setting, "修改配置"):
+    async with event_exception_failmsg_a(matcher_modify_quote_setting, "修改配置"):
         # 参数检查
         if len(args) < 2:
             raise ValueError("参数过少，至少需要两个参数👻~")
@@ -56,7 +56,7 @@ async def f_reload_quote_setting(event: GroupME):
     """重载当前群组配置"""
     from ...imports import notify_reload_config
 
-    async with exception_finish_failure(matcher_reload_quote_setting, "重载配置"):
+    async with event_exception_failmsg_a(matcher_reload_quote_setting, "重载配置"):
         notify_reload_config()
     
     await matcher_reload_quote_setting.finish("配置重载成功~")

@@ -18,7 +18,7 @@ async def f_rank(event: GroupME, arg: Message = CommandArg()):
     else:
         max_showcase_number = cfg[event.group_id].showcase.max_rank_user_num
 
-    async with exception_finish_failure(matcher_rank, "获取语录排行"):
+    async with event_exception_failmsg_a(matcher_rank, "获取语录排行"):
         # 获取详细信息 HTML
         time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         html = s_get_ranking_html(str(event.group_id), time, max_showcase_number)
@@ -37,7 +37,7 @@ async def f_quote_list(event: GroupME, arg: Message = CommandArg()):
     from ...services.statistics_management.personal_listing_service import s_get_listing_html
     from datetime import datetime
 
-    async with exception_finish_failure(matcher_quote_list, "获取语录列表"):
+    async with event_exception_failmsg_a(matcher_quote_list, "获取语录列表"):
         # 解析参数，获取目标用户 QQ 号
         key = arg.extract_plain_text().strip()
         users = s_parse_at_and_str_user(key, event, exact=True)

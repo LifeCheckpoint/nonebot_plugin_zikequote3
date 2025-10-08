@@ -29,12 +29,12 @@ async def f_add_quote(event: GroupME, bot: Bot):
     # 检查图片数据存在性
     img = None
     if reply.message.count("image") >= 1:
-        async with exception_finish_failure(matcher_add_quote, "获取将要添加的图片数据"):
+        async with event_exception_failmsg_a(matcher_add_quote, "获取将要添加的图片数据"):
             picseg_data = reply.message.get("image")[0].data
             img_url_or_file = picseg_data["url"] if "url" in picseg_data else picseg_data["file"]
             img = await s_get_image_data_from_file_or_url(img_url_or_file)
 
-    async with exception_finish_failure(matcher_add_quote, "添加语录"):
+    async with event_exception_failmsg_a(matcher_add_quote, "添加语录"):
         if img is not None:
             uuid = await s_image_info_register(img, img_url_or_file)
         else:
@@ -50,7 +50,7 @@ async def f_add_quote(event: GroupME, bot: Bot):
     await matcher_add_quote.send(add_quote_success())
     
     # 添加消息映射
-    with exception_report(not_raise=True):
+    with event_exception(operation="ignore"):
         s_create_mapping_from_msgid_to_quoteid(str(reply.message_id), qid)
 
 
@@ -105,7 +105,7 @@ async def f_comment_quote(event: GroupME, bot: Bot, arg: Message = CommandArg())
     if reply == None or content == "":
         await matcher_comment_quote.finish("请回复一条语录并输入评论内容哦~")
 
-    async with exception_finish_failure(matcher_comment_quote, "添加评论"):
+    async with event_exception_failmsg_a(matcher_comment_quote, "添加评论"):
         # 获取语录 ID
         quote_id = s_get_mapping_by_msgid(str(reply.message_id))
         if quote_id is None:

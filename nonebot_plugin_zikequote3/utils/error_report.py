@@ -1,51 +1,140 @@
+from asyncio import CancelledError
 from contextlib import contextmanager, asynccontextmanager
-from nonebot.matcher import Matcher
-from nonebot.exception import FinishedException
 from nonebot import logger
+from nonebot.exception import FinishedException
+from nonebot.matcher import Matcher
+from typing import Literal
 import sentry_sdk
 
+
 @contextmanager
-def exception_report(error_message: str = "", not_raise: bool = False, ignore_all: bool = False, ignore_then_finish: bool = True, force_raise_nonebot_finished: bool = True):
+def service_exception(error_message: str = "", raise_again: bool = True):
     """
-    用于捕获代码块中的异常的上下文管理器
+    用于捕获服务层同步上下文中的异常的上下文管理器
 
     记录日志、上报 Sentry，重新抛出
 
     Args:
         error_message (str): 错误信息前缀
+        raise_again (bool): 是否重新抛出异常
     """
     try:
         yield
     except Exception as e:
-        if ignore_all:
-            if not ignore_then_finish:
-                logger.debug(f"忽略异常: {e}", stack_info=True)
-                return
-            else:
-                logger.debug(f"忽略异常并结束: {e}", stack_info=True)
-                raise FinishedException()
-        
+        if isinstance(e, CancelledError):
+            raise
+
         if error_message == "":
-            logger.error(f"操作异常: {e}", stack_info=True)
+            logger.error(f"服务操作异常: {e}", stack_info=True)
         else:
-            logger.error(f"操作异常 / {error_message}: {e}", stack_info=True)
+            logger.error(f"服务操作异常 / {error_message}: {e}", stack_info=True)
             
         sentry_sdk.capture_exception(e)
         
-        if not not_raise:
+        if raise_again:
             raise
-        elif force_raise_nonebot_finished and isinstance(e, FinishedException):
+
+
+@contextmanager
+def event_exception(error_message: str = "", operation: Literal["raise", "ignore", "finish"] = "ignore"):
+    """
+    用于捕获事件处理同步上下文中的异常的上下文管理器
+
+    记录日志、上报 Sentry，根据参数决定是否重新抛出
+
+    Args:
+        error_message (str): 错误信息前缀
+        operation (str): 异常发生时的操作，"raise" 重新抛出异常，"ignore" 忽略异常，"finish" 抛出 FinishedException 结束事件
+    """
+    try:
+        yield
+    except Exception as e:
+        if isinstance(e, CancelledError) or isinstance(e, FinishedException):
             raise
+
+        if error_message == "":
+            logger.error(f"事件操作异常: {e}", stack_info=True)
         else:
+            logger.error(f"事件操作异常 / {error_message}: {e}", stack_info=True)
+            
+        sentry_sdk.capture_exception(e)
+        
+        if operation == "raise":
+            raise
+        elif operation == "finish":
+            raise FinishedException()
+        elif operation == "ignore":
             return
-    
+        else:
+            raise ValueError(f"未知的 operation 参数: {operation}")
+
 
 @asynccontextmanager
-async def exception_finish_failure(matcher: type[Matcher], action: str, entity_name: str | None = None):
+async def service_exception_a(error_message: str = "", raise_again: bool = True):
+    """
+    用于捕获服务层异步上下文中的异常的上下文管理器
+
+    记录日志、上报 Sentry，根据参数决定是否重新抛出
+
+    Args:
+        error_message (str): 错误信息前缀
+        raise_again (bool): 是否重新抛出异常
+    """
+    try:
+        yield
+    except Exception as e:
+        if isinstance(e, CancelledError):
+            raise
+
+        if error_message == "":
+            logger.error(f"服务操作异常: {e}", stack_info=True)
+        else:
+            logger.error(f"服务操作异常 / {error_message}: {e}", stack_info=True)
+            
+        sentry_sdk.capture_exception(e)
+        
+        if raise_again:
+            raise
+
+
+@asynccontextmanager
+async def event_exception_a(error_message: str = "", operation: Literal["raise", "ignore", "finish"] = "ignore"):
+    """
+    用于捕获事件处理异步上下文中的异常的上下文管理器
+
+    记录日志、上报 Sentry，根据参数决定是否重新抛出
+
+    Args:
+        error_message (str): 错误信息前缀
+        operation (str): 异常发生时的操作，"raise" 重新抛出异常，"ignore" 忽略异常，"finish" 抛出 FinishedException 结束事件
+    """
+    try:
+        yield
+    except Exception as e:
+        if isinstance(e, CancelledError) or isinstance(e, FinishedException):
+            raise
+
+        if error_message == "":
+            logger.error(f"事件操作异常: {e}", stack_info=True)
+        else:
+            logger.error(f"事件操作异常 / {error_message}: {e}", stack_info=True)
+            
+        sentry_sdk.capture_exception(e)
+        
+        if operation == "raise":
+            raise
+        elif operation == "finish":
+            raise FinishedException()
+        elif operation == "ignore":
+            return
+        else:
+            raise ValueError(f"未知的 operation 参数: {operation}")
+
+
+@asynccontextmanager
+async def event_exception_failmsg_a(matcher: type[Matcher], action: str, entity_name: str | None = None):
     """
     用于捕获异常并通过 matcher 反馈通用失败消息的上下文管理器
-
-    注意，如果已经抛出了一个 Finished 异常，则可能是已经正常结束事件，因此不会重复发送失败消息
 
     Args:
         matcher (Matcher): NoneBot 匹配器对象
@@ -56,8 +145,7 @@ async def exception_finish_failure(matcher: type[Matcher], action: str, entity_n
         yield
     except Exception as e:
         if not isinstance(e, FinishedException):
-            # 非正常结束事件，会告知用户发生异常并向上游传递结束标志
             await matcher.finish(mt_g.failure(action, entity_name, str(e)))
         else:
-            # 已经是正常结束事件，直接向上游传递已有的结束标志
+            # 正常结束事件
             raise

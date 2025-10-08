@@ -5,7 +5,7 @@ def s_user_exists(qq_id: str) -> bool:
     """
     检查用户是否存在
     """
-    with exception_report("检查用户存在性"):
+    with service_exception("检查用户存在性"):
         return db.dao.get_user_dao().user_exists(qq_id)
 
 
@@ -48,7 +48,7 @@ def s_search_users_by_current_card(name: str, group_id: str, exact: bool = False
     Returns:
         results (List[str]): 可能的用户 QQ 号列表
     """
-    with exception_report("搜索用户群名片"):
+    with service_exception("搜索用户群名片"):
         users = db.dao.get_group_nickname_dao().search_users_by_nickname_in_group(
             name=name if exact else f"%{name}%",
             group_id=group_id,
@@ -69,7 +69,7 @@ def s_search_users_by_current_name(name: str, exact: bool = False) -> List[str]:
     Returns:
         results (List[str]): 可能的用户 QQ 号列表
     """
-    with exception_report("搜索用户昵称"):
+    with service_exception("搜索用户昵称"):
         users = db.dao.get_user_nickname_dao().search_user_by_nickname(
             name=name if exact else f"%{name}%"
         )
@@ -90,7 +90,7 @@ def s_search_users_by_past_card(name: str, group_id: str, exact: bool = False) -
     Returns:
         results (List[str]): 可能的用户 QQ 号列表
     """
-    with exception_report("搜索用户群名片"):
+    with service_exception("搜索用户群名片"):
         users = db.dao.get_group_nickname_dao().search_users_by_nickname_in_group(
             name=name if exact else f"%{name}%",
             group_id=group_id,
@@ -111,7 +111,7 @@ def s_search_users_by_past_name(name: str, exact: bool = False) -> List[str]:
     Returns:
         results (List[str]): 可能的用户 QQ 号列表
     """
-    with exception_report("搜索用户昵称"):
+    with service_exception("搜索用户昵称"):
         users = db.dao.get_user_nickname_dao().search_user_by_nickname(
             name=name if exact else f"%{name}%"
         )
@@ -131,7 +131,7 @@ def s_get_user_current_group_card(qq_id: str, group_id: str) -> Optional[str]:
     Returns:
         card (Optional[str]): 群名片，若无则返回 None
     """
-    with exception_report("获取用户群名片"):
+    with service_exception("获取用户群名片"):
         card = db.dao.get_group_nickname_dao().get_current_group_nickname(qq_id, group_id)
         return card
 
@@ -146,7 +146,7 @@ def s_get_user_current_nickname(qq_id: str) -> Optional[str]:
     Returns:
         nickname (Optional[str]): 昵称，若无则返回 None
     """
-    with exception_report("获取用户昵称"):
+    with service_exception("获取用户昵称"):
         nickname = db.dao.get_user_nickname_dao().get_current_nickname(qq_id)
         return nickname.name if nickname else None
 

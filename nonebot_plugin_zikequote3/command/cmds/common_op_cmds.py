@@ -14,7 +14,7 @@ async def f_update_quote(event: GroupME):
     from ...services.quote_management.collection.save_service import s_save_selection_result
     from ...services.review_management.review_service import s_add_review, AUTHOR_AI
 
-    async with exception_finish_failure(matcher_update_quote, "语录强制更新"):
+    async with event_exception_failmsg_a(matcher_update_quote, "语录强制更新"):
         # LLM 筛选
         response, usage = await s_llm_selection(str(event.group_id))
         logger.info(f"筛选到 {response.num_quotes} 条语录，输入 {usage.input_tokens} tokens，输出 {usage.output_tokens} tokens，总计 {usage.total_tokens} tokens")
@@ -27,7 +27,7 @@ async def f_update_quote(event: GroupME):
     
         # 为每条语录添加系统评论
         for quote in response.quotes:
-            with exception_report(ignore_all=True):
+            with event_exception(operation="ignore"):
                 s_add_review(AUTHOR_AI, quote.msg_id, quote.comment)
 
         await matcher_update_quote.finish(f"本次语录更新完成，共新增 {response.num_quotes} 条语录~")

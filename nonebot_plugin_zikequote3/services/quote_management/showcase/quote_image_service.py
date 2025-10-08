@@ -5,7 +5,7 @@ def s_get_quote_image_data(image_content_uuid: str) -> bytes:
     """
     获取语录图片数据
     """
-    with exception_report("获取语录图片数据"):
+    with service_exception("获取语录图片数据"):
         if not qimg_store.exists(image_content_uuid):
             raise FileNotFoundError(f"语录图片文件已丢失: {image_content_uuid}")
         
@@ -27,17 +27,17 @@ async def s_get_image_data_from_file_or_url(url: str) -> bytes:
     import httpx
 
     if url.startswith("http"):
-        with exception_report("获取网络图片数据"):
+        async with service_exception_a("获取网络图片数据"):
             async with httpx.AsyncClient() as client:
                 resp = await client.get(url)
                 resp.raise_for_status()
                 return resp.content
 
     if Path(url).exists():
-        with exception_report("获取缓存图片数据"):
+        async with service_exception_a("获取缓存图片数据"):
             return Path(url).read_bytes()
     
-    with exception_report("获取图片数据"):
+    async with service_exception_a("获取图片数据"):
         raise ValueError("无效的图片路径或 URL")
 
 
@@ -45,7 +45,7 @@ async def s_image_info_register(image_data: bytes, original_url_or_file: str):
     """
     向本地文件储存图片，并在数据库进行注册
     """
-    with exception_report("注册语录图片信息"):
+    async with service_exception_a("注册语录图片信息"):
         uuid = qimg_store.upload(image_data)
         suc = db.dao.get_image_dao().create_image(
             uuid=uuid,
