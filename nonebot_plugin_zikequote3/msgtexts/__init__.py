@@ -6,8 +6,11 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 # 初始化Jinja2环境
 from ..imports import module_msgtexts_root
+
+all_template_dir = [str(p.absolute()) for p in module_msgtexts_root.glob('*/')]
+
 env = Environment(
-    loader=FileSystemLoader(str(module_msgtexts_root.absolute())),
+    loader=FileSystemLoader(all_template_dir),
     autoescape=select_autoescape(['html', 'xml']),
     trim_blocks=True,
     lstrip_blocks=True

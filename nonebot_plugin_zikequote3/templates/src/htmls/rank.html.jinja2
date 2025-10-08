@@ -49,7 +49,7 @@
                     <div class="stat-label">贡献者</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number">{{ stats.average_quotes | format('%.2f') }}</div>
+                    <div class="stat-number">{{ '%.2f' | format(stats.average_quotes | default(0, true)) }}</div>
                     <div class="stat-label">平均语录</div>
                 </div>
                 <div class="stat-card">
@@ -64,7 +64,7 @@
             
             <div class="stats-description">
                 <p>这个群现在有 <span class="highlight">{{ stats.total_quotes }}</span> 条语录，聊天记录还有 <span class="highlight">{{ stats.pending_quotes }}</span> 没有统计呢~</p>
-                <p><span class="highlight">{{ stats.contributors }}</span> 位群友被我记下了语录，平均每人 <span class="highlight">{{ stats.average_quotes }}</span> 条语录哦~</p>
+                <p><span class="highlight">{{ stats.contributors }}</span> 位群友被我记下了语录，平均每人 <span class="highlight">{{ '%.2f' | format(stats.average_quotes | default(0, true)) }}</span> 条语录哦~</p>
             </div>
         </div>
         
