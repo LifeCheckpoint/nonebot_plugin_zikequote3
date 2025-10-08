@@ -2,13 +2,12 @@
 消息模板渲染中转层
 提供类型安全的Jinja2模板渲染方法
 """
-from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 # 初始化Jinja2环境
-template_path = Path(__file__).parent
+from ..imports import module_msgtexts_root
 env = Environment(
-    loader=FileSystemLoader(template_path),
+    loader=FileSystemLoader(str(module_msgtexts_root.absolute())),
     autoescape=select_autoescape(['html', 'xml']),
     trim_blocks=True,
     lstrip_blocks=True

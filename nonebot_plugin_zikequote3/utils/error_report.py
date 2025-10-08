@@ -1,10 +1,8 @@
 from contextlib import contextmanager, asynccontextmanager
 from nonebot.matcher import Matcher
 from nonebot.exception import FinishedException
-import logging
+from nonebot import logger
 import sentry_sdk
-
-logger = logging.getLogger(__name__)
 
 @contextmanager
 def exception_report(error_message: str = "", not_raise: bool = False, ignore_all: bool = False, ignore_then_finish: bool = True, force_raise_nonebot_finished: bool = True):

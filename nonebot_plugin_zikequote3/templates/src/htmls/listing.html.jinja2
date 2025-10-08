@@ -33,20 +33,24 @@
             <p class="description">{{ addition }}</p>
         </header>
 
-        {% set paginated_quotes = quotes | batch(items_per_page, fill_with=None) %}
+        {% set paginated_quotes = quotes | batch(items_per_page, fill_with=None) | list %}
         {% set total_pages = paginated_quotes | length %}
+        {% set pages_to_render = paginated_quotes[-4:] if total_pages > 4 else paginated_quotes %}
+        {% set start_page_number = total_pages - (pages_to_render | length) + 1 %}
+        {% set normalized_page_title_template = page_title_template.replace('{total_page}', '{total_pages}') %}
 
         <main class="main-content">
-            {% for page in paginated_quotes %}
+            {% for page in pages_to_render %}
+            {% set page_number = start_page_number + loop.index0 %}
             {% if section_colors %}
-                {% set section_color = section_colors[loop.index0 % (section_colors | length)] %}
+                {% set section_color = section_colors[(page_number - 1) % (section_colors | length)] %}
             {% else %}
                 {% set section_color = primary_color %}
             {% endif %}
 
             <section class="section">
                 <h2 class="section-title" style="background: {{ section_color }};">
-                    {{ page_title_template.format(page_number=loop.index, total_pages=total_pages) }}
+                    {{ normalized_page_title_template.format(page_number=page_number, total_pages=total_pages) }}
                 </h2>
                 <div class="quotes-grid">
                     {% for box in page if box %}

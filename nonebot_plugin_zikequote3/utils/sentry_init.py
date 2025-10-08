@@ -24,9 +24,9 @@ def init_sentry():
         logger.error(f"Failed to read Sentry DSN from {dsn_path}: {e}")
         return
     
-    if dsn_str == "":
+    if not dsn_str or dsn_str == "":
         logger.warning("Sentry DSN: (not set for empty content)")
         return
 
     logger.info(f"Sentry DSN: {dsn_str[:8] + '...' }")
-    sentry_sdk.init(dsn=dsn_str if dsn_str else None, send_default_pii=True)
+    sentry_sdk.init(dsn=dsn_str, traces_sample_rate=1.0)
