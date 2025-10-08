@@ -44,6 +44,9 @@ def s_rand_quote_choice_by_algorithm(quotes: List[Quote], algorithm_cmd: str = "
     if not quotes:
         return None
 
+    if len(quotes) == 1:
+        return quotes[0]
+
     with exception_report("解析算法命令参数"):
         schema = parse_command(rsap, algorithm_cmd)
 
