@@ -1,8 +1,7 @@
-import asyncio
 from nonebot_plugin_access_control_api.service.interface import IPluginService, ISubService
 
 class PermissionServiceNodes:
-    def __init__(self, n_perm_s: IPluginService, reset_crucial_permissions: bool = True):
+    def __init__(self, n_perm_s: IPluginService):
         """
         定义插件的服务节点，用于精细化的权限控制
 
@@ -46,15 +45,3 @@ class PermissionServiceNodes:
         self.n_settings_reset_global: ISubService = self.n_settings_reset.create_subservice("global")
         self.n_forcerefresh: ISubService = n_perm_s.create_subservice("force_refresh")
         self.n_others: ISubService = n_perm_s.create_subservice("others")
-
-        if reset_crucial_permissions:
-            asyncio.create_task(self._reset_crucial_permissions())
-
-    async def _reset_crucial_permissions(self):
-        """
-        设置 / 重置各个服务节点的默认权限
-        
-        每一次启动都将执行，针对重要权限进行保护性重置
-        """
-        await self.n_settings.set_permission("all", False)
-        await self.n_settings.set_permission("superuser", True)
