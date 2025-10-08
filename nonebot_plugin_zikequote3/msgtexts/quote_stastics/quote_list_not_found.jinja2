@@ -1,8 +1,0 @@
-{# 语录列表未找到用户模板 #}
-{%- set totalmsgs = 2 -%}
-{%- set choice = range(totalmsgs) | random -%}
-{%- if choice == 0 -%}
-没有找到「{{ key }}」这个群友╥﹏╥...已经输入全名了嘛？
-{%- elif choice == 1 -%}
-查询失败...没找到「{{ key }}」这个群友哦？ヾ(≧へ≦)〃
-{%- endif -%}

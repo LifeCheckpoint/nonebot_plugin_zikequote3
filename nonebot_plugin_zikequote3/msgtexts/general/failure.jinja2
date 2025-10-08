@@ -1,2 +1,42 @@
-{% from "failure_general.jinja2" import failure_message %}
-{{ failure_message(action, entity_name, detial) }}
+{%- set totalmsgs = 10 -%}
+{%- set choice = range(totalmsgs) | random -%}
+{%- if choice == 0 -%}
+    呜喵...{% if entity_name %}为{{ entity_name }}{% endif %}执行{{ action }}失败了喵...(´；ω；`){% if detial %}失败原因如下~
+{{ detial }}{% endif %}
+{%- endif -%}
+{%- if choice == 1 -%}
+    呜...搞砸了...{% if entity_name %}{{ entity_name }}的{% endif %}{{ action }}没有成功完成喵(>_<){% if detial %}详细错误信息在这里~
+{{ detial }}{% endif %}
+{%- endif -%}
+{%- if choice == 2 -%}
+    啊呀！{% if entity_name %}{{ entity_name }}的{% endif %}{{ action }}操作遇到了问题喵~(；ω；){% if detial %}错误详情如下~
+{{ detial }}{% endif %}
+{%- endif -%}
+{%- if choice == 3 -%}
+    失败了喵...{% if entity_name %}为{{ entity_name }}执行{% endif %}{{ action }}时出了点小状况ヽ(*。>Д<)o゜{% if detial %}具体问题在这里喵~
+{{ detial }}{% endif %}
+{%- endif -%}
+{%- if choice == 4 -%}
+    呜...没能完成{% if entity_name %}{{ entity_name }}的{% endif %}{{ action }}任务喵~不要生气哦(｡•́︿•̀｡){% if detial %}失败原因如下~
+{{ detial }}{% endif %}
+{%- endif -%}
+{%- if choice == 5 -%}
+    糟糕！{% if entity_name %}{{ entity_name }}的{% endif %}{{ action }}操作失败了喵...(；´Д`){% if detial %}错误信息如下~
+{{ detial }}{% endif %}
+{%- endif -%}
+{%- if choice == 6 -%}
+    喵呜...服务器遇到了困难，{% if entity_name %}为{{ entity_name }}执行{% endif %}{{ action }}没有成功╥﹏╥{% if detial %}详细错误报告~
+{{ detial }}{% endif %}
+{%- endif -%}
+{%- if choice == 7 -%}
+    对不起喵...{% if entity_name %}{{ entity_name }}的{% endif %}{{ action }}任务失败了(´•̥̥̥ω•̥̥̥`){% if detial %}失败详情如下~
+{{ detial }}{% endif %}
+{%- endif -%}
+{%- if choice == 8 -%}
+    啊啦...{% if entity_name %}对{{ entity_name }}的{% endif %}{{ action }}操作没有达到预期效果喵.·´¯`(>▂<)´¯`·. {% if detial %}问题细节在这里~
+{{ detial }}{% endif %}
+{%- endif -%}
+{%- if choice == 9 -%}
+    很抱歉...{% if entity_name %}{{ entity_name }}的{% endif %}{{ action }}执行失败了，但我们还可以再试一次喵！O.O{% if detial %}错误信息如下~
+{{ detial }}{% endif %}
+{%- endif -%}

@@ -10,7 +10,6 @@ async def f_add_quote(event: GroupME, bot: Bot):
     from ...services.quote_management.addtion.add_quote_service import s_add_quote
     from ...services.quote_management.mapping_service import s_create_mapping_from_msgid_to_quoteid
     from ...services.quote_management.showcase.quote_image_service import s_get_image_data_from_file_or_url, s_image_info_register
-    from ...msgtexts.quote_modify import add_quote_success
     
     reply = event.reply
     if reply == None:
@@ -47,7 +46,7 @@ async def f_add_quote(event: GroupME, bot: Bot):
             image_uuid=uuid if img is not None else None,
         )
     
-    await matcher_add_quote.send(add_quote_success())
+    await matcher_add_quote.send("语录添加成功~(≧▽≦)")
     
     # 添加消息映射
     with event_exception(operation="ignore"):
