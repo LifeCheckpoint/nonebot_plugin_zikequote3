@@ -39,6 +39,7 @@ async def f_collecting_listener(event: GroupME, bot: Bot, state: T_State):
         return
     
     # 异步锁，防止多次触发
+    # FIXME: 锁似乎无效
     lock: KeyedRejectingLock = state.get("f_collecting_listener_locker", KeyedRejectingLock())
     state["f_collecting_listener_locker"] = lock
     
@@ -64,4 +65,3 @@ async def f_collecting_listener(event: GroupME, bot: Bot, state: T_State):
         logger.info(f"群 {event.group_id} 收录中，跳过本次收录")
     except Exception:
         raise
-    

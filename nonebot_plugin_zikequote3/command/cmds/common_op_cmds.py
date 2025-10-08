@@ -15,6 +15,7 @@ async def f_update_quote(event: GroupME, state: T_State):
     from ...services.review_management.review_service import s_add_review, AUTHOR_AI
 
     # 异步锁，防止多次触发
+    # FIXME: 锁似乎无效
     lock: KeyedRejectingLock = state.get("f_collecting_listener_locker", KeyedRejectingLock())
     state["f_collecting_listener_locker"] = lock
     
