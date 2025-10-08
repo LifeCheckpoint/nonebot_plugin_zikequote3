@@ -10,7 +10,7 @@ async def f_random_quote(event: GroupME, arg: Message = CommandArg()):
     from ...services.quote_management.mapping_service import s_create_mapping_from_msgid_to_quoteid
     from ...services.quote_management.showcase.rand_quote_service import s_get_random_quote, s_increase_quote_appearance_count
     from ...services.quote_management.showcase.quote_image_service import s_get_quote_image_data
-    from msgtexts.quote_read import send_quote
+    from ...msgtexts.quote_read import send_quote
     
     key = arg.extract_plain_text().strip()
     async with exception_finish_failure(matcher_random_quote, "获取随机语录"):

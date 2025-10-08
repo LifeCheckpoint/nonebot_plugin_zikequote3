@@ -20,6 +20,7 @@ async def f_collecting_listener(event: GroupME, bot: Bot):
         return
     
     # 加入队列并获取是否达到阈值
+    is_thresold = None
     with exception_report(ignore_all=True):
         is_thresold = await s_queue_put(
             group_id=str(event.group_id),

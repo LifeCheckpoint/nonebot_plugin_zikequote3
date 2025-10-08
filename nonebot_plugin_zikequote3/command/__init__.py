@@ -16,9 +16,4 @@ async def f_startup():
         return
     
     # 尝试安装依赖
-    result = await asyncio.to_thread(install_frontend_dependencies)
-
-    if result:
-        logger.info("前端依赖安装完成")
-    else:
-        logger.error("前端依赖安装失败")
+    await asyncio.to_thread(install_frontend_dependencies)
