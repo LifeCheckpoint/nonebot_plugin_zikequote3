@@ -115,7 +115,15 @@ ZikeQuote3 基于 NoneBot2 开发，便于群聊语录自动收集与管理，�
         pip install nonebot-plugin-access-control
     </details>
 
-    可以参照其<a herf="https://github.com/bot-ssttkkl/nonebot-plugin-access-control">文档</a>进行权限配置，具体配置项可见本插件文档或本插件根目录下的 `nonebot_plugin_zikequote3\services\permission_management\permission_node_definition.py`
+    <details>
+    <summary>问题排除</summary>
+        - 如遇到新版 nonebot 启动后 `FakeIO` 报错 `expected str instance, bytes found`，可通过命令 `nb orm --upgrade` 升级权限插件的 orm 数据库后端后重新启动
+    </details>
+
+    <details>
+    <summary>配置权限</summary>
+        可以参照其<a herf="https://github.com/bot-ssttkkl/nonebot-plugin-access-control">文档</a>对本插件进行权限配置，具体配置项可见本插件文档或本插件根目录下的 `nonebot_plugin_zikequote3\services\permission_management\permission_node_definition.py`
+    </details>
 
 3. **确保系统安装 Node.js** 并安装截图 npm 依赖
     <details close>
