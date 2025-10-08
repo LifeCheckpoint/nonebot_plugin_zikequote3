@@ -1,10 +1,17 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
 [project]
 name = "nonebot_plugin_zikequote3"
 version = "0.4.0alpha1"
 description = "LLM 介入，功能丰富的群聊语录自动收集与管理插件，支持自动收集、后台管理、生成排行榜、展示等功能"
 authors = [
-  { name="LifeCheckpoint" },
+  { name = "LifeCheckpoint" },
 ]
+requires-python = ">=3.12"
+readme = "README.md"
+license = { text = "MIT" }
 dependencies = [
   "nonebot2>=2.0.0",
   "nonebot-adapter-onebot>=2.0.0",
@@ -12,10 +19,6 @@ dependencies = [
   "pydantic>=2.0.0",
   "openai>=1.76.0",
   "requests>=2.26.0",
-  "pytest>=8.3.5",
-  "pytest-asyncio>=1.0.0",
-  "nonebug>=0.4.3",
-  "tomlkit>=0.13.3",
   "pillow>=11.3.0",
   "jinja2>=3.1.6",
   "markdown>=3.9",
@@ -25,9 +28,14 @@ dependencies = [
   "typer>=0.19.2",
   "nonebot-plugin-access-control-api>=1.2.1",
 ]
-requires-python = ">=3.12"
-readme = "README.md"
-license = "MIT"
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.5",
+  "pytest-asyncio>=1.0.0",
+  "nonebug>=0.4.3",
+  "tomlkit>=0.13.3",
+]
 
 [project.urls]
 Homepage = "https://github.com/LifeCheckpoint/nonebot_plugin_zikequote3"
@@ -39,5 +47,28 @@ plugins = ["nonebot_plugin_zikequote3"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 
-[tool.setuptools]
-include-package-data = true
+[tool.hatch.build]
+include = [
+  "nonebot_plugin_zikequote3/**",
+  "pyproject.toml",
+  "README.md",
+  "LICENSE",
+]
+exclude = [
+  "/.github/**",
+  "/.pytest_cache/**",
+  "/.venv/**",
+  "/.vscode/**",
+  "/.VSCodeCounter/**",
+  "/dist/**",
+  "/docs/**",
+  "/nonebot_plugin_zikequote3/html_capture/node_modules/**",
+  "**/*.pyc",
+  "**/apikey",
+  "**/api_key",
+  "**/dsn",
+  "**/sentry_dsn",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["nonebot_plugin_zikequote3"]

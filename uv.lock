@@ -1177,7 +1177,7 @@ wheels = [
 [[package]]
 name = "nonebot-plugin-zikequote3"
 version = "0.4.0a1"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "jinja2" },
     { name = "markdown" },
@@ -1185,18 +1185,22 @@ dependencies = [
     { name = "nonebot-plugin-access-control-api" },
     { name = "nonebot-plugin-localstore" },
     { name = "nonebot2" },
-    { name = "nonebug" },
     { name = "openai" },
     { name = "pillow" },
     { name = "pydantic" },
     { name = "pydantic-ai" },
     { name = "pymdown-extensions" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
     { name = "requests" },
     { name = "sentry-sdk" },
-    { name = "tomlkit" },
     { name = "typer" },
+]
+
+[package.optional-dependencies]
+dev = [
+    { name = "nonebug" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "tomlkit" },
 ]
 
 [package.metadata]
@@ -1207,17 +1211,17 @@ requires-dist = [
     { name = "nonebot-plugin-access-control-api", specifier = ">=1.2.1" },
     { name = "nonebot-plugin-localstore", specifier = ">=0.7.0" },
     { name = "nonebot2", specifier = ">=2.0.0" },
-    { name = "nonebug", specifier = ">=0.4.3" },
+    { name = "nonebug", marker = "extra == 'dev'", specifier = ">=0.4.3" },
     { name = "openai", specifier = ">=1.76.0" },
     { name = "pillow", specifier = ">=11.3.0" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pydantic-ai", specifier = ">=1.0.14" },
     { name = "pymdown-extensions", specifier = ">=10.16.1" },
-    { name = "pytest", specifier = ">=8.3.5" },
-    { name = "pytest-asyncio", specifier = ">=1.0.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3.5" },
+    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=1.0.0" },
     { name = "requests", specifier = ">=2.26.0" },
     { name = "sentry-sdk", specifier = ">=2.39.0" },
-    { name = "tomlkit", specifier = ">=0.13.3" },
+    { name = "tomlkit", marker = "extra == 'dev'", specifier = ">=0.13.3" },
     { name = "typer", specifier = ">=0.19.2" },
 ]
 
