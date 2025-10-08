@@ -110,27 +110,30 @@ def s_get_quote_card_html(group_id: str, quote: Quote) -> str:
     获取渲染好的语录卡 HTML 图片
     """
     from ....services.quote_management.showcase.quote_image_service import s_get_quote_image_data, to_data_uri
+    from ....services.user_management.user_service import s_get_user_current_display_name
+    from ....services.review_management.review_service import AUTHOR_AI
     from ....templates import card
     from ....templates.schema.card import Comment
     
     with service_exception("获取语录作者信息"):
-        author = db.dao.get_group_nickname_dao().get_current_group_nickname(group_id, quote.author_id)
-        if author is None:
-            author = db.dao.get_user_nickname_dao().get_current_nickname(quote.author_id)
-            if author is None:
-                raise ValueError("无法获取语录作者昵称")
-            else:
-                author = author.name
+        author = s_get_user_current_display_name(quote.author_id, group_id)
 
     with service_exception("获取语录相关评论"):
         reviews = db.dao.get_review_dao().get_reviews_by_quote(quote.quote_id)
     
     with service_exception("转换评论数据"):
-        comments = [Comment(
-            comment_id=r.review_id,
-            author_name=db.dao.get_group_nickname_dao().get_current_group_nickname(r.author_id, group_id) or "佚名",
-            content=r.content,
-        ) for r in reviews]
+        comments = []
+        for r in reviews:
+            
+            comment_author = s_get_user_current_display_name(r.author_id, group_id)
+            if comment_author == AUTHOR_AI:
+                comment_author = "AI"
+            
+            comments.append(Comment(
+                comment_id=r.review_id,
+                author_name=comment_author,
+                content=r.content,
+            ))
 
     image_data = None
     if quote.image_content_uuid is not None:
