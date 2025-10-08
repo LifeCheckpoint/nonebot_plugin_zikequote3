@@ -2,7 +2,7 @@ from ...imports import *
 from ..command_definition import *
 
 @matcher_collecting_listener.handle()
-async def f_collecting_listener(event: GroupME, bot: Bot):
+async def f_collecting_listener(event: GroupME, bot: Bot, state: T_State):
     """
     监听群组消息，处理自动语录收集
 
@@ -38,18 +38,30 @@ async def f_collecting_listener(event: GroupME, bot: Bot):
     if not is_thresold:
         return
     
-    async with event_exception_a("LLM 筛选", operation="finish"):
-        response, usage = await s_llm_selection(str(event.group_id))
-        logger.info(f"筛选到 {response.num_quotes} 条语录，输入 {usage.input_tokens} tokens，输出 {usage.output_tokens} tokens，总计 {usage.total_tokens} tokens")
+    # 异步锁，防止多次触发
+    lock: KeyedRejectingLock = state.get("f_collecting_listener_locker", KeyedRejectingLock())
+    state["f_collecting_listener_locker"] = lock
     
-    with event_exception("入库", operation="finish"):
-        response_with_qid = s_save_selection_result(str(event.group_id), response)
+    try:
+
+        async with lock.for_key(credential=str(event.group_id)):
+            async with event_exception_a("LLM 筛选", operation="finish"):
+                response, usage = await s_llm_selection(str(event.group_id))
+                logger.info(f"筛选到 {response.num_quotes} 条语录，输入 {usage.input_tokens} tokens，输出 {usage.output_tokens} tokens，总计 {usage.total_tokens} tokens")
+            
+            with event_exception("入库", operation="finish"):
+                response_with_qid = s_save_selection_result(str(event.group_id), response)
+            
+            for quote in response_with_qid.quotes:
+                if quote.quote_id is not None:
+                    with event_exception("添加评论", operation="finish"):
+                        s_add_review(AUTHOR_AI, quote.quote_id, quote.comment)
+            
+            with event_exception("清空队列", operation="finish"):
+                s_queue_clear(str(event.group_id))
     
-    for quote in response_with_qid.quotes:
-        if quote.quote_id is not None:
-            with event_exception("添加评论", operation="finish"):
-                s_add_review(AUTHOR_AI, quote.quote_id, quote.comment)
-    
-    with event_exception("清空队列", operation="finish"):
-        s_queue_clear(str(event.group_id))
+    except LockIsHeldError:
+        logger.info(f"群 {event.group_id} 收录中，跳过本次收录")
+    except Exception:
+        raise
     
