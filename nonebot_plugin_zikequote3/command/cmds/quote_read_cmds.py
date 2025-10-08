@@ -1,5 +1,5 @@
 from ...imports import *
-from ..comand_definition import *
+from ..command_definition import *
 
 
 @matcher_random_quote.handle()

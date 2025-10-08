@@ -1,5 +1,5 @@
 from ...imports import *
-from ..comand_definition import *
+from ..command_definition import *
 
 @matcher_collecting_listener.handle()
 async def f_collecting_listener(event: GroupME, bot: Bot):

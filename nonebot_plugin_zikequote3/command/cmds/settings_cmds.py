@@ -2,7 +2,7 @@
 语录设置调整相关命令
 """
 
-from ..comand_definition import *
+from ..command_definition import *
 from ...imports import *
 
 @matcher_get_quote_setting.handle()
