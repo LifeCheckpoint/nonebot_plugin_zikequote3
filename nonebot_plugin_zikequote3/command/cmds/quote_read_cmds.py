@@ -10,6 +10,7 @@ async def f_random_quote(event: GroupME, arg: Message = CommandArg()):
     from ...services.quote_management.mapping_service import s_create_mapping_from_msgid_to_quoteid
     from ...services.quote_management.showcase.rand_quote_service import s_get_random_quote, s_increase_quote_appearance_count
     from ...services.quote_management.showcase.quote_image_service import s_get_quote_image_data
+    from ...services.user_management.user_service import s_get_user_current_display_name
     from ...msgtexts.quote_read import send_quote
     
     key = arg.extract_plain_text().strip()
@@ -19,8 +20,11 @@ async def f_random_quote(event: GroupME, arg: Message = CommandArg()):
         if q_result is None:
             await matcher_random_quote.finish("没有找到符合条件的语录哦~")
 
+        # 获取语录作者当前昵称
+        author_card = s_get_user_current_display_name(q_result.author_id, str(event.group_id))
+
         # 发送语录
-        text_msg = MsgSeg.text(send_quote(q_result.author_id, q_result.content))
+        text_msg = MsgSeg.text(send_quote(author_card, q_result.content))
         if q_result.image_content_uuid == None:
             await matcher_random_quote.send(text_msg)
         else:
