@@ -28,6 +28,9 @@ comment_show_method = "noai" # 语录评论展示方式: no | noai | all
 hitokoto_url = "https://v1.hitokoto.cn" # 获取名人名言 Hitokoto API
 render_device_factor = 2.0 # 图片渲染设备像素比
 
+[comment]
+enable_comment_without_prefix = true # 允许不使用“/评”直接进行评论回复
+
 [llm]
 # 模型配置较为复杂，其它端点调整工作需到 llm_services/client.py 进行修改
 base_url = "https://openrouter.ai/api/v1"
@@ -47,3 +50,4 @@ nonreloadable_items = [
     "sentry.dsn_path",
     "configure.nonreloadable_items",
 ]
+cfg_version = 2 # 当前配置版本

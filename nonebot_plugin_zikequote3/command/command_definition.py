@@ -1,4 +1,4 @@
-from ..imports import on_message, on_command, perm_nodes
+from ..imports import on_message, on_command, perm_nodes, default_cfg
 
 
 # region 自动收集事件

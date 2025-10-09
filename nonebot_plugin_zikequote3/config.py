@@ -39,6 +39,9 @@ class ShowcaseConfig(BaseModel):
     hitokoto_url: str = "https://v1.hitokoto.cn"
     render_device_factor: float = 2.0
 
+class CommentConfig(BaseModel):
+    enable_comment_without_prefix: bool = True
+
 class LLMConfig(BaseModel):
     base_url: str = "https://openrouter.ai/api/v1"
     api_key_path: str = "utils/api_key"
@@ -51,6 +54,7 @@ class SentryConfig(BaseModel):
 
 class ConfigureConfig(BaseModel):
     nonreloadable_items: List[str] = Field(default_factory=list)
+    cfg_version: int = 0
 
 class ConfigSchema(BaseModel):
     general: GeneralConfig = Field(default_factory=GeneralConfig)
@@ -78,26 +82,30 @@ def fix_config_integrity(default_toml: tomlkit.TOMLDocument, group_toml: tomlkit
     """
     changed = False
     
-    # 遍历默认配置的所有节
-    for section_name in default_toml.keys():
-        if section_name not in group_toml:
-            # 如果群组配置中缺少整个节，则添加整个节
-            group_toml[section_name] = default_toml[section_name]
-            changed = True
-            logger.info(f"为群组配置添加缺失的节: {section_name}")
-        else:
-            # 如果节存在，检查该节下的所有键
-            default_section = default_toml[section_name]
-            group_section = group_toml[section_name]
-            
-            # 遍历默认节的所有键
-            for key_name in default_section.keys(): # type: ignore
-                if key_name not in group_section:
-                    # 如果群组配置中缺少该键，则添加默认值
-                    group_section[key_name] = default_section[key_name] # type: ignore
-                    changed = True
-                    logger.info(f"为群组配置的节 '{section_name}' 添加缺失的键: {key_name}")
-    
+    default_cfg_version = default_toml.get("configure", {}).get("cfg_version", -1)
+    group_cfg_version = group_toml.get("configure", {}).get("cfg_version", -1)
+
+    if default_cfg_version != group_cfg_version:
+        logger.info(f"配置版本不一致，准备从 v{group_cfg_version} 迁移到 v{default_cfg_version}")
+        new_toml = default_toml.copy()
+        for section_name in default_toml.keys():
+            if section_name in group_toml:
+                for key_name in default_toml[section_name].keys(): # type: ignore
+                    if key_name in group_toml[section_name]:
+                        new_toml[section_name][key_name] = group_toml[section_name][key_name] # type: ignore
+        
+        # 保留新版本的配置版本号
+        new_toml["configure"]["cfg_version"] = default_toml["configure"]["cfg_version"] # type: ignore
+
+        # 清除旧的 group_toml 并将 new_toml 的内容复制过去
+        for key in list(group_toml.keys()):
+            del group_toml[key]
+        for key, value in new_toml.items():
+            group_toml[key] = value
+
+        changed = True
+        logger.info(f"配置已迁移到 v{default_cfg_version}")
+
     return changed
 
 def reload_config():
