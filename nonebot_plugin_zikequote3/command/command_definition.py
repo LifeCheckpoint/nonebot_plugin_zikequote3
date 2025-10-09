@@ -103,7 +103,7 @@ perm_nodes.n_review_add.patch_matcher(matcher_comment_quote)
 matcher_comment_quote_no_prefix = None
 if default_cfg.comment.enable_comment_without_prefix:
     matcher_comment_quote_no_prefix = on_message(
-        priority=15, block=True
+        priority=15, block=False
     )
     perm_nodes.n_review_add.patch_matcher(matcher_comment_quote_no_prefix)
 

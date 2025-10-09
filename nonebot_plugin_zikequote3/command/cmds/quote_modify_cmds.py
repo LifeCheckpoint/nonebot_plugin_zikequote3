@@ -123,7 +123,7 @@ async def f_comment_quote(event: GroupME, bot: Bot, arg: Message = CommandArg())
 
 if matcher_comment_quote_no_prefix is not None:
     @matcher_comment_quote_no_prefix.handle()
-    async def f_comment_quote_no_prefix(event: GroupME, bot: Bot, arg: Message = CommandArg()):
+    async def f_comment_quote_no_prefix(event: GroupME, bot: Bot):
         """
         静默评论语录（无前缀）
 
@@ -143,7 +143,8 @@ if matcher_comment_quote_no_prefix is not None:
             # 获取语录 ID
             quote_id = s_get_mapping_by_msgid(str(reply.message_id))
             if quote_id is None:
-                return  # 不处理
+                # 正常消息，不要处理
+                return
             
             # 添加评论
             s_add_review(
