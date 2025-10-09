@@ -99,6 +99,14 @@ matcher_comment_quote = on_command(
 )
 perm_nodes.n_review_add.patch_matcher(matcher_comment_quote)
 
+# 允许不使用前缀直接评论
+matcher_comment_quote_no_prefix = None
+if default_cfg.comment.enable_comment_without_prefix:
+    matcher_comment_quote_no_prefix = on_message(
+        priority=15, block=True
+    )
+    perm_nodes.n_review_add.patch_matcher(matcher_comment_quote_no_prefix)
+
 
 _del_comment_cmds = ("删评论", "删除评论", "删除语录评论", "删除语录评价", "删语评")
 matcher_del_comment = on_command(

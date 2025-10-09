@@ -121,6 +121,38 @@ async def f_comment_quote(event: GroupME, bot: Bot, arg: Message = CommandArg())
     # TODO: 添加消息映射
 
 
+if matcher_comment_quote_no_prefix is not None:
+    @matcher_comment_quote_no_prefix.handle()
+    async def f_comment_quote_no_prefix(event: GroupME, bot: Bot, arg: Message = CommandArg()):
+        """
+        静默评论语录（无前缀）
+
+        语录评论方式：
+        `(reply) 评价`
+        """
+        from ...services.quote_management.mapping_service import s_get_mapping_by_msgid
+        from ...services.review_management.review_service import s_add_review
+        
+        # 判断 reply
+        reply = event.reply
+        content = event.get_plaintext().strip()
+        if reply == None or content == "":
+            return  # 不处理
+
+        async with event_exception_failmsg_a(matcher_comment_quote_no_prefix, "添加评论"):
+            # 获取语录 ID
+            quote_id = s_get_mapping_by_msgid(str(reply.message_id))
+            if quote_id is None:
+                return  # 不处理
+            
+            # 添加评论
+            s_add_review(
+                user_id=str(event.sender.user_id),
+                quote_id=quote_id,
+                content=content,
+            )
+
+
 @matcher_del_comment.handle()
 async def f_del_comment(event: GroupME, bot: Bot, arg: Message = CommandArg()):
     """

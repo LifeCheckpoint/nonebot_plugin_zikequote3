@@ -61,6 +61,7 @@ class ConfigSchema(BaseModel):
     collecting: CollectingConfig = Field(default_factory=CollectingConfig)
     fetching: FetchingConfig = Field(default_factory=FetchingConfig)
     showcase: ShowcaseConfig = Field(default_factory=ShowcaseConfig)
+    comment: CommentConfig = Field(default_factory=CommentConfig)
     llm: LLMConfig = Field(default_factory=LLMConfig)
     sentry: SentryConfig = Field(default_factory=SentryConfig)
     configure: ConfigureConfig = Field(default_factory=ConfigureConfig)
