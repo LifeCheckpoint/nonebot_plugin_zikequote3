@@ -31,7 +31,7 @@ async def f_random_quote(event: GroupME, arg: Message = CommandArg()):
                 text_msg = None
             
             if q_result.image_content_uuid == None and text_msg is not None:
-                await matcher_random_quote.send(text_msg)
+                send_msg = await matcher_random_quote.send(text_msg)
             elif q_result.image_content_uuid is not None and text_msg is not None:
                 try:
                     image_data = s_get_quote_image_data(q_result.image_content_uuid)
