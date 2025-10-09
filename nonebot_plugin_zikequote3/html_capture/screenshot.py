@@ -1,10 +1,11 @@
 """
 对网页进行截图
 """
+from nonebot import logger
+from pathlib import Path
+from typing import Tuple, Union
 import asyncio
 import subprocess
-from typing import Tuple, Union
-from pathlib import Path
 
 NODE_SCRIPT_PATH = Path(__file__).parent / 'screenshot.js'
 
@@ -55,22 +56,22 @@ async def async_generate_screenshot(
         stderr_str = stderr.decode('utf-8').strip()
 
         if process.returncode == 0:
-            print("截图生成成功")
+            logger.success("截图生成成功")
         elif process.returncode is None:
-            print("截图进程未正确启动")
+            logger.error("截图进程未正确启动")
             raise RuntimeError("截图进程未正确启动")
         else:
-            print(f"截图生成失败 (返回码: {process.returncode})")
+            logger.error(f"截图生成失败 (返回码: {process.returncode})")
             if stderr_str:
-                print("Node.js 错误:", stderr_str)
+                logger.error("Node.js 错误:", stderr_str)
             raise RuntimeError(f"截图生成失败，返回码: {process.returncode}")
 
         return process.returncode, stdout_str, stderr_str
 
     except FileNotFoundError:
-        print("截图错误: 未找到 node 或 screenshot.js。请确保它们在系统路径中或脚本路径正确。")
+        logger.error("截图错误: 未找到 node 或 screenshot.js。请确保它们在系统路径中或脚本路径正确。")
         raise FileNotFoundError("未找到 node 或 screenshot.js")
     
     except Exception as e:
-        print(f"截图错误: {e}")
+        logger.error(f"截图错误: {e}")
         raise e
