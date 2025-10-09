@@ -32,7 +32,9 @@
         
         <div class="quote-main">
             <div class="quote-icon">"</div>
+            {% if quote %}
             <div class="quote-text">{{ quote }}</div>
+            {% endif %}
         </div>
 
         {% if image %}

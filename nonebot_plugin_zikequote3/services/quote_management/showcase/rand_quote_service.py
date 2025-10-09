@@ -17,7 +17,7 @@ def s_search_quotes_by_keyword(group_id: str, keyword: str, limit: Optional[int]
     """
     with service_exception("通过关键词搜索语录"):
         quotes = db.dao.get_quote_dao().get_quotes_by_group(group_id, limit=limit)
-        return [q for q in quotes if keyword in q.content]
+        return [q for q in quotes if q.content and keyword in q.content]
 
 
 def s_search_quotes_by_author_id(group_id: str, author_id: str, limit: Optional[int] = None):

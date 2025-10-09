@@ -15,7 +15,7 @@ class Comment(BaseModel):
 
 def render_card(
     quote_id: str,
-    quote: str,
+    quote: Optional[str],
     image_uri: Optional[str],
     author_name: str,
     comments: Optional[List[Comment]] = None,
