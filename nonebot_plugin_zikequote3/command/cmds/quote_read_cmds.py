@@ -14,6 +14,7 @@ async def f_random_quote(event: GroupME, arg: Message = CommandArg()):
     from ...msgtexts.quote_read import send_quote
     
     key = arg.extract_plain_text().strip()
+    send_msg = None
     async with event_exception_failmsg_a(matcher_random_quote, "获取随机语录"):
         q_result = s_get_random_quote(key, event)
 
@@ -23,25 +24,38 @@ async def f_random_quote(event: GroupME, arg: Message = CommandArg()):
         # 获取语录作者当前昵称
         author_card = s_get_user_current_display_name(q_result.author_id, str(event.group_id))
 
-        # 发送语录
-        text_msg = MsgSeg.text(send_quote(author_card, q_result.content))
-        if q_result.image_content_uuid == None:
-            await matcher_random_quote.send(text_msg)
-        else:
-            try:
-                image_data = s_get_quote_image_data(q_result.image_content_uuid)
-                full_msg = text_msg + MsgSeg.image(image_data)
-            except FileNotFoundError:
-                full_msg = text_msg + MsgSeg.text("\n（语录图片文件已丢失 O.O）")
-            await matcher_random_quote.send(full_msg)
+        with event_exception(operation="ignore"):
+            if q_result.content is not None:
+                text_msg = MsgSeg.text(send_quote(author_card, q_result.content))
+            else:
+                text_msg = None
+            
+            if q_result.image_content_uuid == None and text_msg is not None:
+                await matcher_random_quote.send(text_msg)
+            elif q_result.image_content_uuid is not None and text_msg is not None:
+                try:
+                    image_data = s_get_quote_image_data(q_result.image_content_uuid)
+                    full_msg = text_msg + MsgSeg.image(image_data)
+                except FileNotFoundError:
+                    full_msg = text_msg + MsgSeg.text("\n（语录图片文件已丢失 O.O）")
+                send_msg = await matcher_random_quote.send(full_msg)
+            elif q_result.image_content_uuid is not None and text_msg is None:
+                try:
+                    image_data = s_get_quote_image_data(q_result.image_content_uuid)
+                    send_msg = await matcher_random_quote.send(MsgSeg.image(image_data))
+                except FileNotFoundError:
+                    send_msg = await matcher_random_quote.send("（语录图片文件已丢失 O.O）")
+            else:
+                raise ValueError("语录内容和图片均为空")
         
     # 更新语录出现次数
     with event_exception(operation="ignore"):
         s_increase_quote_appearance_count(q_result.quote_id)
 
     # 添加消息映射
-    with event_exception(operation="ignore"):
-        s_create_mapping_from_msgid_to_quoteid(str(event.message_id), q_result.quote_id)
+    if send_msg is not None:
+        with event_exception(operation="ignore"):
+            s_create_mapping_from_msgid_to_quoteid(str(send_msg["message_id"]), q_result.quote_id)
 
 
 @matcher_quote_card.handle()
@@ -53,6 +67,7 @@ async def f_quote_card(event: GroupME, arg: Message = CommandArg()):
     from ...services.quote_management.showcase.rand_quote_service import s_get_random_quote, s_increase_quote_appearance_count, s_get_quote_card_html
 
     key = arg.extract_plain_text().strip()
+    send_msg = None
     async with event_exception_failmsg_a(matcher_quote_card, "获取语录卡"):
         q_result = s_get_random_quote(key, event)
 
@@ -62,15 +77,16 @@ async def f_quote_card(event: GroupME, arg: Message = CommandArg()):
         # 发送语录
         quote_card_html = s_get_quote_card_html(str(event.group_id), q_result)
         quote_card = await html_img_render(quote_card_html, module_render_image_root, width=800, height=120)
-        await matcher_quote_card.send(MsgSeg.image(quote_card))
+        send_msg = await matcher_quote_card.send(MsgSeg.image(quote_card))
         
     # 更新语录出现次数
     with event_exception(operation="ignore"):
         s_increase_quote_appearance_count(q_result.quote_id)
     
     # 添加消息映射
-    with event_exception(operation="ignore"):
-        s_create_mapping_from_msgid_to_quoteid(str(event.message_id), q_result.quote_id)
+    if send_msg is not None:
+        with event_exception(operation="ignore"):
+            s_create_mapping_from_msgid_to_quoteid(str(send_msg["message_id"]), q_result.quote_id)
 
 
 @matcher_quote_image_fetching.handle()
