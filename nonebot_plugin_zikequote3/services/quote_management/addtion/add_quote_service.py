@@ -1,7 +1,7 @@
 from ....imports import *
 
 
-def s_add_quote(group_id: str, author_id: str, content: str, image_uuid: str | None = None):
+def s_add_quote(group_id: str, author_id: str, content: str | None = None, image_uuid: str | None = None):
     """
     添加语录
     """

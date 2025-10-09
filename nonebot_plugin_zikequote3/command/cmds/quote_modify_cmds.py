@@ -18,11 +18,7 @@ async def f_add_quote(event: GroupME, bot: Bot):
     if reply.sender.user_id == bot.self_id:
         await matcher_add_quote.finish("呀呀呀，怎么在添加我的语录呢？(>_<)")    
     
-    if reply.message.only("image"):
-        # TODO: 修改数据模型以支持纯图片语录
-        await matcher_add_quote.finish("暂不支持纯图片语录哦~")
-
-    if reply.message.extract_plain_text().strip() == "":
+    if reply.message.extract_plain_text().strip() == "" and reply.message.count("image") == 0:
         await matcher_add_quote.finish("语录内容不能为空哦~")
 
     # 检查图片数据存在性
@@ -33,6 +29,9 @@ async def f_add_quote(event: GroupME, bot: Bot):
             img_url_or_file = picseg_data["url"] if "url" in picseg_data else picseg_data["file"]
             img = await s_get_image_data_from_file_or_url(img_url_or_file)
 
+    # 检查语录内容存在性
+    content_text = reply.message.extract_plain_text().strip() if not reply.message.only("image") else None
+
     async with event_exception_failmsg_a(matcher_add_quote, "添加语录"):
         if img is not None:
             uuid = await s_image_info_register(img, img_url_or_file)
@@ -42,7 +41,7 @@ async def f_add_quote(event: GroupME, bot: Bot):
         qid = s_add_quote(
             group_id=str(event.group_id),
             author_id=str(reply.sender.user_id),
-            content=reply.message.extract_plain_text().strip(),
+            content=content_text,
             image_uuid=uuid if img is not None else None,
         )
     

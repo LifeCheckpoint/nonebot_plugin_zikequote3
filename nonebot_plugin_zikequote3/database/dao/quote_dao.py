@@ -68,8 +68,10 @@ class QuoteDAO(BaseDAO[Quote]):
             cursor.execute(sql, values)
             return cursor.rowcount > 0
 
-    def create_quote(self, quote_id: str, author_id: str, group_id: str, content: str,
-                    image_content_uuid: Optional[str] = None, total_show_time: int = 0) -> bool:
+    def create_quote(
+        self, quote_id: str, author_id: str, group_id: str, content: Optional[str] = None,
+        image_content_uuid: Optional[str] = None, total_show_time: int = 0
+    ) -> bool:
         """
         创建新语录
         
@@ -77,7 +79,7 @@ class QuoteDAO(BaseDAO[Quote]):
             quote_id: 语录ID
             author_id: 作者QQ号
             group_id: 群号
-            content: 语录内容
+            content: 语录内容（可选）
             image_content_uuid: 图片内容UUID（可选）
             total_show_time: 总展示次数（默认0）
             
@@ -146,8 +148,10 @@ class QuoteDAO(BaseDAO[Quote]):
             cursor.execute(sql, params)
             return cursor.rowcount > 0
 
-    def update_quote(self, quote_id: str, content: Optional[str] = None,
-                    image_content_uuid: Optional[str] = None, total_show_time: Optional[int] = None) -> bool:
+    def update_quote(
+        self, quote_id: str, content: Optional[str] = None,
+        image_content_uuid: Optional[str] = None, total_show_time: Optional[int] = None
+    ) -> bool:
         """
         更新语录信息
         
@@ -250,8 +254,10 @@ class QuoteDAO(BaseDAO[Quote]):
             cursor.execute(sql, (author_id, content))
             return cursor.fetchone() is not None
     
-    def get_quotes_by_group_and_author(self, group_id: str, author_id: str,
-                                     limit: Optional[int] = None, offset: int = 0) -> List[Quote]:
+    def get_quotes_by_group_and_author(
+        self, group_id: str, author_id: str,
+        limit: Optional[int] = None, offset: int = 0
+    ) -> List[Quote]:
         """
         根据群组和作者获取语录列表
         
@@ -277,8 +283,10 @@ class QuoteDAO(BaseDAO[Quote]):
             
             return [self._row_to_model(row) for row in rows]
     
-    def search_quotes_by_content(self, keyword: str, group_id: Optional[str] = None, 
-                               limit: Optional[int] = None, offset: int = 0) -> List[Quote]:
+    def search_quotes_by_content(
+        self, keyword: str, group_id: Optional[str] = None, 
+        limit: Optional[int] = None, offset: int = 0
+    ) -> List[Quote]:
         """
         根据内容关键词搜索语录
         
