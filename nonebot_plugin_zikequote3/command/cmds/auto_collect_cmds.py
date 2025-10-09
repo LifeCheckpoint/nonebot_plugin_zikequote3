@@ -13,6 +13,7 @@ async def f_collecting_listener(event: GroupME, bot: Bot, state: T_State):
     from ...services.quote_management.collection.save_service import s_save_selection_result
     from ...services.review_management.review_service import s_add_review, AUTHOR_AI
     from ...services.user_management.personal_info_service import s_update_personal_info_api
+    from ...services.quote_management.collection.lock_service import llm_collecting_locker as locker
 
     # 验证收录条件
     msg = event.get_plaintext().strip()
@@ -39,29 +40,23 @@ async def f_collecting_listener(event: GroupME, bot: Bot, state: T_State):
         return
     
     # 异步锁，防止多次触发
-    # FIXME: 锁似乎无效
-    lock: KeyedRejectingLock = state.get("f_collecting_listener_locker", KeyedRejectingLock())
-    state["f_collecting_listener_locker"] = lock
-    
-    try:
+    if locker.is_locked(str(event.group_id)):
+        logger.info(f"群 {event.group_id} 的 LLM 收录任务已在进行中，跳过本次触发")
+        return
 
-        async with lock.for_key(credential=str(event.group_id)):
-            async with event_exception_a("LLM 筛选", operation="finish"):
-                response, usage = await s_llm_selection(str(event.group_id))
-                logger.info(f"筛选到 {response.num_quotes} 条语录，输入 {usage.input_tokens} tokens，输出 {usage.output_tokens} tokens，总计 {usage.total_tokens} tokens")
-            
-            with event_exception("入库", operation="finish"):
-                response_with_qid = s_save_selection_result(str(event.group_id), response)
-            
-            for quote in response_with_qid.quotes:
-                if quote.quote_id is not None:
-                    with event_exception("添加评论", operation="finish"):
-                        s_add_review(AUTHOR_AI, quote.quote_id, quote.comment)
-            
-            with event_exception("清空队列", operation="finish"):
-                s_queue_clear(str(event.group_id))
+    async with locker.for_key(credential=str(event.group_id)):
+        async with event_exception_a("LLM 筛选", operation="finish"):
+            response, usage = await s_llm_selection(str(event.group_id))
+            logger.info(f"筛选到 {response.num_quotes} 条语录，输入 {usage.input_tokens} tokens，输出 {usage.output_tokens} tokens，总计 {usage.total_tokens} tokens")
+        
+        with event_exception("入库", operation="finish"):
+            response_with_qid = s_save_selection_result(str(event.group_id), response)
+        
+        for quote in response_with_qid.quotes:
+            if quote.quote_id is not None:
+                with event_exception("添加评论", operation="finish"):
+                    s_add_review(AUTHOR_AI, quote.quote_id, quote.comment)
+        
+        with event_exception("清空队列", operation="finish"):
+            s_queue_clear(str(event.group_id))
     
-    except LockIsHeldError:
-        logger.info(f"群 {event.group_id} 收录中，跳过本次收录")
-    except Exception:
-        raise

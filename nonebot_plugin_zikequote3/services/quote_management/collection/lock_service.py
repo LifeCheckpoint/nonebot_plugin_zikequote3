@@ -44,3 +44,6 @@ class KeyedRejectingLock:
         async def __aexit__(self, exc_type, exc_val, exc_tb):
             self._parent._locks.pop(self._credential, None)
             return False
+
+
+llm_collecting_locker = KeyedRejectingLock()

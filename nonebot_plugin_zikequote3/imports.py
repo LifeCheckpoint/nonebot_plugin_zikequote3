@@ -79,9 +79,6 @@ def notify_reload_config():
 from .utils.sentry_init import init_sentry
 init_sentry()
 
-# 其它工具
-from .utils.async_lock import KeyedRejectingLock, LockIsHeldError
-
 
 # 加载消息导入
 from . import msgtexts
