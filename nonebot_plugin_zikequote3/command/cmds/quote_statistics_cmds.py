@@ -60,6 +60,6 @@ async def f_quote_list(event: GroupME, arg: Message = CommandArg()):
         html = s_get_listing_html(str(event.group_id), valid_first_user, time)
 
         # 渲染图片
-        img = await html_img_render(html, module_render_image_root, width=800, height=200)
+        img = await html_img_render(html, module_render_image_root, width=1520, height=200)
         await matcher_quote_list.finish(MsgSeg.image(img))
     

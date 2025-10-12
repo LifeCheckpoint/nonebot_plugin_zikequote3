@@ -31,15 +31,15 @@
     {% if addition %}<div class="top-info-additional">{{ addition }}</div>{% endif %}
   </div>
   <div class="masonry-container">
-    <div class="quote-card">
     {% for q in quotes %}
+    <div class="quote-card">
       {% if q.quote_id %}<span class="quote-id">{{ q.quote_id }}</span>{% endif %}
       {% if q.quote_text %}<div class="quote-text">{{ q.quote_text }}</div>{% endif %}
       {% if q.quote_image %}<img class="quote-img" src="{{ q.quote_image }}" alt="Quote Image"/>{% endif %}
       {% if q.quote_author %}<div class="quote-author">{{ q.quote_author }}</div>{% endif %}
       {% if q.quote_comment %}<div class="quote-comment">“{{ q.quote_comment }}”</div>{% endif %}
-    {% endfor %}
     </div>
+    {% endfor %}
   </div>
 </body>
 </html>

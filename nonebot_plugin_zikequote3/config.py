@@ -34,7 +34,7 @@ class FetchingConfig(BaseModel):
 class ShowcaseConfig(BaseModel):
     max_rank_user_num: int = 40
     quote_num_per_page: int = 20
-    max_quotes_in_list: int = 80
+    max_quotes_in_list: int = 50
     comment_show_method: Literal["no", "noai", "all"] = "noai"
     hitokoto_url: str = "https://v1.hitokoto.cn"
     render_device_factor: float = 2.0

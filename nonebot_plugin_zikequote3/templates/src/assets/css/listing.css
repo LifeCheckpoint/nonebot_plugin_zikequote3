@@ -13,11 +13,11 @@ html, body {
     padding: 0 22px 35px 22px;
     color: #222;
 }
-.top-info-title { font-size: 2.3rem; font-weight: 700; margin-bottom: 14px; letter-spacing: 2px;}
-.top-info-desc { font-size: 1.14rem; color: #444; line-height: 1.7; margin-bottom: 10px;}
-.top-info-additional { font-size: 1.05rem; color: #7D8492; line-height: 1.52;}
+.top-info-title { font-size: 3.8rem; font-weight: 700; margin-bottom: 14px; letter-spacing: 2px;}
+.top-info-desc { font-size: 2rem; color: #444; line-height: 1.7; margin-bottom: 10px;}
+.top-info-additional { font-size: 1.9rem; color: #7D8492; line-height: 1.52;}
 .masonry-container {
-    column-count: 4;
+    column-count: 3;
     column-gap: 28px;
     max-width: 1500px;
     margin: auto;
@@ -32,20 +32,20 @@ html, body {
     display: block;
     break-inside: avoid;
     padding: 29px 24px 21px 24px;
-    font-size: 1.13rem;
+    font-size: 1.5rem;
 }
 .quote-id     { color: #b6b6b6; font-size: 0.89rem; margin-bottom: 8px; letter-spacing: 1px; }
-.quote-text   { font-size: 1.22rem; font-weight: 600; margin-bottom: 13px; line-height: 1.5; }
-.quote-author { font-size: 1.02rem; color: #667; margin-bottom: 6px; margin-top: 6px; }
+.quote-text   { font-size: 1.6rem; font-weight: 600; margin-bottom: 13px; line-height: 1.5; }
+.quote-author { font-size: 1.3rem; color: #667; margin-bottom: 6px; margin-top: 6px; }
 .quote-comment{
-    margin-top: 11px; font-size: 1.01rem; color: #2c6b80; font-style: italic;
+    margin-top: 11px; font-size: 1.1rem; color: #2c6b80; font-style: italic;
     border-left: 3px solid #2c6b80; padding-left: 13px; letter-spacing: 1px;
 }
 .quote-img {
     width: 100%;
-    max-width: 220px;     /* 或根据实际排版微调 */
+    max-width: 400px;
     display: block;
     margin: 10px 0 12px 0;
-    border-radius: 10px;  /* 微小圆角与卡片协调 */
+    border-radius: 10px;
     object-fit: cover;
 }

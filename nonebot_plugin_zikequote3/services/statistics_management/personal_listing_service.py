@@ -44,8 +44,8 @@ def s_get_listing_html(group_id: str, qq_id: str, time: str):
                 quote_id=qd.quote_id,
                 quote_text=qd.content,
                 quote_image=image_uri,
-                quote_author=current_card,
-                quote_comment=f"{review}  ——{review_author}" if review else None,
+                # quote_author=current_card, # 作者统一为当前用户，没必要显示
+                quote_comment=f"{review.content}  ——{review_author}" if review else None,
             ))
 
     with service_exception("拼接装饰性文字"):
