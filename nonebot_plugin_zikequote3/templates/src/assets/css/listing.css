@@ -3,7 +3,7 @@ html, body {
     min-height: 100vh;
     margin: 0;
     padding: 0;
-    font-family: 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'SF Pro Display', 'Helvetica Neue', '句读黑体 Hans Medium', Arial, sans-serif;
     background: #F6F7F9;
     overflow: auto;
 }
@@ -38,7 +38,7 @@ html, body {
 .quote-text   { font-size: 2.2rem; font-weight: 600; margin-bottom: 13px; line-height: 1.5; }
 .quote-author { font-size: 1.8rem; color: #667; margin-bottom: 6px; margin-top: 6px; }
 .quote-comment{
-    margin-top: 11px; font-size: 1.3rem; color: #2c6b80; font-style: italic;
+    margin-top: 11px; font-size: 1.3rem; color: #2c6b80;
     border-left: 3px solid #2c6b80; padding-left: 13px; letter-spacing: 1px;
 }
 .quote-img {
@@ -48,4 +48,14 @@ html, body {
     margin: 10px 0 12px 0;
     border-radius: 10px;
     object-fit: cover;
+}
+body::after {
+    content: "";
+    position: fixed;
+    left: 100px; top: 60px;
+    width: 320px; height: 160px;
+    background: radial-gradient(circle, #e3f0fb77 70%, transparent 100%);
+    opacity: 0.6;
+    z-index: 0;
+    pointer-events: none;
 }

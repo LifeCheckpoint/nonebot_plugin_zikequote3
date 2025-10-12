@@ -29,7 +29,7 @@ All notable changes to this project will be documented in this file.
 - 配置文件更换为 TOML
 - 优化 LLM 配置体验，支持更便捷清晰的自定义
 - ▶️ 回复信息模板化
-- HTML 模板化，优化了渲染调用代码结构
+- HTML 模板化，优化了渲染调用代码结构，优化了一些视觉效果
 - 调整了文档结构
 
 ### Fixed
