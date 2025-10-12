@@ -23,7 +23,7 @@ algorithm = "IFW --lambda 1.0" # 语录推荐算法命令，有 IFW 和 LogIFW �
 [showcase]
 max_rank_user_num = 40 # 语录榜单展示最大用户数
 quote_num_per_page = 20 # 语录展示每页数量
-page_num_limit = 5 # 语录展示最大页数
+max_quotes_in_list = 80 # 语录列表展示最大条数
 comment_show_method = "noai" # 语录评论展示方式: no | noai | all
 hitokoto_url = "https://v1.hitokoto.cn" # 获取名人名言 Hitokoto API
 render_device_factor = 2.0 # 图片渲染设备像素比
@@ -50,4 +50,4 @@ nonreloadable_items = [
     "sentry.dsn_path",
     "configure.nonreloadable_items",
 ]
-cfg_version = 2 # 当前配置版本
+cfg_version = 3 # 当前配置版本

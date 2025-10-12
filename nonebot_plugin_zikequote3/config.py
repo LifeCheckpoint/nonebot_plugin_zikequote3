@@ -34,7 +34,7 @@ class FetchingConfig(BaseModel):
 class ShowcaseConfig(BaseModel):
     max_rank_user_num: int = 40
     quote_num_per_page: int = 20
-    page_num_limit: int = 5
+    max_quotes_in_list: int = 80
     comment_show_method: Literal["no", "noai", "all"] = "noai"
     hitokoto_url: str = "https://v1.hitokoto.cn"
     render_device_factor: float = 2.0
@@ -169,7 +169,7 @@ def modify_group_config(group_id: int, schema_str: str, new_value: Any, reload: 
     :param group_id: 群号
     :param schema_str: 配置的模式文本。
     
-        例如，`showcase.page_num_limit` 表示修改 `showcase` 模式下的 `page_num_limit` 配置项
+        例如，`showcase.max_quotes_in_list` 表示修改 `showcase` 模式下的 `max_quotes_in_list` 配置项
     :param new_value: 新的配置值
     :param reload: 是否在修改后重新加载配置
 
