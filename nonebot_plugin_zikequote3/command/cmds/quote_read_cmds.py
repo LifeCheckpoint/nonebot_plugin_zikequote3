@@ -3,10 +3,11 @@ from ..command_definition import *
 
 
 @matcher_random_quote.handle()
-async def f_random_quote(event: GroupME, arg: Message = CommandArg()):
+async def f_random_quote(event: GroupME, bot: Bot, arg: Message = CommandArg()):
     """
     随机语录
     """
+    from ...services.user_management.personal_info_service import s_update_personal_info_api
     from ...services.quote_management.mapping_service import s_create_mapping_from_msgid_to_quoteid
     from ...services.quote_management.showcase.rand_quote_service import s_get_random_quote, s_increase_quote_appearance_count
     from ...services.quote_management.showcase.quote_image_service import s_get_quote_image_data
@@ -20,6 +21,9 @@ async def f_random_quote(event: GroupME, arg: Message = CommandArg()):
 
         if q_result is None:
             await matcher_random_quote.finish("没有找到符合条件的语录哦~")
+
+        # 发起一个异步要求更新用户信息
+        asyncio.create_task(s_update_personal_info_api(str(event.group_id), q_result.author_id, bot))
 
         # 获取语录作者当前昵称
         author_card = s_get_user_current_display_name(q_result.author_id, str(event.group_id))
@@ -59,10 +63,11 @@ async def f_random_quote(event: GroupME, arg: Message = CommandArg()):
 
 
 @matcher_quote_card.handle()
-async def f_quote_card(event: GroupME, arg: Message = CommandArg()):
+async def f_quote_card(event: GroupME, bot: Bot, arg: Message = CommandArg()):
     """
     随机语录卡，基本与随机语录逻辑一致
     """
+    from ...services.user_management.personal_info_service import s_update_personal_info_api
     from ...services.quote_management.mapping_service import s_create_mapping_from_msgid_to_quoteid
     from ...services.quote_management.showcase.rand_quote_service import s_get_random_quote, s_increase_quote_appearance_count, s_get_quote_card_html
 
@@ -73,6 +78,9 @@ async def f_quote_card(event: GroupME, arg: Message = CommandArg()):
 
         if q_result is None:
             await matcher_quote_card.finish("没有找到符合条件的语录哦~")
+
+        # 发起一个异步要求更新用户信息
+        asyncio.create_task(s_update_personal_info_api(str(event.group_id), q_result.author_id, bot))
 
         # 发送语录
         quote_card_html = s_get_quote_card_html(str(event.group_id), q_result)
