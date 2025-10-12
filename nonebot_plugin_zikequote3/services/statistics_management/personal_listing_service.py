@@ -44,6 +44,10 @@ def s_get_listing_html(
                 start = current_quotes_length - max_showcase_number
                 end = current_quotes_length - 1
                 quotes_data = quotes_data[-max_showcase_number:]
+            else:
+                start = 0
+                end = current_quotes_length - 1
+                quotes_data = quotes_data
 
         elif from_page is not None and to_page is None:
             start = max(0, from_page)
