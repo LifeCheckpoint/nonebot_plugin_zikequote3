@@ -82,15 +82,19 @@ def s_get_random_quote(key: str, event: GroupME, filter_: Optional[Callable[[Quo
     # TODO: 通过参数控制解析范围
 
     with service_exception("解析用户参数"):
-        union_users = s_parse_at_and_str_user(key, event, exact=False, empty_parse_to_self=False, multiple_at=True, parse_at_all=True)
-        for u in union_users:
-            with service_exception(raise_again=False):
-                if u == "all":
-                    # @全体，视为获取群内所有语录
-                    quotes_pool = s_get_quote_by_group(str(event.group_id))
-                    break
-                quotes_pool.extend(s_search_quotes_by_author_id(str(event.group_id), u))
-        quotes_pool.extend(s_search_quotes_by_keyword(str(event.group_id), key))
+        if key == "":
+            # 空参数，获取群内所有语录
+            quotes_pool = s_get_quote_by_group(str(event.group_id))
+        else:
+            union_users = s_parse_at_and_str_user(key, event, exact=False, empty_parse_to_self=False, multiple_at=True, parse_at_all=True)
+            for u in union_users:
+                with service_exception(raise_again=False):
+                    if u == "all":
+                        # @全体，视为获取群内所有语录
+                        quotes_pool = s_get_quote_by_group(str(event.group_id))
+                        break
+                    quotes_pool.extend(s_search_quotes_by_author_id(str(event.group_id), u))
+            quotes_pool.extend(s_search_quotes_by_keyword(str(event.group_id), key))
 
     with service_exception("语录去重过滤"):
         filter_key_q: Callable[[Quote], str] = lambda q: q.quote_id
