@@ -49,6 +49,7 @@ def s_rand_quote_choice_by_algorithm(quotes: List[Quote], algorithm_cmd: str = "
 
     with service_exception("解析算法命令参数"):
         schema = parse_command(rsap, algorithm_cmd)
+        logger.debug(f"解析语录算法参数: {schema}")
 
     with service_exception("语录随机选择计算"):
         if isinstance(schema, IFW):
@@ -105,6 +106,8 @@ def s_get_random_quote(key: str, event: GroupME, filter_: Optional[Callable[[Quo
 
     with service_exception("通过算法随机选择语录"):
         result = s_rand_quote_choice_by_algorithm(quotes_pool, cfg[event.group_id].fetching.algorithm)
+
+    logger.debug(f"随机语录池大小: {len(quotes_pool)}，选择结果: {result.quote_id if result else None}")
 
     return result
 
