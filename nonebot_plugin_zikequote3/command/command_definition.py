@@ -116,7 +116,7 @@ perm_nodes.n_review_delete.patch_matcher(matcher_remove_quote_comment)
 
 # endregion
 
-# region 语录读取命令
+# region 语录查询命令
 
 cmdname_random_quote = (
     "语录", "quote", "随机语录", "随机quote",
