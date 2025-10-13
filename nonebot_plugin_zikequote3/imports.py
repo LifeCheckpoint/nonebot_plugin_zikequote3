@@ -59,6 +59,10 @@ from .html_capture import html_img_render, parse_md2html
 # 异常上报与日志工具
 from .utils.error_report import service_exception, service_exception_a, event_exception_a, event_exception, event_exception_failmsg_a
 
+# 载入命令解析工具
+require("nonebot_plugin_alconna")
+from nonebot_plugin_alconna import on_alconna, Match
+
 
 # 权限配置插件载入与权限服务创建
 require("nonebot_plugin_access_control_api")

@@ -28,6 +28,7 @@ dependencies = [
   "sentry-sdk>=2.39.0",
   "tomlkit>=0.13.3",
   "typer>=0.19.2",
+  "nonebot-plugin-alconna>=0.59.4",
 ]
 
 [project.optional-dependencies]

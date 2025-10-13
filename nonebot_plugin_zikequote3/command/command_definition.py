@@ -1,4 +1,7 @@
-from ..imports import on_message, on_command, perm_nodes, default_cfg
+from ..imports import on_message, on_command, on_alconna, perm_nodes, default_cfg
+from arclet.alconna import Alconna, Arg, AllParam
+from nonebot_plugin_alconna.uniseg.segment import At
+from nepattern import BasePattern
 
 
 # region 自动收集事件
@@ -30,10 +33,17 @@ cmdname_get_quote_list = (
     "语录列表", "语录list", "语录列表", "列语录",
     "个人语录", "个人语录列表", "语录个人列表",
 )
-matcher_get_quote_list = on_command(
+alc_get_quote_list = Alconna(
     cmdname_get_quote_list[0],
-    aliases=set(cmdname_get_quote_list[1:]),
-    priority=10, block=True
+    cmdname_get_quote_list[1:],
+    Arg("range?", "re:\\d{1,4}(?:-\\d+)?", None),
+    Arg("at_user?", At, None),
+    Arg("qq?", "re:\\d{5,}", None),
+    Arg("nickname?", AllParam(str), ""),
+)
+matcher_get_quote_list = on_alconna(
+    alc_get_quote_list,
+    use_cmd_start=True, priority=10, block=True, skip_for_unmatch=False,
 )
 perm_nodes.n_listing.patch_matcher(matcher_get_quote_list)
 
@@ -126,7 +136,7 @@ cmdname_random_quote = (
 matcher_random_quote = on_command(
     cmdname_random_quote[0],
     aliases=set(cmdname_random_quote[1:]),
-    priority=10, block=True
+    priority=11, block=True
 )
 perm_nodes.n_get_text.patch_matcher(matcher_random_quote)
 

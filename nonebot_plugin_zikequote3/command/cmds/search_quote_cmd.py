@@ -3,6 +3,7 @@ from ..command_definition import *
 from ..parse_helper import *
 
 
+# HACK
 class CmdParamsSearchQuote(BaseModel):
     qq: Optional[int] = Field(None, description="用于筛选的QQ号")
     search_with_image: bool = Field(True, description="是否搜索包含图片的语录")
@@ -12,7 +13,7 @@ class CmdParamsSearchQuote(BaseModel):
 
 
 parser = typer.Typer()
-@cmd_name_alias(parser, cmdname_search_quote)
+@parser.command("搜索语录")
 @click.option('-qq', type=int, default=None, help='筛选特定QQ号的语录')
 @click.option('--no-image', '-ni', is_flag=True, flag_value=False, default=True, help='禁用图片语录搜索 (缩写: -ni)')
 @click.option('--max-result', '-m', type=click.IntRange(min=1), default=None, show_default=True, help='最大结果数量 (缩写: -m)')
@@ -51,9 +52,11 @@ async def f_search_quote(event: GroupME):
 
     async with event_exception_failmsg_a(matcher_search_quote, "解析参数"):
         plain_command = event.get_plaintext().strip()
+        logger.debug(f"命令原始文本: {plain_command}")
+        # HACK
+        from ...utils.click_cmd_parser import parse_command
         params: CmdParamsSearchQuote = parse_command(parser, plain_command)
 
-        logger.debug(f"命令原始文本: {plain_command}")
         logger.debug(f"命令解析参数结果: {params}")
 
     async with event_exception_failmsg_a(matcher_search_quote, "获取语录列表"):
