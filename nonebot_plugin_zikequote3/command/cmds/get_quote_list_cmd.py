@@ -61,7 +61,6 @@ async def f_get_quote_list(event: GroupME):
     from ...services.statistics_management.personal_listing_service import s_get_listing_html
     from ...services.user_management.user_parser_service import s_parse_at_and_str_user, s_at_one_user
     from ...services.user_management.user_service import s_user_exists
-    from ...utils.click_cmd_parser import parse_command
     from datetime import datetime
 
     async with event_exception_failmsg_a(matcher_get_quote_list, "解析参数"):
