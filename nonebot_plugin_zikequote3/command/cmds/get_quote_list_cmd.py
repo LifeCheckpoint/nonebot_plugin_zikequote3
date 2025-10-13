@@ -2,8 +2,8 @@ from ...imports import *
 from ..command_definition import *
 
 
-@matcher_quote_list.handle()
-async def f_quote_list(event: GroupME):
+@matcher_get_quote_list.handle()
+async def f_get_quote_list(event: GroupME):
     """
     语录列表
     """
@@ -14,7 +14,7 @@ async def f_quote_list(event: GroupME):
     from ..parser.quote_statistics_parser import quote_statistics_parser as qsp, QuoteListCommandParams
     from datetime import datetime
 
-    async with event_exception_failmsg_a(matcher_quote_list, "解析参数"):
+    async with event_exception_failmsg_a(matcher_get_quote_list, "解析参数"):
         plain_command = event.get_plaintext().strip()
         params: QuoteListCommandParams = parse_command(qsp, plain_command)
         users: List[str] = []
@@ -38,10 +38,10 @@ async def f_quote_list(event: GroupME):
         
         logger.debug(f"解析结果用户列表: {users}")
 
-    async with event_exception_failmsg_a(matcher_quote_list, "获取语录列表"):
+    async with event_exception_failmsg_a(matcher_get_quote_list, "获取语录列表"):
         # 解析参数，获取目标用户 QQ 号
         if len(users) > 1:
-            await matcher_quote_list.send("找到多个用户，仅使用第一个有效用户进行查询哦~")
+            await matcher_get_quote_list.send("找到多个用户，仅使用第一个有效用户进行查询哦~")
 
         # 尝试使用第一个有效 QQ
         valid_first_user = None
@@ -59,5 +59,5 @@ async def f_quote_list(event: GroupME):
 
         # 渲染图片
         img = await html_img_render(html, module_render_image_root, width=1520, height=200)
-        await matcher_quote_list.finish(MsgSeg.image(img))
+        await matcher_get_quote_list.finish(MsgSeg.image(img))
     

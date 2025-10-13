@@ -2,8 +2,8 @@ from ...imports import *
 from ..command_definition import *
 
 
-@matcher_rank.handle()
-async def f_rank(event: GroupME, arg: Message = CommandArg()):
+@matcher_get_ranking.handle()
+async def f_get_ranking(event: GroupME, arg: Message = CommandArg()):
     """
     展示群内语录排行图片
     """
@@ -17,11 +17,11 @@ async def f_rank(event: GroupME, arg: Message = CommandArg()):
     else:
         max_showcase_number = cfg[event.group_id].showcase.max_rank_user_num
 
-    async with event_exception_failmsg_a(matcher_rank, "获取语录排行"):
+    async with event_exception_failmsg_a(matcher_get_ranking, "获取语录排行"):
         # 获取详细信息 HTML
         time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         html = s_get_ranking_html(str(event.group_id), time, max_showcase_number)
         
         # 渲染图片
         img = await html_img_render(html, module_render_image_root, width=800, height=200)
-        await matcher_rank.finish(MsgSeg.image(img))
+        await matcher_get_ranking.finish(MsgSeg.image(img))
