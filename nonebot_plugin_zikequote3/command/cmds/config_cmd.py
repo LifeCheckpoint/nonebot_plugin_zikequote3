@@ -1,7 +1,3 @@
-"""
-语录设置调整相关命令
-"""
-
 from ..command_definition import *
 from ...imports import *
 

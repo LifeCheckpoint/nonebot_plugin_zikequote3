@@ -2,7 +2,7 @@ from ...imports import *
 from ..command_definition import *
 
 @matcher_collecting_listener.handle()
-async def f_collecting_listener(event: GroupME, bot: Bot, state: T_State):
+async def f_collecting_listener(event: GroupME, bot: Bot):
     """
     监听群组消息，处理自动语录收集
 
