@@ -1,34 +1,6 @@
 from ...imports import *
 from ..command_definition import *
-
-
-def parse_page_range(s: Optional[str]) -> Tuple[Optional[int], Optional[int]]:
-    """
-    解析 page_from, page_to
-    """
-    if s is None:
-        return (None, None)
-    
-    s = s.strip()
-    if not s:
-        return (None, None)
-    if "-" in s:
-        parts = s.split("-", 1)
-        try:
-            page_from = int(parts[0])
-        except ValueError:
-            page_from = None
-        try:
-            page_to = int(parts[1])
-        except ValueError:
-            page_to = None
-        return (page_from, page_to)
-    else:
-        try:
-            val = int(s)
-        except ValueError:
-            return (None, None)
-        return (val, None)
+from ..parse_helper.datatype_parse import parse_page_range
 
 
 @matcher_get_quote_list.handle()
@@ -62,6 +34,7 @@ async def f_get_quote_list(
             if not user_qq and qq.available:
                 if qq.result and qq.result.isdigit():
                     user_qq = qq.result
+            
             # 其次解析手动输入昵称
             if not user_qq and nickname.available:
                 if nickname.result:

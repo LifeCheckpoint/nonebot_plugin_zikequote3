@@ -13,7 +13,7 @@ def s_get_searching_quote_html(
     from ...services.quote_management.showcase.basic_quote_service import s_get_quote_by_group
     from ...services.statistics_management.quote_type_transform import s_transform_quotedata_to_quotebox
     from ...templates import listing
-    from utils.hitokoto import get_hitokoto
+    from ...utils.hitokoto import get_hitokoto
     import re
 
     with service_exception("语录搜索筛选"):
@@ -35,18 +35,18 @@ def s_get_searching_quote_html(
         if max_result:
             quotes = quotes[:max_result]
 
-        quote_boxes = s_transform_quotedata_to_quotebox(group_id, quotes)
+        quote_boxes = s_transform_quotedata_to_quotebox(group_id, quotes, show_author=True)
 
     with service_exception("拼接说明文字"):
         # 标题
         title_text = f"有关{pattern}的语录搜索结果"
         
         # 描述
-        desc_text = " / ".join([
+        desc_text = " | ".join([
             f"{time}",
-            f"搜索模式: {'正则' if use_regex else '普通'}",
-            f"筛选 QQ: {qq_id}" if qq_id else "筛选 QQ: 无",
-            f"包含图片: {'是' if search_with_image else '否'}",
+            f"{'正则' if use_regex else '普通'}搜索模式",
+            f"筛选 QQ: {qq_id}" if qq_id else "不筛选 QQ",
+            f"{'' if search_with_image else '不'} 包含图片",
             f"共 {total_found} 条 (显示 {len(quote_boxes)} 条)",
         ])
 

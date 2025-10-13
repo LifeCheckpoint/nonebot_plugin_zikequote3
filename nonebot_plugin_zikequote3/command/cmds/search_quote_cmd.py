@@ -3,48 +3,23 @@ from ..command_definition import *
 from ..parse_helper import *
 
 
-# HACK
-class CmdParamsSearchQuote(BaseModel):
-    qq: Optional[int] = Field(None, description="用于筛选的QQ号")
-    search_with_image: bool = Field(True, description="是否搜索包含图片的语录")
-    max_result: Optional[int] = Field(None, ge=1, description="最大返回结果数量，至少为1")
-    use_regex: bool = Field(False, description="是否启用正则表达式匹配")
-    keyword: str = Field(..., description="搜索的关键词或模式")
-
-
-parser = typer.Typer()
-@parser.command("搜索语录")
-@click.option('-qq', type=int, default=None, help='筛选特定QQ号的语录')
-@click.option('--no-image', '-ni', is_flag=True, flag_value=False, default=True, help='禁用图片语录搜索 (缩写: -ni)')
-@click.option('--max-result', '-m', type=click.IntRange(min=1), default=None, show_default=True, help='最大结果数量 (缩写: -m)')
-@click.option('-r', '--regex', is_flag=True, default=False, help='启用正则表达式')
-@click.argument('keyword_parts', nargs=-1, required=True)
-def quote_search_command(qq, search_with_image, max_result, use_regex, keyword_parts):
-    """
-    - /查语录 xxx
-    - /查语录 -qq 123456 xxx
-    - /查语录 --no-image xxx
-    - /查语录 -m 5 xxx
-    - /查语录 -r xxx
-    - /查语录 -qq 123456 --no-image -m 5 -r xxx
-    """
-    if not keyword_parts:
-        raise ValueError("缺少关键词或搜索模式~")
-    
-    keyword = " ".join(keyword_parts)
-    
-    with service_exception("解析语录搜索命令验证"):
-        return CmdParamsSearchQuote(
-            qq=qq,
-            search_with_image=search_with_image,
-            max_result=max_result,
-            use_regex=use_regex,
-            keyword=keyword
-        )
+class ArgsValidater(BaseModel):
+    qq: Optional[int] = None
+    search_with_image: bool = True
+    max_result: Optional[int] = None
+    use_regex: bool = False
+    pattern: str = ""
 
 
 @matcher_search_quote.handle()
-async def f_search_quote(event: GroupME):
+async def f_search_quote(
+    event: GroupME,
+    qq: Match[int],
+    max_result: Match[int],
+    keyword: Match[UniMessage],
+    no_image: Query[bool] = Query("no_image.value", False),
+    use_regex: Query[bool] = Query("use_regex.value", False),
+):
     """
     语录搜索
     """
@@ -53,22 +28,30 @@ async def f_search_quote(event: GroupME):
     async with event_exception_failmsg_a(matcher_search_quote, "解析参数"):
         plain_command = event.get_plaintext().strip()
         logger.debug(f"命令原始文本: {plain_command}")
-        # HACK
-        from ...utils.click_cmd_parser import parse_command
-        params: CmdParamsSearchQuote = parse_command(parser, plain_command)
 
-        logger.debug(f"命令解析参数结果: {params}")
+        if max_result.available:
+            if max_result.result is not None and max_result.result < 1:
+                await matcher_search_quote.finish("最大返回结果数量至少为 1 哦~")
+        
+        params = ArgsValidater(
+            qq=qq.result if qq.available else None,
+            search_with_image=(not no_image.result) if no_image.available else True,
+            max_result=max_result.result if max_result.available else None,
+            use_regex=use_regex.result if use_regex.available else False,
+            pattern=keyword.result.extract_plain_text() if keyword.available else "",
+        )
+        logger.debug(f"解析结果参数: {params}")
 
     async with event_exception_failmsg_a(matcher_search_quote, "获取语录列表"):
         time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         html = s_get_searching_quote_html(
             group_id=str(event.group_id),
-            pattern=params.keyword,
-            qq_id=str(params.qq),
+            pattern=params.pattern,
+            qq_id=str(params.qq) if params.qq else None,
             search_with_image=params.search_with_image,
             max_result=params.max_result,
             use_regex=params.use_regex,
-            time=time,
+            time=time
         )
 
         # 渲染图片

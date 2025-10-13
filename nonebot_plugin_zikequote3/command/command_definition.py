@@ -1,7 +1,6 @@
 from ..imports import on_message, on_command, on_alconna, perm_nodes, default_cfg
-from arclet.alconna import Alconna, Arg, AllParam
+from arclet.alconna import Alconna, Arg, Option, AllParam, store_true, store_false
 from nonebot_plugin_alconna.uniseg.segment import At
-from nepattern import BasePattern
 
 
 # region 自动收集事件
@@ -36,10 +35,10 @@ cmdname_get_quote_list = (
 alc_get_quote_list = Alconna(
     cmdname_get_quote_list[0],
     cmdname_get_quote_list[1:],
-    Arg("range?", "re:\\d{1,4}(?:-\\d+)?", None),
-    Arg("at_user?", At, None),
-    Arg("qq?", "re:\\d{5,}", None),
-    Arg("nickname?", AllParam(str), ""),
+    Arg("range?", "re:\\d{1,4}(?:-\\d+)?", None, notice="页码范围，格式如 3 或 2-5"),
+    Arg("at_user?", At, None, notice="At 段用户"),
+    Arg("qq?", "re:\\d{5,}", None, notice="指定 QQ 号"),
+    Arg("nickname?", AllParam(str), "", notice="指定昵称"),
 )
 matcher_get_quote_list = on_alconna(
     alc_get_quote_list,
@@ -155,10 +154,18 @@ cmdname_search_quote = (
     "搜语录", "找语录", "搜语录", "找语录", 
     "搜索语录", "查找语录", "寻找语录", "检索语录"
 )
-matcher_search_quote = on_command(
+alc_search_quote = Alconna(
     cmdname_search_quote[0],
-    aliases=set(cmdname_search_quote[1:]),
-    priority=10, block=True
+    cmdname_search_quote[1:],
+    Option("-qq", Arg("qq", int, None, notice="用于筛选的QQ号")),
+    Option("-m|--max-result", Arg("max_result", int, None, notice="最大返回结果数量，至少为1")),
+    Option("-ni|--no-image", dest="no_image", action=store_true, default=False, help_text="是否排除包含图片的语录"),
+    Option("-r|--regex", dest="use_regex", action=store_true, default=False, help_text="是否使用正则表达式进行搜索"),
+    Arg("keyword", AllParam(str), "", notice="搜索的关键词或模式"),
+)
+matcher_search_quote = on_alconna(
+    alc_search_quote,
+    use_cmd_start=True, priority=10, block=True, skip_for_unmatch=False,
 )
 perm_nodes.n_search.patch_matcher(matcher_search_quote)
 
