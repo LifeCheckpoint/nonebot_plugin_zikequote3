@@ -1,5 +1,56 @@
 from ...imports import *
 from ..command_definition import *
+from ..parse_helper import *
+
+class CmdParamsGetQuoteList(BaseModel):
+    page_from: Optional[int] = Field(None, description="起始页码")
+    page_to: Optional[int] = Field(None, description="结束页码")
+    name: Optional[str] = Field(..., description="名称，可含空格")
+
+
+parser = typer.Typer()
+@cmd_name_alias(parser, cmdname_get_quote_list)
+def quote_list_command(
+    args: List[str] = typer.Argument(..., help="格式: [页码/范围] <名称>")
+):
+    """
+    - /语录列表
+    - /语录列表 <名称>
+    - /语录列表 <页码> <名称>
+    - /语录列表 <起始页码-结束页码> <名称>
+    """
+
+    # 去除命令头
+    args = args[1:]
+
+    # /语录列表
+    if not args:
+        return CmdParamsGetQuoteList(page_from=None, page_to=None, name=None)
+    
+    page_range_str = args[0]
+    name_parts = args[1:]
+    
+    page_range_obj = None
+    
+    # 尝试将第一个参数解析为页码范围
+    try:
+        page_range_obj = PARAMTYPE_RANGE.convert(page_range_str, None, None)
+    except click.BadParameter:
+        # 如果解析失败，说明第一个参数是名称的一部分
+        name_parts.insert(0, page_range_str)
+        page_range_obj = None
+    
+    full_name = " ".join(name_parts)
+    full_name = full_name if full_name != "" else None
+    page_from = None
+    page_to = None
+
+    if isinstance(page_range_obj, tuple):
+        page_from, page_to = page_range_obj
+    elif isinstance(page_range_obj, int):
+        page_from = page_range_obj
+    
+    return CmdParamsGetQuoteList(page_from=page_from, page_to=page_to, name=full_name)
 
 
 @matcher_get_quote_list.handle()
@@ -11,12 +62,11 @@ async def f_get_quote_list(event: GroupME):
     from ...services.user_management.user_parser_service import s_parse_at_and_str_user, s_at_one_user
     from ...services.user_management.user_service import s_user_exists
     from ...utils.click_cmd_parser import parse_command
-    from ..parser.quote_statistics_parser import quote_statistics_parser as qsp, QuoteListCommandParams
     from datetime import datetime
 
     async with event_exception_failmsg_a(matcher_get_quote_list, "解析参数"):
         plain_command = event.get_plaintext().strip()
-        params: QuoteListCommandParams = parse_command(qsp, plain_command)
+        params: CmdParamsGetQuoteList = parse_command(parser, plain_command)
         users: List[str] = []
         
         # HACK: 实现不太好，需要重新考虑

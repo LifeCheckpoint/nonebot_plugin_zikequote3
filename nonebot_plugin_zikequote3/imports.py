@@ -9,8 +9,9 @@ from nonebot.plugin import PluginMetadata
 from nonebot.typing import T_State
 from pathlib import Path
 from pydantic import BaseModel, Field
-from typing import Optional, Union, Literal, Callable, Any, Dict, List, Tuple
+from typing import Optional, Union, Literal, Callable, Any, Dict, List, Tuple, Sequence
 import asyncio
+import click
 import colorsys
 import random
 import requests
