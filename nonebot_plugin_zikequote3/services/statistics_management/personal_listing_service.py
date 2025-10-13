@@ -20,7 +20,7 @@ def s_get_listing_html(
     from ...services.review_management.review_service import AUTHOR_AI, s_get_reviews_by_quote_id
     from ...services.user_management.user_service import s_get_user_current_display_name
     from ...templates import listing
-    from ...templates.schema.listing import QuoteBox
+    from ...services.statistics_management.quote_type_transform import s_transform_quotedata_to_quotebox
     from ...utils.hitokoto import get_hitokoto
 
     with service_exception("获取用户信息"):
@@ -62,31 +62,9 @@ def s_get_listing_html(
         else:
             raise ValueError("语录范围参数不正确")
         
-        # 将语录转换为模板参数
-        quotes_params: List[QuoteBox] = []
-        for qd in quotes_data:
-            # 首条评论
-            reviews = s_get_reviews_by_quote_id(qd.quote_id)
-            review = next((r for r in reviews if r.author_id != AUTHOR_AI), None)
-            review_author = s_get_user_current_display_name(review.author_id, group_id) if review else None
+        quotes_boxes = s_transform_quotedata_to_quotebox(group_id, quotes_data)
 
-            # 图片
-            image_uri = None
-            if qd.image_content_uuid is not None:
-                with service_exception(f"语录列表获取语录 {qd.quote_id} 图片", raise_again=False):
-                    img_bytes = qimg_store.get_path(qd.image_content_uuid).read_bytes()
-                    image_uri = to_data_uri(img_bytes)
-            
-            # 加入列表
-            quotes_params.append(QuoteBox(
-                quote_id=qd.quote_id,
-                quote_text=qd.content,
-                quote_image=image_uri,
-                # quote_author=current_card, # 作者统一为当前用户，没必要显示
-                quote_comment=f"{review.content}  ——{review_author}" if review else None,
-            ))
-
-    with service_exception("拼接装饰性文字"):
+    with service_exception("拼接说明文字"):
         # 标题
         title_text = f"{current_card}的语录列表"
 
@@ -107,5 +85,5 @@ def s_get_listing_html(
             title=title_text,
             desc=desc_text,
             addition=hitokoto_text,
-            quotes=quotes_params,
+            quotes=quotes_boxes,
         )

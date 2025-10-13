@@ -6,7 +6,7 @@ from ..parse_helper import *
 class CmdParamsSearchQuote(BaseModel):
     qq: Optional[int] = Field(None, description="用于筛选的QQ号")
     search_with_image: bool = Field(True, description="是否搜索包含图片的语录")
-    max_result: int = Field(10, ge=1, description="最大返回结果数量，至少为1")
+    max_result: Optional[int] = Field(None, ge=1, description="最大返回结果数量，至少为1")
     use_regex: bool = Field(False, description="是否启用正则表达式匹配")
     keyword: str = Field(..., description="搜索的关键词或模式")
 
@@ -15,7 +15,7 @@ parser = typer.Typer()
 @cmd_name_alias(parser, cmdname_search_quote)
 @click.option('-qq', type=int, default=None, help='筛选特定QQ号的语录')
 @click.option('--no-image', '-ni', is_flag=True, flag_value=False, default=True, help='禁用图片语录搜索 (缩写: -ni)')
-@click.option('--max-result', '-m', type=click.IntRange(min=1), default=30, show_default=True, help='最大结果数量 (缩写: -m)')
+@click.option('--max-result', '-m', type=click.IntRange(min=1), default=None, show_default=True, help='最大结果数量 (缩写: -m)')
 @click.option('-r', '--regex', is_flag=True, default=False, help='启用正则表达式')
 @click.argument('keyword_parts', nargs=-1, required=True)
 def quote_search_command(qq, search_with_image, max_result, use_regex, keyword_parts):
@@ -60,8 +60,8 @@ async def f_search_quote(event: GroupME):
         time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         html = s_get_searching_quote_html(
             group_id=str(event.group_id),
-            keyword=params.keyword,
-            qq_id=params.qq,
+            pattern=params.keyword,
+            qq_id=str(params.qq),
             search_with_image=params.search_with_image,
             max_result=params.max_result,
             use_regex=params.use_regex,
