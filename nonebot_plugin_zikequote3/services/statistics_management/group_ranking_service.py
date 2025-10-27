@@ -111,10 +111,11 @@ def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int) -> st
             while current_date <= today_start:
                 this_day_end = current_date + datetime.timedelta(days=1)
                 count_until_date = sum(1 for q in all_quotes if q.time_stamp < this_day_end)
+                logger.debug([q.time_stamp for q in all_quotes])
                 daily_counts.append(count_until_date)
                 current_date = this_day_end
             
-            frontiers_series_data.append(daily_counts)    
+            frontiers_series_data.append(daily_counts)
         
         line_chart_data = LineChartData(
             topN=top_n,

@@ -73,13 +73,13 @@ def render_rank(
         })
     
     # 准备统计数据
-    stats_data = {
-        "total_quotes": stats.total_quotes,
-        "pending_quotes": stats.pending_quotes,
-        "contributors": stats.contributors,
-        "average_quotes": stats.average_quotes,
-        "total_shows": stats.total_shows,
-    }
+    stats_data = [
+        {"label": "总语录", "value": stats.total_quotes},
+        {"label": "待收集语录", "value": stats.pending_quotes},
+        {"label": "贡献者数", "value": stats.contributors},
+        {"label": "人均语录数", "value": f"{stats.average_quotes:.2f}"},
+        {"label": "总展示次数", "value": stats.total_shows},
+    ]
 
     # 准备折线图数据
     line_chart_data = {
