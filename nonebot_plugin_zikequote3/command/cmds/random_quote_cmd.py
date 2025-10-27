@@ -7,10 +7,11 @@ async def f_random_quote(event: GroupME, bot: Bot, arg: Message = CommandArg()):
     """
     随机语录
     """
-    from ...services.user_management.personal_info_service import s_update_personal_info_api
     from ...services.quote_management.mapping_service import s_create_mapping_from_msgid_to_quoteid
-    from ...services.quote_management.showcase.rand_quote_service import s_get_random_quote, s_increase_quote_appearance_count
     from ...services.quote_management.showcase.quote_image_service import s_get_quote_image_data
+    from ...services.quote_management.showcase.rand_quote_service import s_get_random_quote, s_increase_quote_appearance_count
+    from ...services.user_management.group_relationship_service import s_ensure_user_group_mapping
+    from ...services.user_management.personal_info_service import s_update_personal_info_api
     from ...services.user_management.user_service import s_get_user_current_display_name
     from ...msgtexts.quote_read import send_quote
     
@@ -55,6 +56,10 @@ async def f_random_quote(event: GroupME, bot: Bot, arg: Message = CommandArg()):
     # 更新语录出现次数
     with event_exception(operation="ignore"):
         s_increase_quote_appearance_count(q_result.quote_id)
+    
+    # 检查用户-群映射存在性
+    with event_exception(operation="ignore"):
+        await s_ensure_user_group_mapping(str(event.group_id), q_result.author_id, bot)
 
     # 添加消息映射
     if send_msg is not None:

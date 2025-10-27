@@ -10,6 +10,7 @@ async def f_add_quote(event: GroupME, bot: Bot):
     from ...services.quote_management.addtion.add_quote_service import s_add_quote
     from ...services.quote_management.mapping_service import s_create_mapping_from_msgid_to_quoteid
     from ...services.quote_management.showcase.quote_image_service import s_get_image_data_from_file_or_url, s_image_info_register
+    from ...services.user_management.group_relationship_service import s_ensure_user_group_mapping
     
     reply = event.reply
     if reply == None:
@@ -46,6 +47,10 @@ async def f_add_quote(event: GroupME, bot: Bot):
         )
     
     await matcher_add_quote.send("语录添加成功~(≧▽≦)")
+
+    # 检查用户-群映射存在性
+    with event_exception(operation="ignore"):
+        await s_ensure_user_group_mapping(str(event.group_id), str(reply.sender.user_id), bot)
     
     # 添加消息映射
     with event_exception(operation="ignore"):

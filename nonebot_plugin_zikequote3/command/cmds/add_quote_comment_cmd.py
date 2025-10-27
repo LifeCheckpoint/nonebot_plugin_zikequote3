@@ -12,6 +12,7 @@ async def f_add_quote_comment(event: GroupME, bot: Bot, arg: Message = CommandAr
     """
     from ...services.quote_management.mapping_service import s_get_mapping_by_msgid
     from ...services.review_management.review_service import s_add_review
+    from ...services.user_management.group_relationship_service import s_ensure_user_group_mapping
     
     # 判断 reply
     reply = event.reply
@@ -33,6 +34,10 @@ async def f_add_quote_comment(event: GroupME, bot: Bot, arg: Message = CommandAr
         )
 
         await matcher_add_quote_comment.send("评论添加成功~(≧▽≦)")
+    
+    # 检查用户-群映射存在性
+    with event_exception(operation="ignore"):
+        await s_ensure_user_group_mapping(str(event.group_id), str(event.sender.user_id), bot)
     
     # TODO: 添加消息映射
 

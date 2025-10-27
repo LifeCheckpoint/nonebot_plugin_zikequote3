@@ -3,14 +3,15 @@ from ..command_definition import *
 
 
 @matcher_random_quote_image.handle()
-async def f_random_quote_image(event: GroupME, arg: Message = CommandArg()):
+async def f_random_quote_image(event: GroupME, bot: Bot, arg: Message = CommandArg()):
     """
     随机语录图，基本与随机语录逻辑一致
     """
     from ...database.models.quotes import Quote
     from ...services.quote_management.mapping_service import s_create_mapping_from_msgid_to_quoteid
-    from ...services.quote_management.showcase.rand_quote_service import s_get_random_quote, s_increase_quote_appearance_count
     from ...services.quote_management.showcase.quote_image_service import s_get_quote_image_data
+    from ...services.quote_management.showcase.rand_quote_service import s_get_random_quote, s_increase_quote_appearance_count
+    from ...services.user_management.group_relationship_service import s_ensure_user_group_mapping
 
     key = arg.extract_plain_text().strip()
     async with event_exception_failmsg_a(matcher_random_quote_image, "获取语录图片"):
@@ -26,6 +27,10 @@ async def f_random_quote_image(event: GroupME, arg: Message = CommandArg()):
     # 更新语录出现次数
     with event_exception(operation="ignore"):
         s_increase_quote_appearance_count(q_result.quote_id)
+    
+    # 检查用户-群映射存在性
+    with event_exception(operation="ignore"):
+        await s_ensure_user_group_mapping(str(event.group_id), q_result.author_id, bot)
 
     # 添加消息映射
     with event_exception(operation="ignore"):

@@ -8,12 +8,13 @@ async def f_collecting_listener(event: GroupME, bot: Bot):
 
     此事件不会向用户界面提供任何反馈
     """
-    from ...services.quote_management.collection.queue_service import s_queue_put, s_queue_clear
     from ...services.quote_management.collection.llm_selection_service import s_llm_selection
+    from ...services.quote_management.collection.lock_service import llm_collecting_locker as locker
+    from ...services.quote_management.collection.queue_service import s_queue_put, s_queue_clear
     from ...services.quote_management.collection.save_service import s_save_selection_result
     from ...services.review_management.review_service import s_add_review, AUTHOR_AI
+    from ...services.user_management.group_relationship_service import s_ensure_user_group_mapping
     from ...services.user_management.personal_info_service import s_update_personal_info_api
-    from ...services.quote_management.collection.lock_service import llm_collecting_locker as locker
 
     # 验证收录条件
     msg = event.get_plaintext().strip()
@@ -34,7 +35,11 @@ async def f_collecting_listener(event: GroupME, bot: Bot):
     if random.random() < cfg[event.group_id].collecting.update_personal_info_probability:
         async with event_exception_a("更新个人信息", operation="finish"):
             await s_update_personal_info_api(str(event.group_id), str(event.user_id), bot)
-
+    
+    # 检查用户-群映射存在性
+    with event_exception(operation="ignore"):
+        await s_ensure_user_group_mapping(str(event.group_id), str(event.user_id), bot)
+    
     # 未达到阈值，结束流程，否则尝试触发收录
     if not is_thresold:
         return

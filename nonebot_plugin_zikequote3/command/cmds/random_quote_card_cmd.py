@@ -30,6 +30,11 @@ async def f_quote_card(event: GroupME, bot: Bot, arg: Message = CommandArg()):
     # 更新语录出现次数
     with event_exception(operation="ignore"):
         s_increase_quote_appearance_count(q_result.quote_id)
+
+    # 检查用户-群映射存在性
+    with event_exception(operation="ignore"):
+        from ...services.user_management.group_relationship_service import s_ensure_user_group_mapping
+        await s_ensure_user_group_mapping(str(event.group_id), q_result.author_id, bot)
     
     # 添加消息映射
     if send_msg is not None:
