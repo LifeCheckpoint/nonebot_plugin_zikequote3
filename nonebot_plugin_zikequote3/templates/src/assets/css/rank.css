@@ -114,9 +114,9 @@ h2 {
 
 #endpoints-panel {
     position: absolute;
-    right: 0;
+    left: 0;
     top: 0;
-    width: 200px;
+    width: 100%;
     height: 100%;
     pointer-events: none;
     z-index: 10;
@@ -125,7 +125,6 @@ h2 {
 
 .endpoint-item {
     position: absolute;
-    right: 24px;
     display: flex;
     align-items: center;
     height: 64px;
@@ -149,10 +148,9 @@ h2 {
     background: var(--window-bg);
     border: 1px solid var(--border-color);
     border-radius: 14px;
-    padding: 0 16px;
-    width: 156px;
-    min-height: 56px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.11);
+    padding: 0 8px;
+    width: 250px;
+    min-height: 60px;
     pointer-events: auto;
     position: relative;
 }
@@ -166,7 +164,7 @@ h2 {
     border-radius: 8px;
     overflow: hidden;
     background-color: #eee;
-    margin-right: 12px;
+    margin-right: 6px;
     flex-shrink: 0;
 }
 
@@ -181,7 +179,7 @@ h2 {
     width: 1px;
     height: 40px;
     background: var(--border-color);
-    margin: 0 13px;
+    margin: 0 6px;
     flex-shrink: 0;
     border: none;
 }
@@ -198,7 +196,7 @@ h2 {
     font-weight: 600;
     font-size: 1rem;
     color: var(--text-primary);
-    text-shadow: 0 0 6px rgba(255,255,255,0.35), 0 1px 2px rgba(0,0,0,0.11);
+    text-shadow: 0 0 6px rgba(255,255,255,0.35);
     margin: 0 0 2px 0;
     line-height: 1.12;
 }
@@ -209,19 +207,6 @@ h2 {
     text-shadow: 0 0 8px rgba(255,255,255,0.25);
     margin: 0;
     line-height: 1.1;
-}
-
-.endpoint-pointer {
-    position: absolute;
-    left: -12px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 0;
-    height: 0;
-    border-right: 12px solid var(--window-bg);
-    border-top: 7px solid transparent;
-    border-bottom: 7px solid transparent;
-    z-index: 1;
 }
 
 .sidebar-right {
@@ -267,8 +252,8 @@ h2 {
         grid-template-columns: repeat(3, 1fr);
     }
     #endpoints-panel {
-        width: 120px;
-        right: 4px;
+        left: 0;
+        width: 100%;
     }
     .endpoint-card {
         width: 98px;

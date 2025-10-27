@@ -148,7 +148,7 @@ async function initChart(chartId, topNParam = topN) {
         },
         grid: {
             left: '40', 
-            right: '40',  // 减少右边距，为HTML面板腾空间
+            right: '300',
             top: '40', 
             bottom: '80'
         },
@@ -206,6 +206,8 @@ function createHTMLEndpoints(myChart, seriesData, topUsers, userColors) {
     // 按 Y 从上到下排序
     const sorted = pointsWithIdx.sort((a, b) => a.point[1] - b.point[1]);
 
+    const padding = 15; // 终点标志相对于线条终点的右侧偏移距离
+
     sorted.forEach(({ idx, point }, rank) => {
         const user = topUsers[idx];
         const markerY = point[1];
@@ -214,12 +216,12 @@ function createHTMLEndpoints(myChart, seriesData, topUsers, userColors) {
 
         const item = document.createElement('div');
         item.className = 'endpoint-item';
+        item.style.left = `${point[0] + padding}px`;
         item.style.top = `${cardY}px`;
 
         item.innerHTML = `
             <div class="endpoint-marker" style="background-color: ${userColors[idx]}"></div>
-            <div class="endpoint-card" style="background-color: ${userColors[idx]}; border-color: ${userColors[idx]}20;">
-                <div class="endpoint-pointer"></div>
+            <div class="endpoint-card" style="background-color: #ffffff; border-color: ${userColors[idx]}20;">
                 <div class="endpoint-avatar-bg" style="background-color: ${userColors[idx]};">
                     <img src="${user.avatar}" alt="${user.name}" class="endpoint-avatar">
                 </div>
