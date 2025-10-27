@@ -1,14 +1,15 @@
 from ...imports import *
 
-def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int) -> str:
+async def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int) -> str:
     """
     获取语录排行 HTML
     """
+    from ...services.user_management.user_service import s_get_user_current_display_name
+    from ...services.user_management.avatar_service import s_get_user_avatar
     from ...templates import rank
     from ...templates.schema.rank import Stats, BasicRankingItem, LineChartData
     from ...utils.base64_encoder import to_data_uri
     from ..quote_management.collection.queue_service import s_get_queue_length
-    from ...services.user_management.user_service import s_get_user_current_display_name
     from dateutil.relativedelta import relativedelta
     import datetime
 
@@ -60,6 +61,11 @@ def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int) -> st
                 # 获取头像
                 usr = db.dao.get_user_dao().get_user_by_qq_id(author.qq_id)
                 avatar_bytes = usr.avatar if usr else None
+                # 如果没有头像，强制更新也
+                if not avatar_bytes:
+                    avatar_bytes = await s_get_user_avatar(author.qq_id)
+                    if avatar_bytes:
+                        db.dao.get_user_dao().update_user(author.qq_id, avatar_bytes)
                 avatar_bs64 = to_data_uri(avatar_bytes) if avatar_bytes else None
 
                 # 加入列表

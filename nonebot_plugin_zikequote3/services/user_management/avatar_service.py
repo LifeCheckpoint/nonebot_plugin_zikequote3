@@ -2,7 +2,7 @@ from ...imports import *
 import aiohttp
 from aiohttp import ClientTimeout
 
-async def get_user_avatar(qq: str) -> bytes:
+async def s_get_user_avatar(qq: str) -> bytes:
     """
     获取用户头像
     """
