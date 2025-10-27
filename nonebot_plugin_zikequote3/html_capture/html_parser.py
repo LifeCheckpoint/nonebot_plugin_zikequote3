@@ -103,7 +103,6 @@ async def html_img_render_plugin(
     from nonebot_plugin_htmlrender import template_to_pic
 
     async with get_new_page(viewport={"width": width, "height": height}) as page:
-        print(temp_html.read_text(encoding="utf-8"))
         await page.goto(
             "file://" + str(temp_html.absolute()),
             wait_until="networkidle",
