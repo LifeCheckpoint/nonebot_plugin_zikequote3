@@ -86,7 +86,7 @@ async def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int)
     top_n = min(5, len(ranking_data))
 
     with service_exception("获取排行走势数据"):
-        # 对于前 top_n 名，获取其全部语录，然后过滤日期到近一个月
+        # 对于前 top_n 名，获取其全部语录，然后过滤日期到近半个月
         # TODO: 可调时间范围
 
         # example data:
@@ -100,7 +100,7 @@ async def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int)
         # }
 
         today_start = datetime.datetime.now()
-        one_month_ago_start = (today_start - relativedelta(months=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        one_month_ago_start = (today_start - relativedelta(days=15)).replace(hour=0, minute=0, second=0, microsecond=0)
 
         frontiers_series_data = []
         for i in range(top_n):
