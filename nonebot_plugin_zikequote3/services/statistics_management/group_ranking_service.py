@@ -21,7 +21,7 @@ async def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int)
             current_date += datetime.timedelta(days=1)
         return date_list
 
-    with service_exception("获取语录统计数据"):
+    async with service_exception_a("获取语录统计数据"):
         stat_group = db.dao.get_quote_dao().get_quote_statistics_by_group(group_id)
         total_count = stat_group["total_quotes"]
         pending_count = s_get_queue_length(group_id)
@@ -39,18 +39,18 @@ async def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int)
         total_shows=total_shows
     )
 
-    with service_exception("获取群组名称"):
+    async with service_exception_a("获取群组名称"):
         group = db.dao.get_group_dao().get_group_by_id(group_id)
         if group is None:
             raise ValueError(f"无法在数据库中找到群组 {group_id}")
         group_name = group.name
 
-    with service_exception("获取个人排行"):
+    async with service_exception_a("获取个人排行"):
         ranking_data: List[BasicRankingItem] = []
         authors = db.dao.get_group_member_dao().get_members_by_group(group_id)
         
         for author in authors:
-            with service_exception("处理单个用户排行数据", raise_again=False):
+            async with service_exception_a("处理单个用户排行数据", raise_again=False):
                 name = s_get_user_current_display_name(author.qq_id, group_id)
                 
                 # 获取计数
@@ -85,7 +85,7 @@ async def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int)
     # TODO: 改为配置项
     top_n = min(5, len(ranking_data))
 
-    with service_exception("获取排行走势数据"):
+    async with service_exception_a("获取排行走势数据"):
         # 对于前 top_n 名，获取其全部语录，然后过滤日期到近半个月
         # TODO: 可调时间范围
 
@@ -127,7 +127,7 @@ async def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int)
             seriesData=frontiers_series_data,
         )
 
-    with service_exception("获取语录排行数据"):
+    async with service_exception_a("获取语录排行数据"):
         return rank.render_rank(
             group_name=group_name,
             date_time=time,
