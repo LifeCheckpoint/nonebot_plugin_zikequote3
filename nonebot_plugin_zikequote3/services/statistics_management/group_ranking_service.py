@@ -4,9 +4,20 @@ def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int) -> st
     """
     获取语录排行 HTML
     """
-    from ..quote_management.collection.queue_service import s_get_queue_length
     from ...templates import rank
-    from ...templates.schema.rank import Stats, BasicRankingItem
+    from ...templates.schema.rank import Stats, BasicRankingItem, LineChartData
+    from ...utils.base64_encoder import to_data_uri
+    from ..quote_management.collection.queue_service import s_get_queue_length
+    from dateutil.relativedelta import relativedelta
+    import datetime
+
+    def generate_date_range_mm_dd(start_date: datetime.date, end_date: datetime.date) -> List[str]:
+        date_list = []
+        current_date = start_date
+        while current_date <= end_date:
+            date_list.append(current_date.strftime("%m-%d"))
+            current_date += datetime.timedelta(days=1)
+        return date_list
 
     with service_exception("获取语录统计数据"):
         stat_group = db.dao.get_quote_dao().get_quote_statistics_by_group(group_id)
@@ -51,11 +62,16 @@ def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int) -> st
                 if num == 0:
                     continue
 
+                # 获取头像
+                usr = db.dao.get_user_dao().get_user_by_qq_id(author.qq_id)
+                avatar_bytes = usr.avatar if usr else None
+                avatar_bs64 = to_data_uri(avatar_bytes) if avatar_bytes else None
+
                 # 加入列表
                 ranking_data.append(BasicRankingItem(
                     author=name,
                     count=num,
-                    percentage=num / total_count,
+                    avatar=avatar_bs64,
                 ))
 
     if len(ranking_data) == 0:
@@ -64,10 +80,56 @@ def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int) -> st
     ranking_data.sort(key=lambda x: x.count, reverse=True)
     ranking_data = ranking_data[:max_showcase_number]
 
+    # TODO: 改为配置项
+    top_n = min(5, len(ranking_data))
+
+    with service_exception("获取排行走势数据"):
+        # 对于前 top_n 名，获取其全部语录，然后过滤日期到近一个月
+        # TODO: 可调时间范围
+
+        # example data:
+        # {
+        #     "topN": 2,
+        #     "dates": ["10-1", "10-2", "10-3", "10-4"],
+        #     "seriesData": [
+        #         [995, 988, 1002, 1015],
+        #         [945, 938, 952, 965],
+        #     ]
+        # }
+
+        today_start = datetime.datetime.now()
+        one_month_ago_start = (today_start - relativedelta(months=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+
+        frontiers_series_data = []
+        for i in range(top_n):
+            item = ranking_data[i]
+            all_quotes = db.dao.get_quote_dao().get_quotes_by_group_and_author(group_id, item.author)
+
+            # 从 timestamp_start 开始，每次累计一天，获取该用户截止该日的语录数
+            daily_counts = []
+            current_date = one_month_ago_start
+            while current_date <= today_start:
+                this_day_end = current_date + datetime.timedelta(days=1)
+                count_until_date = sum(1 for q in all_quotes if q.time_stamp < this_day_end)
+                daily_counts.append(count_until_date)
+                current_date = this_day_end
+            
+            frontiers_series_data.append(daily_counts)    
+        
+        line_chart_data = LineChartData(
+            topN=top_n,
+            dates=generate_date_range_mm_dd(
+                one_month_ago_start.date(),
+                today_start.date()
+            ),
+            seriesData=frontiers_series_data,
+        )
+
     with service_exception("获取语录排行数据"):
         return rank.render_rank(
             group_name=group_name,
             date_time=time,
-            stats=stats_data,
             basic_ranking=ranking_data,
+            line_chart=line_chart_data,
+            stats=stats_data,
         )

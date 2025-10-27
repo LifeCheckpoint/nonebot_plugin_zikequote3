@@ -29,6 +29,7 @@ dependencies = [
   "tomlkit>=0.13.3",
   "typer>=0.19.2",
   "nonebot-plugin-alconna>=0.59.4",
+  "python-dateutil>=2.9.0.post0",
 ]
 
 [project.optional-dependencies]
