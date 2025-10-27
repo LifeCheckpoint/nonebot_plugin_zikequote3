@@ -130,7 +130,7 @@ function renderLeaderboard(containerId) {
             ${avatarHtml}
             <div class="user-info">
                 <span class="user-name">${user.name}</span>
-                <span class="user-score">${user.score.toLocaleString()} points</span>
+                <span class="user-score">${user.score.toLocaleString()} 语录</span>
             </div>
         `;
         container.appendChild(item);

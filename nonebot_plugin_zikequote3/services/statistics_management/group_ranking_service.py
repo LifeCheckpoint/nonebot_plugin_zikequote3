@@ -8,6 +8,7 @@ def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int) -> st
     from ...templates.schema.rank import Stats, BasicRankingItem, LineChartData
     from ...utils.base64_encoder import to_data_uri
     from ..quote_management.collection.queue_service import s_get_queue_length
+    from ...services.user_management.user_service import s_get_user_current_display_name
     from dateutil.relativedelta import relativedelta
     import datetime
 
@@ -49,13 +50,7 @@ def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int) -> st
         
         for author in authors:
             with service_exception("处理单个用户排行数据", raise_again=False):
-                # 获取昵称，顺序获取防止失败
-                name = db.dao.get_group_nickname_dao().get_current_group_nickname(author.qq_id, group_id)
-                if name is None:
-                    n = db.dao.get_user_nickname_dao().get_current_nickname(author.qq_id)
-                    name = n.name if n else None
-                if name is None:
-                    name = author.qq_id
+                name = s_get_user_current_display_name(author.qq_id, group_id)
                 
                 # 获取计数
                 num = db.dao.get_quote_dao().count_quotes_by_group_and_author(group_id, author.qq_id)
@@ -69,6 +64,7 @@ def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int) -> st
 
                 # 加入列表
                 ranking_data.append(BasicRankingItem(
+                    qq=author.qq_id,
                     author=name,
                     count=num,
                     avatar=avatar_bs64,
@@ -103,7 +99,7 @@ def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int) -> st
         frontiers_series_data = []
         for i in range(top_n):
             item = ranking_data[i]
-            all_quotes = db.dao.get_quote_dao().get_quotes_by_group_and_author(group_id, item.author)
+            all_quotes = db.dao.get_quote_dao().get_quotes_by_group_and_author(group_id, item.qq)
 
             # 从 timestamp_start 开始，每次累计一天，获取该用户截止该日的语录数
             daily_counts = []
@@ -111,7 +107,6 @@ def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int) -> st
             while current_date <= today_start:
                 this_day_end = current_date + datetime.timedelta(days=1)
                 count_until_date = sum(1 for q in all_quotes if q.time_stamp < this_day_end)
-                logger.debug([q.time_stamp for q in all_quotes])
                 daily_counts.append(count_until_date)
                 current_date = this_day_end
             

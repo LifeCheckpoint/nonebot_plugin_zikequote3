@@ -10,6 +10,7 @@ import random, base64
 
 class BasicRankingItem(BaseModel):
     """排行榜项数据类"""
+    qq: str
     author: str
     count: int
     avatar: Optional[str]
