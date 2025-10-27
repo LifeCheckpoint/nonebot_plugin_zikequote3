@@ -23,7 +23,8 @@ async def html_img_render_plugin(
     cache_dir,
     width: int = 1000,
     height: int = 800,
-    timeout: int = 5
+    timeout: int = 30000,
+    wait: int = 200,
 ) -> bytes:
     from .html_parser import html_img_render_plugin as _html_img_render_plugin
 
@@ -33,6 +34,7 @@ async def html_img_render_plugin(
         width=width,
         height=height,
         timeout=timeout,
+        wait=wait,
     )
 
 

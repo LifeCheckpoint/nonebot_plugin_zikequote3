@@ -24,5 +24,5 @@ async def f_get_ranking(event: GroupME, arg: Message = CommandArg()):
 
         # HACK
         # 渲染图片
-        img = await html_img_render_plugin(html, module_render_image_root, width=1920, height=1080, timeout=10000)
+        img = await html_img_render_plugin(html, module_render_image_root, width=1920, height=1080, wait=1000)
         await matcher_get_ranking.finish(MsgSeg.image(img))

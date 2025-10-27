@@ -33,84 +33,32 @@ const dates = chartConfig.dates;
 const seriesData = chartConfig.seriesData;
 
 /**
- * 从图像URI计算平均颜色，使用随机采样128像素，并调整亮度到中等范围。
- * 支持URL或Base64数据URL输入。
- * @param {string} imageUri - 图像URI，例如"https://example.com/avatar.png" 或 "data:image/png;base64,iVBOR..."
- * @returns {Promise<string>} - 调整后的平均颜色，格式为RGB字符串，如"rgb(128, 128, 128)"
+ * 从图像URI计算感知平均色，使用ColorThief提取主导色。
+ * 支持URL或Base64数据URL输入。假设图像不透明。
+ * @param {string} imageUri - 图像URI
+ * @param {number} [quality=10] - ColorThief采样质量，值越小精度越高但计算越慢
+ * @returns {Promise<string>} - 主导平均颜色，RGB字符串
  */
-async function calculateAverageColorFromUri(imageUri) {
+async function calculateAverageColorFromUri(imageUri, quality = 10) {
     return new Promise((resolve, reject) => {
         const img = new Image();
-        img.crossOrigin = 'Anonymous'; // 处理跨域图像
+        img.crossOrigin = 'Anonymous';
         img.src = imageUri;
 
         img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = img.width;
-            canvas.height = img.height;
-
-            // 绘制图像到Canvas
-            ctx.drawImage(img, 0, 0);
-
-            // 获取ImageData
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const { data, width, height } = imageData;
-            const totalPixels = width * height;
-            const sampleSize = Math.min(128, totalPixels); // 如果像素少于128，采样全部
-
-            let rSum = 0, gSum = 0, bSum = 0;
-
-            // 随机采样像素
-            for (let i = 0; i < sampleSize; i++) {
-                const x = Math.floor(Math.random() * width);
-                const y = Math.floor(Math.random() * height);
-                const pixelIndex = (y * width + x) * 4;
-
-                rSum += data[pixelIndex];
-                gSum += data[pixelIndex + 1];
-                bSum += data[pixelIndex + 2];
+            const colorThief = new ColorThief();
+            const dominantColor = colorThief.getColor(img, quality); // 返回 [R, G, B]
+            
+            if (!dominantColor) {
+                resolve('rgb(150, 150, 150)'); // 回退到中性灰
+                return;
             }
 
-            // 计算平均RGB（基于采样数）
-            let avgR = Math.round(rSum / sampleSize);
-            let avgG = Math.round(gSum / sampleSize);
-            let avgB = Math.round(bSum / sampleSize);
-
-            // 计算感知亮度 (0.299R + 0.587G + 0.114B)
-            let brightness = 0.299 * avgR + 0.587 * avgG + 0.114 * avgB;
-
-            // 目标亮度128，中等范围80-176
-            const targetBrightness = 128;
-            const minBrightness = 80;
-            const maxBrightness = 176;
-            const factor = targetBrightness / Math.max(brightness, 1); // 避免除零
-
-            // 调整RGB到目标亮度，但限制范围
-            avgR = Math.max(0, Math.min(255, Math.round(avgR * factor)));
-            avgG = Math.max(0, Math.min(255, Math.round(avgG * factor)));
-            avgB = Math.max(0, Math.min(255, Math.round(avgB * factor)));
-
-            // 重新计算亮度并微调如果超出范围
-            brightness = 0.299 * avgR + 0.587 * avgG + 0.114 * avgB;
-            if (brightness < minBrightness) {
-                const adjust = (minBrightness - brightness) / Math.max(brightness, 1);
-                avgR = Math.min(255, Math.round(avgR * (1 + adjust)));
-                avgG = Math.min(255, Math.round(avgG * (1 + adjust)));
-                avgB = Math.min(255, Math.round(avgB * (1 + adjust)));
-            } else if (brightness > maxBrightness) {
-                const adjust = maxBrightness / Math.max(brightness, 1);
-                avgR = Math.max(0, Math.round(avgR * adjust));
-                avgG = Math.max(0, Math.round(avgG * adjust));
-                avgB = Math.max(0, Math.round(avgB * adjust));
-            }
-
+            const [avgR, avgG, avgB] = dominantColor;
             resolve(`rgb(${avgR}, ${avgG}, ${avgB})`);
         };
 
-        img.onerror = (error) => {
-            reject(new Error(`Failed to load image: ${error}`));
-        };
+        img.onerror = (error) => reject(new Error(`Failed to load image: ${error}`));
     });
 }
 
@@ -200,7 +148,7 @@ async function initChart(chartId, topNParam = topN) {
         },
         grid: {
             left: '40', 
-            right: '130', 
+            right: '40',  // 减少右边距，为HTML面板腾空间
             top: '40', 
             bottom: '80'
         },
@@ -224,128 +172,63 @@ async function initChart(chartId, topNParam = topN) {
 
     myChart.setOption(option);
 
-    // 在图表渲染完成后添加 graphic 元素
-    myChart.on('rendered', function addGraphics() {
+    // 在图表渲染完成后添加HTML终点组件
+    myChart.on('rendered', function addEndpoints() {
         // 移除监听器，避免重复添加
-        myChart.off('rendered', addGraphics);
+        myChart.off('rendered', addEndpoints);
 
-        const markers = createMarkers(myChart, validSeriesData, userColors);
-        const chartWidth = chartDom.clientWidth;
-        const bubbles = createBubbles(myChart, topUsers, validSeriesData, userColors, chartWidth);
-        myChart.setOption({
-            graphic: [...markers, ...bubbles]
-        });
+        createHTMLEndpoints(myChart, validSeriesData, topUsers, userColors);
+    });
+
+    // 处理窗口大小变化，重新定位HTML组件
+    window.addEventListener('resize', () => {
+        if (myChart) {
+            myChart.resize();
+            createHTMLEndpoints(myChart, validSeriesData, topUsers, userColors);
+        }
     });
 
     return { myChart, seriesData: validSeriesData, topUsers };
 }
 
-// 终点标志（使用用户平均颜色）
-function createMarkers(myChart, seriesData, userColors) {
-    const markers = [];
-    seriesData.forEach((data, idx) => {
-        const lastY = data[data.length - 1];
-        const point = myChart.convertToPixel('series', [data.length - 1, lastY]);
-        if (point && point[0] > 0 && point[1] > 0) {
-            markers.push({
-                type: 'circle',
-                z: 110,
-                shape: { cx: point[0], cy: point[1], r: 6 },
-                style: {
-                    fill: userColors[idx],
-                    stroke: '#fff',
-                    lineWidth: 2
-                }
-            });
-        }
-    });
-    return markers;
-}
+// 创建HTML终点标记和卡片组件
+function createHTMLEndpoints(myChart, seriesData, topUsers, userColors) {
+    const panel = document.getElementById('endpoints-panel');
+    panel.innerHTML = '';  // 清空面板
 
-// 圆角头像
-function createBubbles(myChart, topUsers, seriesData, userColors, chartWidth) {
-    const bubbles = [];
-    // 收集所有point
+    // 收集所有Y像素位置
     const pointsWithIdx = seriesData.map((data, idx) => {
         const lastY = data[data.length - 1];
         const point = myChart.convertToPixel('series', [data.length - 1, lastY]);
         return { idx, point };
     }).filter(p => p.point && p.point[0] > 0 && p.point[1] > 0);
 
-    // 按 y 从上到下排序
+    // 按 Y 从上到下排序
     const sorted = pointsWithIdx.sort((a, b) => a.point[1] - b.point[1]);
-    const initial_avatar_y = 0;
-    const avatar_size = 60; // 宽度和高度
-    const spacing = 15; // 终点标志到头像的间距
-    const corner_radius = 12; // 圆角半径，轻微圆角
 
     sorted.forEach(({ idx, point }, rank) => {
         const user = topUsers[idx];
-        const markerX = point[0];
         const markerY = point[1];
-        let avatarX = markerX + spacing;
-        let avatarY = Math.max(20, markerY - avatar_size / 2);
+        const cardY = markerY - 24;  // 卡片中心对齐标记
 
-        // x边界检查：防止左溢出（最小20px）和右溢出（裕度20px）
-        if (avatarX < 20) {
-            avatarX = 20;
-        }
-        if (avatarX + avatar_size > chartWidth - 20) {
-            avatarX = chartWidth - avatar_size - 20;
-        }
+        const item = document.createElement('div');
+        item.className = 'endpoint-item';
+        item.style.top = `${cardY}px`;
 
-        const bubbleZ = 105 - rank;
-
-        const bubble = {
-            type: 'group',
-            z: bubbleZ,
-            left: avatarX,
-            top: avatarY,
-            children: [
-                // 平均颜色背景矩形
-                {
-                    type: 'rect',
-                    z: 101,
-                    shape: {
-                        x: 0,
-                        y: 0,
-                        width: avatar_size,
-                        height: avatar_size,
-                        r: corner_radius
-                    },
-                    style: {
-                        fill: userColors[idx]
-                    }
-                },
-                // 圆角矩形裁剪的头像图像
-                {
-                    type: 'image',
-                    style: {
-                        image: user.avatar,
-                        x: 0,
-                        y: initial_avatar_y,
-                        width: avatar_size,
-                        height: avatar_size
-                    },
-                    clipPath: {
-                        type: 'rect',
-                        shape: {
-                            x: 0,
-                            y: 0,
-                            width: avatar_size,
-                            height: avatar_size,
-                            r: corner_radius
-                        }
-                    },
-                    z: 102
-                }
-            ]
-        };
-        bubbles.push(bubble);
+        item.innerHTML = `
+            <div class="endpoint-marker" style="background-color: ${userColors[idx]}"></div>
+            <div class="endpoint-card" style="background-color: ${userColors[idx]}; border-color: ${userColors[idx]}20;">
+                <div class="endpoint-pointer"></div>
+                <div class="endpoint-avatar-bg" style="background-color: ${userColors[idx]};">
+                    <img src="${user.avatar}" alt="${user.name}" class="endpoint-avatar">
+                </div>
+                <hr class="endpoint-divider">
+                <p class="endpoint-name">${user.name}</p>
+                <p class="endpoint-score">${user.score.toLocaleString()} 语录</p>
+            </div>
+        `;
+        panel.appendChild(item);
     });
-
-    // 反转顺序以便上层覆盖下层
-    return bubbles.reverse();
 }
 
 // 初始化（先同步渲染统计和排行榜，再异步初始化图表）

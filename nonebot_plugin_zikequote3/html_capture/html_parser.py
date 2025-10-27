@@ -67,7 +67,8 @@ async def html_img_render_plugin(
     cache_dir: Path,
     width: int = 1000,
     height: int = 800,
-    timeout: int = 5
+    timeout: int = 30000,
+    wait: int = 200
 ) -> bytes:
     """
     渲染 HTML 文件并截图，自动处理临时文件
@@ -107,6 +108,7 @@ async def html_img_render_plugin(
             "file://" + str(temp_html.absolute()),
             wait_until="networkidle",
         )
+        await page.wait_for_timeout(wait)
         img_bytes = await page.screenshot(timeout=timeout, full_page=True, path=temp_image)
 
     # 清理临时文件

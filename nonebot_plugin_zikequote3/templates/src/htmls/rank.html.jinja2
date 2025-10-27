@@ -6,6 +6,7 @@
     echarts_js: echarts 库绝对路径
     rank_css: 排行榜样式绝对路径
     rank_js: 排行榜脚本绝对路径
+    color_thief_js: color-thief 库绝对路径
 
 
     group_name: 群组名称字符串
@@ -60,6 +61,7 @@
     <title>语录排行榜 / {{ group_name }}</title>
     
     <script src="{{ echarts_js | safe }}"></script>
+    <script src="{{ color_thief_js | safe }}"></script>
     <link href="{{ rank_css | safe }}" rel="stylesheet">
 
     <!-- 排行榜基本数据 Json -->
@@ -93,7 +95,10 @@
         </aside>
         <main class="main-content">
             <h2>排行走势 (To {{ date_time }})</h2>
-            <div id="main-chart"></div>
+            <div class="chart-wrapper">
+                <div id="main-chart"></div>
+                <div id="endpoints-panel"></div>
+            </div>
         </main>
         <aside class="sidebar-right">
             <h2>整体统计</h2>

@@ -60,6 +60,7 @@ def render_rank(
     echarts_js = module_templates_root / "src" / "assets" / "js" / "vendor" / "echarts.min.js"
     rank_css = module_templates_root / "src" / "assets" / "css" / "rank.css"
     rank_js = module_templates_root / "src" / "assets" / "js" / "rank.js"
+    color_thief_js = module_templates_root / "src" / "assets" / "js" / "vendor" / "color-thief.min.js"
 
     max_avatar_threshold = 10
 
@@ -94,6 +95,7 @@ def render_rank(
         echarts_js=str(echarts_js.absolute()),
         rank_css=str(rank_css.absolute()),
         rank_js=str(rank_js.absolute()),
+        color_thief_js=str(color_thief_js.absolute()),
 
         group_name=group_name,
         date_time=date_time,
