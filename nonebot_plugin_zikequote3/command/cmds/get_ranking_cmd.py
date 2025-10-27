@@ -20,7 +20,7 @@ async def f_get_ranking(event: GroupME, arg: Message = CommandArg()):
     async with event_exception_failmsg_a(matcher_get_ranking, "获取语录排行"):
         # 获取详细信息 HTML
         time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        html = s_get_ranking_html(str(event.group_id), time, max_showcase_number)
+        html = await s_get_ranking_html(str(event.group_id), time, max_showcase_number)
 
         # HACK
         # 渲染图片
