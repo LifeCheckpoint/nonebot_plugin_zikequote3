@@ -53,7 +53,14 @@ qimg_store = ImageStore(data_image_root)
 
 
 # HTML 截图工具
-from .html_capture import html_img_render, parse_md2html
+require("nonebot_plugin_htmlrender")
+from nonebot_plugin_htmlrender import (
+    get_new_page,
+    md_to_pic,
+    template_to_pic,
+    text_to_pic,
+)
+from .html_capture import html_img_render, parse_md2html, html_img_render_plugin
 
 
 # 异常上报与日志工具
