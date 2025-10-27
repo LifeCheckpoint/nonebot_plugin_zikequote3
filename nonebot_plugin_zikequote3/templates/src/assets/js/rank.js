@@ -194,7 +194,7 @@ async function initChart(chartId, topNParam = topN) {
 // 创建HTML终点标记和卡片组件
 function createHTMLEndpoints(myChart, seriesData, topUsers, userColors) {
     const panel = document.getElementById('endpoints-panel');
-    panel.innerHTML = '';  // 清空面板
+    panel.innerHTML = '';
 
     // 收集所有Y像素位置
     const pointsWithIdx = seriesData.map((data, idx) => {
@@ -209,7 +209,8 @@ function createHTMLEndpoints(myChart, seriesData, topUsers, userColors) {
     sorted.forEach(({ idx, point }, rank) => {
         const user = topUsers[idx];
         const markerY = point[1];
-        const cardY = markerY - 24;  // 卡片中心对齐标记
+        // 卡片的垂直居中（每个卡片高度为64px，头像垂直居中）
+        const cardY = markerY - 32;
 
         const item = document.createElement('div');
         item.className = 'endpoint-item';
@@ -223,8 +224,10 @@ function createHTMLEndpoints(myChart, seriesData, topUsers, userColors) {
                     <img src="${user.avatar}" alt="${user.name}" class="endpoint-avatar">
                 </div>
                 <hr class="endpoint-divider">
-                <p class="endpoint-name">${user.name}</p>
-                <p class="endpoint-score">${user.score.toLocaleString()} 语录</p>
+                <div class="endpoint-details">
+                    <p class="endpoint-name">${user.name}</p>
+                    <p class="endpoint-score">${user.score.toLocaleString()} 语录</p>
+                </div>
             </div>
         `;
         panel.appendChild(item);
