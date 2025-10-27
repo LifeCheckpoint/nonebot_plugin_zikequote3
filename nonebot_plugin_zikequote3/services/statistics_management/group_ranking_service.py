@@ -6,7 +6,7 @@ def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int) -> st
     """
     from ..quote_management.collection.queue_service import s_get_queue_length
     from ...templates import rank
-    from ...templates.schema.rank import Stats, RankingItem
+    from ...templates.schema.rank import Stats, BasicRankingItem
 
     with service_exception("获取语录统计数据"):
         stat_group = db.dao.get_quote_dao().get_quote_statistics_by_group(group_id)
@@ -33,7 +33,7 @@ def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int) -> st
         group_name = group.name
 
     with service_exception("获取个人排行"):
-        ranking_data: List[RankingItem] = []
+        ranking_data: List[BasicRankingItem] = []
         authors = db.dao.get_group_member_dao().get_members_by_group(group_id)
         
         for author in authors:
@@ -52,7 +52,7 @@ def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int) -> st
                     continue
 
                 # 加入列表
-                ranking_data.append(RankingItem(
+                ranking_data.append(BasicRankingItem(
                     author=name,
                     count=num,
                     percentage=num / total_count,
@@ -67,7 +67,7 @@ def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int) -> st
     with service_exception("获取语录排行数据"):
         return rank.render_rank(
             group_name=group_name,
-            time=time,
+            date_time=time,
             stats=stats_data,
-            ranking=ranking_data,
+            basic_ranking=ranking_data,
         )

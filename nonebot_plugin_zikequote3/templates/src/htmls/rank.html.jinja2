@@ -8,6 +8,10 @@
     rank_js: 排行榜脚本绝对路径
 
 
+    group_name: 群组名称字符串
+    date_time: 时间字符串
+
+
     max_avatar_threshold: 整数，当排行榜用户数超过该值时，不显示头像以节省空间
     basic_ranking_data: 排行榜基本数据字典
         example:
@@ -53,7 +57,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>语录排行榜</title>
+    <title>语录排行榜 / {{ group_name }}</title>
     
     <script src="{{ echarts_js | safe }}"></script>
     <link href="{{ rank_css | safe }}" rel="stylesheet">
@@ -88,7 +92,7 @@
             <ol class="leaderboard-list" id="leaderboard"></ol>
         </aside>
         <main class="main-content">
-            <h2>排行走势</h2>
+            <h2>排行走势 (To {{ date_time }})</h2>
             <div id="main-chart"></div>
         </main>
         <aside class="sidebar-right">
