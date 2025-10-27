@@ -1,20 +1,51 @@
 {#
-    语录排行榜模板
+    语录排行榜 HTML 模板
+    该模板模板定义排行榜页面布局，包含左侧的贡献排行榜、中间的趋势分析图表和右侧的整体统计信息。
 
-    - inline_css: 内联CSS样式
+
+    echarts_js: echarts 库绝对路径
+    rank_css: 排行榜样式绝对路径
+    rank_js: 排行榜脚本绝对路径
+
+
+    max_avatar_threshold: 整数，当排行榜用户数超过该值时，不显示头像以节省空间
+    basic_ranking_data: 排行榜基本数据字典
+        example:
+            [
+                { rank: 1, name: "Alex", score: 1050, avatar: "..." },
+                { rank: 2, name: "Bella", score: 980, avatar: "..." },
+                { rank: 3, name: "Chris", score: 925, avatar: "..." },
+                { rank: 4, name: "Diana", score: 880, avatar: "..." },
+                ...
+            ]
+        要求给定: rank, name, score, avatar (可以为 Base64 或 URL)
     
-    - group_name: 群组名称
-    - time: 时间
-    - stats: 统计信息
-        - total_quotes: 语录数量
-        - pending_quotes: 待统计数量
-        - contributors: 人数
-        - average_quotes: 平均语录数量
-        - total_shows: 总展示次数
-    - ranking: 排行榜详情列表
-        - author: 用户名称
-        - count: 语录数量
-        - percentage: 百分比
+
+    line_chart_data: 折线图数据字典
+        example:
+            {
+                "topN": 5,
+                "dates": ["10-1", "10-2", "10-3", "10-4", "10-5", "10-6", "10-7", "10-8", "10-9", "10-10"],
+                "seriesData": [
+                    [995, 988, 1002, 1015, 1008, 1022, 1035, 1028, 1042, 1055],
+                    [945, 938, 952, 965, 958, 972, 985, 978, 992, 1005],
+                    [895, 888, 902, 915, 908, 922, 935, 928, 942, 955],
+                    [845, 838, 852, 865, 858, 872, 885, 878, 892, 905],
+                    [795, 788, 802, 815, 808, 822, 835, 828, 842, 855]
+                ]
+            }
+        topN 表示显示前 N 名用户的趋势，dates 为日期列表，需要有顺序，seriesData 为每个对应用户的语录统计数量列表
+        注意这里的 seriesData 顺序必须和 basic_ranking_data 保持一致
+    
+    
+    stat_data: 统计数据字典
+        example:
+            [
+                { value: 128, label: "活跃用户" },
+                { value: 8421, label: "总贡献点" },
+                { value: "+12.5%", label: "月增长率" }
+            ]
+        会按照顺序显示在右侧统计栏
 #}
 
 <!DOCTYPE html>
@@ -23,75 +54,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>语录排行榜</title>
-    <style>
-        {{ inline_css | safe }}
-    </style>
+    
+    <script src="{{ echarts_js | safe }}"></script>
+    <link href="{{ rank_css | safe }}" rel="stylesheet">
+
+    <!-- 排行榜基本数据 Json -->
+    <script type="application/json" id="leaderboard-data">
+    {{ basic_ranking_data | tojson }}
+    </script>
+
+    <!-- 统计数据 Json -->
+    <script type="application/json" id="stats-data">
+    {{ stat_data | tojson }}
+    </script>
+
+    <!-- 折线图 Json -->
+    <script type="application/json" id="chart-config">
+    {{ line_chart_data | tojson }}
+    </script>
+
+    <!-- 其他配置 Json -->
+    <script type="application/json" id="app-config">
+    {% raw %} { {% endraw %}
+        "maxAvatarThreshold": {{ max_avatar_threshold }},
+    {% raw %} } {% endraw %}
+    </script>
 </head>
 <body>
-    <div class="container" style="--primary-color: {{ primary_color | default('#667eea') }}; --secondary-color: {{ secondary_color | default('#764ba2') }};">
-        <div class="header">
-            <h1>语录排行榜</h1>
-            <div class="subtitle">{{ group_name }} · {{ time }}</div>
-        </div>
-        
-        <div class="stats-container">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-number">{{ stats.total_quotes }}</div>
-                    <div class="stat-label">总语录数</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">{{ stats.pending_quotes }}</div>
-                    <div class="stat-label">待统计</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">{{ stats.contributors }}</div>
-                    <div class="stat-label">贡献者</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">{{ '%.2f' | format(stats.average_quotes | default(0, true)) }}</div>
-                    <div class="stat-label">平均语录</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">#{{ ranking[0].author if ranking else '?' }}</div>
-                    <div class="stat-label">您的语录有点多</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">#{{ total_shows }}</div>
-                    <div class="stat-label">总展示次数</div>
-                </div>
-            </div>
-            
-            <div class="stats-description">
-                <p>这个群现在有 <span class="highlight">{{ stats.total_quotes }}</span> 条语录，聊天记录还有 <span class="highlight">{{ stats.pending_quotes }}</span> 没有统计呢~</p>
-                <p><span class="highlight">{{ stats.contributors }}</span> 位群友被我记下了语录，平均每人 <span class="highlight">{{ '%.2f' | format(stats.average_quotes | default(0, true)) }}</span> 条语录哦~</p>
-            </div>
-        </div>
-        
-        <div class="ranking-section">
-            <h2 class="ranking-title">语录排行榜</h2>
-            
-            {% for item in ranking %}
-            <div class="rank-item">
-                <div class="rank-number">#{{ loop.index }}</div>
-                <div class="rank-avatar">{{ item.author[0] if item.author else '?' }}</div>
-                <div class="rank-name">{{ item.author }}</div>
-                <div class="rank-bar-container">
-                    <div class="rank-bar" style="width: {{ item.percentage }}%"></div>
-                </div>
-                <div class="rank-stats">
-                    <div class="rank-count">{{ item.count }}</div>
-                    <div class="rank-percentage">{{ item.percentage }}%</div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        
-        <div class="footer">
-            <p>@ZikeQuote3 by LifeCheckpoint</p>
-        </div>
-        
-        <div class="decorative-bg"></div>
+
+    <div class="dashboard-window">
+        <aside class="sidebar-left">
+            <h2>贡献排行</h2>
+            <ol class="leaderboard-list" id="leaderboard"></ol>
+        </aside>
+        <main class="main-content">
+            <h2>排行走势</h2>
+            <div id="main-chart"></div>
+        </main>
+        <aside class="sidebar-right">
+            <h2>整体统计</h2>
+            <div id="stats-container" class="stats-container"></div>
+        </aside>
     </div>
+
+    <script src="{{ rank_js | safe }}"></script>
 </body>
 </html>
