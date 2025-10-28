@@ -1,4 +1,4 @@
-from ..imports import cfg, default_cfg, _plugin_root
+from ..imports import cfg, default_cfg, PluginPath
 
 from openai import AsyncOpenAI
 from pathlib import Path
@@ -18,7 +18,7 @@ def create_model(group_id: int) -> Model:
     """
     api_key_path = Path(default_cfg.llm.api_key_path)
     api_key: str = (
-        api_key_path if api_key_path.is_absolute() else (_plugin_root / api_key_path)
+        api_key_path if api_key_path.is_absolute() else (PluginPath.plugin_root / api_key_path)
     ).read_text(encoding="utf-8").strip()
 
     client = AsyncOpenAI(

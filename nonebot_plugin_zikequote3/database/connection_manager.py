@@ -126,19 +126,19 @@ class ConnectionManager:
         否则根据 PRAGMA user_version 自动执行增量迁移脚本。
         """
         if not schema_file:
-            from ..imports import module_database_root
+            from ..imports import PluginPath
         else:
             module_database_root = schema_file.parent
 
         schema_file = (
             schema_file
             if schema_file is not None
-            else module_database_root / "schema.sql"
+            else PluginPath.module_database_root / "schema.sql"
         )
         migrations_dir = (
             migrations_dir
             if migrations_dir is not None
-            else module_database_root / "migrations"
+            else PluginPath.module_database_root / "migrations"
         )
 
         if not schema_file.exists():

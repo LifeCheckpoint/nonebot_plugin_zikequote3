@@ -1,10 +1,10 @@
 def init_sentry():
-    from ..imports import Path, default_cfg, _plugin_root, logger
+    from ..imports import Path, default_cfg, PluginPath, logger
     import sentry_sdk
 
     dsn_path_to_parse = Path(default_cfg.sentry.dsn_path) if default_cfg.sentry.dsn_path else None
     if dsn_path_to_parse and not dsn_path_to_parse.is_absolute():
-        dsn_path = _plugin_root / default_cfg.sentry.dsn_path
+        dsn_path = PluginPath.plugin_root / default_cfg.sentry.dsn_path
     elif dsn_path_to_parse is not None:
         dsn_path = dsn_path_to_parse
     else:

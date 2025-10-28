@@ -8,7 +8,7 @@ async def f_get_privacy():
     获取隐私政策
     """
     from ...templates import md
-    privacy_markdown = module_resources_root / "privacy.md"
+    privacy_markdown = PluginPath.module_resources_root / "privacy.md"
 
     if not privacy_markdown.exists():
         await matcher_get_privacy.finish("隐私政策文件不存在，请联系管理员处理（＞人＜；）")

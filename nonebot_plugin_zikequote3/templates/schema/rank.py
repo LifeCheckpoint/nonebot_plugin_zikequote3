@@ -4,7 +4,7 @@
 from typing import List, Optional
 from pydantic import BaseModel
 from .. import render_template
-from ...imports import module_templates_root
+from ...imports import PluginPath
 import random, base64
 
 
@@ -57,10 +57,10 @@ def render_rank(
         encoded_svg = base64.b64encode(svg_content.encode("utf-8")).decode("utf-8")
         return f"data:image/svg+xml;base64,{encoded_svg}"
     
-    echarts_js = module_templates_root / "src" / "assets" / "js" / "vendor" / "echarts.min.js"
-    rank_css = module_templates_root / "src" / "assets" / "css" / "rank.css"
-    rank_js = module_templates_root / "src" / "assets" / "js" / "rank.js"
-    color_thief_js = module_templates_root / "src" / "assets" / "js" / "vendor" / "color-thief.min.js"
+    echarts_js = PluginPath.module_templates_root / "src" / "assets" / "js" / "vendor" / "echarts.min.js"
+    rank_css = PluginPath.module_templates_root / "src" / "assets" / "css" / "rank.css"
+    rank_js = PluginPath.module_templates_root / "src" / "assets" / "js" / "rank.js"
+    color_thief_js = PluginPath.module_templates_root / "src" / "assets" / "js" / "vendor" / "color-thief.min.js"
 
     max_avatar_threshold = 10
 

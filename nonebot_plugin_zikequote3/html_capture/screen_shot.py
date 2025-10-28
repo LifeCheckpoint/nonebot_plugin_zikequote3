@@ -1,3 +1,4 @@
+from ..paths import PluginPath
 from nonebot import logger
 from nonebot_plugin_htmlrender import get_new_page
 import nonebot_plugin_localstore as store
@@ -26,14 +27,13 @@ async def _html_img_render(
     """
 
     # 获取临时文件名
-    cache_dir = store.get_cache_dir("ZikeQuote3")
     temp_file_name = uuid.uuid4().hex
-    temp_html = cache_dir / f"{temp_file_name}.html"
-    temp_image = cache_dir / f"{temp_file_name}.png"
+    temp_html = PluginPath.data_cache_path / f"{temp_file_name}.html"
+    temp_image = PluginPath.data_cache_path / f"{temp_file_name}.png"
 
     # html 文件生成
     try:
-        cache_dir.parent.mkdir(parents=True, exist_ok=True)
+        PluginPath.data_cache_path.mkdir(parents=True, exist_ok=True)
         temp_html.write_text(html_content, encoding="utf-8")
     except Exception as e:
         temp_html.unlink(missing_ok=True)
