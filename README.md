@@ -86,9 +86,9 @@ ZikeQuote3 基于 NoneBot2 开发，便于群聊语录自动收集与管理，�
         pip install nonebot-plugin-zikequote3
     </details>
     <details>
-    <summary>pdm</summary>
+    <summary>uv (推荐插件管理器)</summary>
 
-        pdm add nonebot-plugin-zikequote3
+        uv add nonebot-plugin-zikequote3
     </details>
     <details>
     <summary>poetry</summary>
@@ -101,7 +101,7 @@ ZikeQuote3 基于 NoneBot2 开发，便于群聊语录自动收集与管理，�
         conda install nonebot-plugin-zikequote3
     </details>
 
-    打开 nonebot2 项目根目录下的 `pyproject.toml` 文件, 在 `[tool.nonebot]` 部分追加写入
+    如果不使用 nb cli 安装，需要打开 nonebot2 项目根目录下的 `pyproject.toml` 文件, 在 `[tool.nonebot]` 部分追加写入
 
         ```toml
         plugins = ["nonebot-plugin-zikequote3"]
@@ -125,28 +125,10 @@ ZikeQuote3 基于 NoneBot2 开发，便于群聊语录自动收集与管理，�
         可以参照其<a herf="https://github.com/bot-ssttkkl/nonebot-plugin-access-control">文档</a>对本插件进行权限配置，具体配置项可见本插件文档或本插件根目录下的 `nonebot_plugin_zikequote3\services\permission_management\permission_node_definition.py`
     </details>
 
-3. **确保系统安装 Node.js** 并安装截图 npm 依赖
+3. 截图相关插件调整
     <details close>
-    <summary>安装截图依赖</summary>
-    可通过如下方式检查：
-
-        ```bash
-        npm --version
-        ```
-
-    可运行脚本安装截图 npm 依赖：
-
-        ```bash
-        cd your/bot/nonebot_plugin_zikequote3
-        python utils/install_frontend.py
-        ```
-
-    或者手动安装：
-
-        ```bash
-        cd your/bot/nonebot_plugin_zikequote3/html_capture
-        npm install
-        ```
+    <summary>问题排除</summary>
+    如果出现报错如“找不到浏览器”等，可以在配置中指定 `htmlrender_browser_channel = "msedge"` 指定使用系统浏览器
     </details>
 
 4. 创建文件 `llm_services/api_key` 配置 LLM API Key，可修改 `llm_services/client.py` 使用自定义客户端、模型与自定义参数
@@ -161,15 +143,17 @@ ZikeQuote3 基于 NoneBot2 开发，便于群聊语录自动收集与管理，�
 
 插件主要命令：
 
-- `/语录rank [数字]`: 查看语录排行榜，可指定显示前几名。
-- `(reply) /加语录`: 添加语录。
-- `(reply) /删语录 或 /删语录 语录ID`: 删除语录（需要管理员权限）。
-- `(reply) /评 评价内容`: 评论语录。
-- `/删评 评论ID`: 删除自己的评论。
-- `/语录 [关键词]`: 随机获取一条语录，可按关键词搜索。
-- `/语录卡 [关键词]`: 生成语录卡片图片，可按关键词搜索。
-- `/语录列表 [用户]`: 查看某个用户的语录列表。
-- `/查语录 关键词`: 搜索包含指定关键词的语录。
+- `/语录rank`: 查看语录排行榜。
+- `(回复消息) /加语录`: 添加语录。
+- `(回复语录) /删语录 或 /删语录 语录ID`: 删除语录。
+- `(回复语录) 评价内容`: 评论语录。
+- `/删评论 评论ID`: 删除评论。
+- `/语录 [关键词]`: 随机获取一条语录，可按关键词筛选。
+- `/语录卡 [关键词]`: 生成语录卡片图片，可按关键词筛选。
+- `/语录图 [关键词]`: 随机抽取一张语录图片，可按附带语录信息的关键词筛选。
+- `/语录列表 [用户名] 或 /语录列表 @用户`: 查看某个用户的语录列表。
+- `/查语录 关键词`: 搜索包含指定关键词的语录，可指定正则等选项。
+- `/查看语录配置`: 查看本群的语录配置情况
 
 ## 🖼️ 更新日志
 
