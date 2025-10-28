@@ -24,7 +24,7 @@ async def f_quote_card(event: GroupME, bot: Bot, arg: Message = CommandArg()):
 
         # 发送语录
         quote_card_html = s_get_quote_card_html(str(event.group_id), q_result)
-        quote_card = await html_img_render(quote_card_html, module_render_image_root, width=800, height=120)
+        quote_card = await html_img_render(quote_card_html, width=800, height=120)
         send_msg = await matcher_random_quote_card.send(MsgSeg.image(quote_card))
         
     # 更新语录出现次数

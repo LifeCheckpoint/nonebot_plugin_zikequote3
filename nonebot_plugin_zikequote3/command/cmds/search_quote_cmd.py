@@ -55,5 +55,5 @@ async def f_search_quote(
         )
 
         # 渲染图片
-        img = await html_img_render(html, module_render_image_root, width=1520, height=200)
+        img = await html_img_render(html, width=1520, height=200)
         await matcher_search_quote.finish(MsgSeg.image(img))

@@ -8,7 +8,7 @@ async def f_get_current_config(event: GroupME):
 
     async with event_exception_failmsg_a(matcher_get_current_config, "生成配置预览"):
         html = s_get_setting_html(event.group_id)
-        image_data = await html_img_render(html, module_render_image_root, width=800, height=200)
+        image_data = await html_img_render(html, width=800, height=200)
         await matcher_get_current_config.finish(MsgSeg.image(image_data))
 
 

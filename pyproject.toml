@@ -65,7 +65,6 @@ exclude = [
   "/.VSCodeCounter/**",
   "/dist/**",
   "/docs/**",
-  "/nonebot_plugin_zikequote3/html_capture/node_modules/**",
   "**/*.pyc",
   "**/apikey",
   "**/api_key",

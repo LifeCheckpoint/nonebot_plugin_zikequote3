@@ -22,7 +22,6 @@ async def f_get_ranking(event: GroupME, arg: Message = CommandArg()):
         time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         html = await s_get_ranking_html(str(event.group_id), time, max_showcase_number)
 
-        # HACK
         # 渲染图片
-        img = await html_img_render_plugin(html, module_render_image_root, width=1920, height=1080, wait=3000)
+        img = await html_img_render(html, width=1920, height=1080, wait=3000)
         await matcher_get_ranking.finish(MsgSeg.image(img))

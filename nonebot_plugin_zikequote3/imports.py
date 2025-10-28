@@ -60,7 +60,7 @@ from nonebot_plugin_htmlrender import (
     template_to_pic,
     text_to_pic,
 )
-from .html_capture import html_img_render, parse_md2html, html_img_render_plugin
+from .html_capture import html_img_render
 
 
 # 异常上报与日志工具

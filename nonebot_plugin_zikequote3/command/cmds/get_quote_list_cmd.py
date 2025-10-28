@@ -65,6 +65,6 @@ async def f_get_quote_list(
         html = s_get_listing_html(str(event.group_id), user_qq, time, from_page=page_from, to_page=page_to)
 
         # 渲染图片
-        img = await html_img_render(html, module_render_image_root, width=1520, height=200)
+        img = await html_img_render(html, width=1520, height=200)
         await matcher_get_quote_list.finish(MsgSeg.image(img))
     
