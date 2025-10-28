@@ -2,7 +2,6 @@
 # 如有修改，注意调整 `config.py` 中的配置模型
 
 [general]
-check_intergrity = true # 启动时检查 Node.js 依赖完整性
 
 [collecting]
 enable_auto_collect = true # 启用自动收集，需要配置 LLM
@@ -32,7 +31,7 @@ render_device_factor = 2.0 # 图片渲染设备像素比
 enable_comment_without_prefix = true # 允许不使用“/评”直接进行评论回复
 
 [llm]
-# 模型配置较为复杂，其它端点调整工作需到 llm_services/client.py 进行修改
+# 模型配置，其它端点调整工作需到 llm_services/client.py 进行修改
 base_url = "https://openrouter.ai/api/v1"
 api_key_path = "llm_services/api_key" # API Key 文件路径，相对插件根目录或绝对路径
 model = "deepseek/deepseek-v3.2-exp"
@@ -45,9 +44,8 @@ dsn_path = "utils/sentry_dsn" # Sentry DSN 文件路径，相对插件根目录�
 [configure]
 # 不允许进行热更新，并且应该全局应用的配置项
 nonreloadable_items = [
-    "general.check_intergrity",
     "llm.api_key_path",
     "sentry.dsn_path",
     "configure.nonreloadable_items",
 ]
-cfg_version = 3 # 当前配置版本
+cfg_version = 4 # 当前配置版本

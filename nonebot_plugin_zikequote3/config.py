@@ -13,7 +13,7 @@ class ConfigPath(BaseModel):
 # 具体配置模型
 
 class GeneralConfig(BaseModel):
-    check_intergrity: bool = True
+    pass
 
 class CollectingConfig(BaseModel):
     enable_auto_collect: bool = True
