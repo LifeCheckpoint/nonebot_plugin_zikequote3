@@ -1,6 +1,3 @@
-from ..imports import default_cfg
-from .screen_shot import _html_img_render
-
 def html_img_render(
     html_content: str,
     width: int = 1000,
@@ -8,6 +5,9 @@ def html_img_render(
     *,
     wait: int = 200,
 ):
+    from ..imports import default_cfg
+    from .screen_shot import _html_img_render
+    
     return _html_img_render(
         html_content,
         width=width,
