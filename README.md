@@ -11,11 +11,11 @@
 
 <a href="./LICENSE">
     <img src="https://img.shields.io/github/license/LifeCheckpoint/nonebot_plugin_zikequote3.svg" alt="license">
-</a><!--
+</a>
 <a href="https://pypi.python.org/pypi/nonebot-plugin-zikequote3">
     <img src="https://img.shields.io/pypi/v/nonebot-plugin-zikequote3.svg" alt="pypi">
 </a>
---><a href="https://www.python.org">
+<a href="https://www.python.org">
     <img src="https://img.shields.io/badge/python-3.12+-blue.svg" alt="python">
 </a>
 <a href="https://nonebot.dev">
