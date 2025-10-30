@@ -1,5 +1,5 @@
 <div align="center">
-  <a href="https://v2.nonebot.dev/store"><img src="https://github.com/lifecheckpoint/nonebot_plugin_zikequote3/blob/v0.4a1/docs/zikequote3_logo.png" width="180" height="180" alt="ZikeQuote3PluginLogo"></a>
+  <a href="https://v2.nonebot.dev/store"><img src="https://github.com/LifeCheckpoint/nonebot_plugin_zikequote3/blob/main/docs/zikequote3_logo.png" width="180" height="180" alt="ZikeQuote3PluginLogo"></a>
   <br>
 </div>
 
