@@ -9,13 +9,13 @@ All notable changes to this project will be documented in this file.
 > - 向量化数据库与语义化查询
 > - 图片储存检查
 > - 其它依托于 LLM 的大型统计 / 语义化功能
+> - 定期数据备份功能
 
-## \[0.4.0alpha1\] - 2025-10-?? \[BREAKING CHANGES\] ▶️
+## \[0.4.0alpha1\] - 2025-10-30 \[BREAKING CHANGES\]
 
 ### Added
 
 - 一些命令支持参数解析，例如查语录
-- ▶️ 新增定期数据备份功能
 - 现在支持较为精细的权限配置
 - 配置现在支持群际自定义、动态修改与热更新
 - 新增语录图片储存，允许手动添加图片到语录数据库
@@ -28,7 +28,7 @@ All notable changes to this project will be documented in this file.
 - 配置文件更换为 TOML
 - 优化 LLM 配置体验，支持更便捷清晰的自定义
 - 回复信息模板化
-- ▶️ 截图方案调整
+- 截图方案调整
 - HTML 模板化，优化了渲染调用代码结构，优化了一些视觉效果
 - 调整了文档结构
 
@@ -39,6 +39,7 @@ All notable changes to this project will be documented in this file.
 ### Removed
 
 - 删除了旧代码中大量的冗余内容
+- 暂时移除删除类功能
 
 ## \[0.3.2\] - 2025-05-29
 
