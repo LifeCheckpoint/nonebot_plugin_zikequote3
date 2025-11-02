@@ -21,8 +21,12 @@ async def s_queue_put(group_id: str, msg_id: str, qq_id: str, content: str, bot:
         u_exists = db.dao.get_user_dao().user_exists(qq_id)
 
     if not u_exists:
+        avatar_bytes = None
+        async with service_exception_a(f"获取用户 {qq_id} 头像", raise_again=False):
+            avatar_bytes = await s_get_user_avatar(qq_id)
+        
         async with service_exception_a(f"创建用户 {qq_id}"):
-            db.dao.get_user_dao().create_user(qq_id, await s_get_user_avatar(qq_id))
+            db.dao.get_user_dao().create_user(qq_id, avatar_bytes)
 
     async with service_exception_a("消息入队"):
         db.dao.get_msg_queue_dao().create_msg(
