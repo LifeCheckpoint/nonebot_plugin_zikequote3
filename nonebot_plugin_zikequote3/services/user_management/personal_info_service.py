@@ -28,12 +28,19 @@ async def s_update_personal_info_api(group_id: str, qq_id: str, bot: Bot):
     """
     通过接口 API 更新个人信息，带缓存机制
     """
+    from nonebot.exception import ActionFailed
     async with service_exception_a(f"获取用户 {qq_id} 在群 {group_id} 的信息"):
-        info = await bot.get_group_member_info(
-            group_id=int(group_id),
-            user_id=int(qq_id),
-            no_cache=False
-        )
+        try:
+            info = await bot.get_group_member_info(
+                group_id=int(group_id),
+                user_id=int(qq_id),
+                no_cache=False
+            )
+        except ActionFailed as e:
+            logger.warning(f"获取用户个人信息失败，用户可能已经不在群内：{e}")
+            return
+        except:
+            raise
 
         # 将 info 转换为 PersonalInformation
         pinfo = PersonalInformation(
