@@ -44,7 +44,7 @@ async def send_llm_request(group_id: int, model: Model, content: str) -> Tuple[s
         model_settings=ModelSettings(temperature=cfg[group_id].llm.temperature)
     )
 
-    if model_response.parts[0] is None:
+    if not model_response.parts or model_response.parts[0] is None:
         raise RuntimeError("模型返回为空")
     
     if not isinstance(model_response.parts[0].content, str): # type: ignore
