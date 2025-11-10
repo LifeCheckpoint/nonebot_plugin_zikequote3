@@ -12,7 +12,7 @@ ZikeQuote3 基于 NoneBot 开发，便于群聊语录自动收集与管理，支
     supported_adapters={"~onebot.v11"},
     extra={
         "author": "LifeCheckpoint",
-        "version": "0.4.0alpha1",
+        "version": "0.4.0alpha2",
     },
 )
 
