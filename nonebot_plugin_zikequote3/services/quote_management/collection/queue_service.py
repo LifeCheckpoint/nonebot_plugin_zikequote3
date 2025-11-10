@@ -26,7 +26,9 @@ async def s_queue_put(group_id: str, msg_id: str, qq_id: str, content: str, bot:
             avatar_bytes = await s_get_user_avatar(qq_id)
         
         async with service_exception_a(f"创建用户 {qq_id}"):
-            db.dao.get_user_dao().create_user(qq_id, avatar_bytes)
+            # 由于获取头像可能耗时较长，造成并发问题，须再检查一次用户是否存在
+            if not db.dao.get_user_dao().user_exists(qq_id):
+                db.dao.get_user_dao().create_user(qq_id, avatar_bytes)
 
     async with service_exception_a("消息入队"):
         db.dao.get_msg_queue_dao().create_msg(
