@@ -14,10 +14,9 @@ def s_get_listing_html(
         :param group_id: 群组 ID
         :param qq_id: 用户 QQ 号
         :param time: 当前时间字符串
-        :param quote_range: 语录范围，None 表示所有语录，int 表示从第 N 到 N + 最大显示条数，(start, end) 表示从 start 到 end 的语录（包含 start，不包含 end）
+        :param from_page: 起始语录索引（包含），1-based
+        :param to_page: 结束语录索引（包含），1-based
     """
-    from ...services.quote_management.showcase.quote_image_service import to_data_uri
-    from ...services.review_management.review_service import AUTHOR_AI, s_get_reviews_by_quote_id
     from ...services.user_management.user_service import s_get_user_current_display_name
     from ...templates import listing
     from ...services.statistics_management.quote_type_transform import s_transform_quotedata_to_quotebox
@@ -41,23 +40,23 @@ def s_get_listing_html(
 
         if from_page is None and to_page is None:
             if current_quotes_length > max_showcase_number:
-                start = current_quotes_length - max_showcase_number
-                end = current_quotes_length - 1
-                quotes_data = quotes_data[-max_showcase_number:]
+                real_page_from = current_quotes_length - max_showcase_number
+                real_page_to = current_quotes_length - 1
+                quotes_data = quotes_data[-max_showcase_number: ]
             else:
-                start = 0
-                end = current_quotes_length - 1
+                real_page_from = 0
+                real_page_to = current_quotes_length - 1
                 quotes_data = quotes_data
 
         elif from_page is not None and to_page is None:
-            start = max(0, from_page)
-            end = min(current_quotes_length, start + max_showcase_number)
-            quotes_data = quotes_data[start:end]
+            real_page_from = max(0, from_page - 1)
+            real_page_to = min(current_quotes_length - 1, real_page_from + max_showcase_number)
+            quotes_data = quotes_data[real_page_from: real_page_to + 1]
 
         elif from_page is not None and to_page is not None:
-            start = max(0, from_page)
-            end = min(current_quotes_length, to_page)
-            quotes_data = quotes_data[start:end]
+            real_page_from = max(0, from_page - 1)
+            real_page_to = min(current_quotes_length - 1, to_page - 1)
+            quotes_data = quotes_data[real_page_from: real_page_to + 1]
 
         else:
             raise ValueError("语录范围参数不正确")
@@ -69,7 +68,7 @@ def s_get_listing_html(
         title_text = f"{current_card}的语录列表"
 
         # 描述
-        desc_text = f"{time} / {current_quotes_length} 条语录 (第 {start} - {end} 条)"
+        desc_text = f"{time} / {current_quotes_length} 条语录 (第 {real_page_from + 1} - {real_page_to + 1} 条)"
 
         # 名人名言（真的
         hitokoto_content, hitokoto_author = get_hitokoto()
