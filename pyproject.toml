@@ -31,6 +31,7 @@ dependencies = [
   "nonebot-plugin-alconna>=0.59.4",
   "python-dateutil>=2.9.0.post0",
   "nonebot-plugin-htmlrender>=0.6.8",
+  "aiohttp>=3.13.1",
 ]
 
 [project.optional-dependencies]
