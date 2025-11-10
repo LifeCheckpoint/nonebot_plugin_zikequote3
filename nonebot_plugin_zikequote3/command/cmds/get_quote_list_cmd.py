@@ -24,36 +24,35 @@ async def f_get_quote_list(
         logger.debug(f"命令原始文本: {plain_command}")
         user_qq: str | None = None
         
-        with service_exception("解析命令参数"):
-            # 优先解析 At 段
-            if at_user.available:
-                if at_user.result and at_user.result.origin:
-                    user_qq = at_user.result.origin.data.get("qq")
+        # 优先解析 At 段
+        if at_user.available:
+            if at_user.result and at_user.result.origin:
+                user_qq = at_user.result.origin.data.get("qq")
 
-            # 其次解析 QQ 号
-            if not user_qq and qq.available:
-                if qq.result and qq.result.isdigit():
-                    user_qq = qq.result
-            
-            # 其次解析手动输入昵称
-            if not user_qq and nickname.available:
-                if nickname.result:
-                    probabily_users = s_search_users_by_name(nickname.result, str(event.group_id), exact=False)
-                    if len(probabily_users) > 1:
-                        await matcher_get_quote_list.finish("找到多个用户，请考虑使用 @ 或 QQ 号进行查询哦~")
-                    elif len(probabily_users) < 1:
-                        await matcher_get_quote_list.finish("没有找到符合条件的用户哦~")
-                    else:
-                        user_qq = probabily_users[0]
-            
-            # 最后使用发送者
-            if not user_qq:
-                user_qq = str(event.user_id)
+        # 其次解析 QQ 号
+        if not user_qq and qq.available:
+            if qq.result and qq.result.isdigit():
+                user_qq = qq.result
+        
+        # 其次解析手动输入昵称
+        if not user_qq and nickname.available:
+            if nickname.result:
+                probabily_users = s_search_users_by_name(nickname.result, str(event.group_id), exact=False)
+                if len(probabily_users) > 1:
+                    await matcher_get_quote_list.finish("找到多个用户，请考虑使用 @ 或 QQ 号进行查询哦~")
+                elif len(probabily_users) < 1:
+                    await matcher_get_quote_list.finish("没有找到符合条件的用户哦~")
+                else:
+                    user_qq = probabily_users[0]
+        
+        # 最后使用发送者
+        if not user_qq:
+            user_qq = str(event.user_id)
 
-            logger.debug(f"解析结果用户: {user_qq}")
+        logger.debug(f"解析结果用户: {user_qq}")
 
-            # 解析范围参数
-            page_from, page_to = parse_page_range(range.result if range.available else "")
+        # 解析范围参数
+        page_from, page_to = parse_page_range(range.result if range.available else "")
 
     async with event_exception_failmsg_a(matcher_get_quote_list, "获取语录列表"):
         # 尝试使用第一个有效 QQ
