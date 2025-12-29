@@ -267,13 +267,24 @@ perm_nodes.n_settings_modify.patch_matcher(matcher_reload_config)
 
 # region 其他命令
 
+
 cmdname_group_migration = (
     "迁移群语录", "迁移所有群语录", "移动群语录", "移动所有群语录",
 )
-matcher_group_migration = on_command(
+alc_group_migration = Alconna(
     cmdname_group_migration[0],
-    aliases=set(cmdname_group_migration[1:]),
-    priority=10, block=True
+    cmdname_group_migration[1:],
+    Arg("source?", "re:\\d{5,}", None, notice="源群号"),
+    Arg("target?", "re:\\d{5,}", None, notice="新群号"),
+    Option("-o|--overwrite", dest="overwrite", action=store_true, default=False, help_text="是否完全覆盖而非与目标群语录合并，默认为否"),
+    Option("-d|--duplicate", dest="duplicate", action=store_true, default=False, help_text="是否基于内容进行去重，默认不进行"),
+    Option("-em|--exclude_member", dest="exclude_member", action=store_true, default=False, help_text="是否彻底删除源群中不在新群成员的语录，默认为否"),
+    Option("-cmi|--clear_member_info", dest="clear_member_info", action=store_true, default=False, help_text="是否抹除源群的用户群昵称信息，默认为否"),
+    Option("-ks|--keep_source", dest="keep_source", action=store_true, default=False, help_text="是否保留源群所有语录信息与记录，默认为否"),
+)
+matcher_group_migration = on_alconna(
+    alc_get_quote_list,
+    use_cmd_start=True, priority=10, block=True, skip_for_unmatch=False,
 )
 perm_nodes.n_group_migration.patch_matcher(matcher_group_migration)
 
