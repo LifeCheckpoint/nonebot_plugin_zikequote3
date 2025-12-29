@@ -44,4 +44,5 @@ class PermissionServiceNodes:
         self.n_settings_reset_group: ISubService = self.n_settings_reset.create_subservice("group")
         self.n_settings_reset_global: ISubService = self.n_settings_reset.create_subservice("global")
         self.n_forcerefresh: ISubService = n_perm_s.create_subservice("force_refresh")
+        self.n_group_migration: ISubService = n_perm_s.create_subservice("group_migration")
         self.n_others: ISubService = n_perm_s.create_subservice("others")
