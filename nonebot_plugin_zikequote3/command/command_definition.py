@@ -267,6 +267,17 @@ perm_nodes.n_settings_modify.patch_matcher(matcher_reload_config)
 
 # region 其他命令
 
+cmdname_group_migration = (
+    "迁移群语录", "迁移所有群语录", "移动群语录", "移动所有群语录",
+)
+matcher_group_migration = on_command(
+    cmdname_group_migration[0],
+    aliases=set(cmdname_group_migration[1:]),
+    priority=10, block=True
+)
+perm_nodes.n_group_migration.patch_matcher(matcher_group_migration)
+
+
 cmdname_get_privacy = (
     "语录隐私政策", "语录隐私", "语录政策", "语录隐私条款",
     "查看语录隐私政策", "查看语录隐私", "查看语录政策", "查看语录隐私条款",
