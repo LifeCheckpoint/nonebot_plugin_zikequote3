@@ -1,0 +1,67 @@
+{#
+    迁移 / 配置调整模板
+
+    - inline_css: 内联CSS样式
+
+    - status_title: 可选，标题上方的状态提示小标题
+    - title: 提示主标题
+    - description: 描述信息
+    - diff_items: 差异项目
+        - label: 差异项目名称
+        - oldval: 差异项目旧值
+        - newval: 差异项目新值
+    - left_button: 可选，左按钮（第二按钮）提示信息
+    - right_button: 可选，右按钮（主按钮）提示信息
+#}
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        {{ inline_css | safe }}
+    </style>
+</head>
+<body>
+
+    <div class="migration-card">
+        {% if status_title %}
+        <div class="status-badge">{{ status_title }}</div>
+        {% endif %}
+        
+        <h1 class="main-title">{{ title }}</h1>
+        <p class="description">{{ description }}</p>
+
+        <div class="diff-section">
+            <!-- 迁移项 -->
+            {% for diff in diff_items %}
+            <div class="diff-item">
+                <div class="diff-label">{{ diff.label }}</div>
+                <div class="diff-content">
+                    <span class="old-val">{{ diff.oldval }}</span>
+                    <span class="arrow">→</span>
+                    <span class="new-val">{{ diff.newval }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="footer-actions">
+            {% if left_button %}
+            <button class="btn-secondary">{{ left_button }}</button>
+            {% else %}
+            <button class="btn-secondary">取消</button>
+            {% endif %}
+            
+            {% if right_button %}
+            <button class="btn-primary">{{ right_button }}</button>
+            {% else %}
+            <button class="btn-primary">确定</button>
+            {% endif %}
+        </div>
+    </div>
+
+</body>
+</html>
