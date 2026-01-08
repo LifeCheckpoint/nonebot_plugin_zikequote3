@@ -38,17 +38,17 @@ class TokenManager(BaseModel):
             metadata: Optional[TokenMetadata] = self._tokens.get(token)
 
             if not metadata:
-                return False, "Token does not exist"
+                return False, "Token 不存在"
 
             # 校验过期
             if now > metadata.expires_at:
                 del self._tokens[token]
-                return False, "Token has expired"
+                return False, "Token 已过期"
 
             # 校验次数
             if metadata.remaining_uses <= 0:
                 del self._tokens[token]
-                return False, "Token usage limit reached"
+                return False, "Token 使用超限制"
 
             # 消耗次数
             metadata.remaining_uses -= 1
@@ -57,7 +57,7 @@ class TokenManager(BaseModel):
             if metadata.remaining_uses <= 0:
                 del self._tokens[token]
                 
-            return True, "Success"
+            return True, "成功"
 
     def cleanup(self) -> int:
         """
