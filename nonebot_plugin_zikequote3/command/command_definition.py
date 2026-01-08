@@ -283,7 +283,7 @@ alc_group_migration = Alconna(
     Option("-ks|--keep_source", dest="keep_source", action=store_true, default=False, help_text="是否保留源群所有语录信息与记录，默认为否"),
 )
 matcher_group_migration = on_alconna(
-    alc_get_quote_list,
+    alc_group_migration,
     use_cmd_start=True, priority=10, block=True, skip_for_unmatch=False,
 )
 perm_nodes.n_group_migration.patch_matcher(matcher_group_migration)
