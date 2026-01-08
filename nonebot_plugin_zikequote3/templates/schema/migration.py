@@ -48,7 +48,7 @@ def render_migration_diff(
 
     return render_template(
         "htmls/migration.html.jinja2",
-        inline_css=migration_css,
+        inline_css=migration_css.read_text(encoding="utf-8"),
         
         status_title=status_title,
         title=title,
