@@ -21,7 +21,7 @@ dependencies = [
   "nonebot2>=2.0.0",
   "openai>=1.76.0",
   "pillow>=11.3.0",
-  "pydantic-ai>=1.0.14",
+  "pydantic-ai>=1.40.0",
   "pydantic>=2.0.0",
   "pymdown-extensions>=10.16.1",
   "requests>=2.26.0",
@@ -30,7 +30,7 @@ dependencies = [
   "typer>=0.19.2",
   "nonebot-plugin-alconna>=0.59.4",
   "python-dateutil>=2.9.0.post0",
-  "nonebot-plugin-htmlrender>=0.6.8",
+  "nonebot-plugin-htmlrender>=0.6.7",
   "aiohttp>=3.13.1",
   "nonebot-plugin-waiter>=0.8.1",
 ]
