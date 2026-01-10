@@ -17,7 +17,7 @@ class DiffItem(BaseModel):
 def render_migration_diff(
     status_title: Optional[str],
     title: str,
-    describtion: str,
+    description: str,
     diff_items: List[DiffItem],
     left_button: Optional[str],
     right_button: Optional[str],
@@ -52,7 +52,7 @@ def render_migration_diff(
         
         status_title=status_title,
         title=title,
-        describtion=describtion,
+        description=description,
         diff_items=diff_data,
         left_button=left_button,
         right_button=right_button
