@@ -47,6 +47,25 @@ matcher_get_quote_list = on_alconna(
 perm_nodes.n_listing.patch_matcher(matcher_get_quote_list)
 
 
+cmdname_get_user_info = (
+    "语录用户信息", "语录用户", "语录用户信息", "用户语录信息", "语录作者",
+    "查看用户信息", "语录作者信息", "查看语录用户信息", "查看语录作者信息", "用户作者信息",
+    "获取语录用户信息", "获取语录用户", "获取语录作者", "语录作者用户", "作者信息",
+)
+alc_get_user_info = Alconna(
+    cmdname_get_user_info[0],
+    cmdname_get_user_info[1:],
+    Arg("at_user?", At, None, notice="At 段用户"),
+    Arg("qq?", "re:\\d{5,}", None, notice="指定 QQ 号"),
+    Arg("nickname?", AllParam(str), "", notice="指定昵称"),
+)
+matcher_get_user_info = on_alconna(
+    alc_get_user_info,
+    use_cmd_start=True, priority=10, block=True, skip_for_unmatch=False,
+)
+perm_nodes.n_get_user.patch_matcher(matcher_get_user_info)
+
+
 # endregion
 
 # region 语录修改命令
