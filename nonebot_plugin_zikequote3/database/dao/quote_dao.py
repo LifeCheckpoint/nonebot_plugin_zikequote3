@@ -187,6 +187,22 @@ class QuoteDAO(BaseDAO[Quote]):
             cursor.execute(sql, (quote_id,))
             return cursor.rowcount > 0
     
+    def delete_quotes_by_group(self, group_id: str) -> bool:
+        """
+        删除群组的所有语录
+        
+        Args:
+            group_id: 群号
+            
+        Returns:
+            bool: 删除是否成功
+        """
+        sql = "DELETE FROM quotes WHERE group_id = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (group_id,))
+            return True
+
     def get_quotes_by_group(self, group_id: str, limit: Optional[int] = None, offset: int = 0) -> List[Quote]:
         """
         根据群组获取语录列表
