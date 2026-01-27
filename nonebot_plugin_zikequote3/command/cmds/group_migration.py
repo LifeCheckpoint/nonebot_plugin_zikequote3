@@ -42,6 +42,7 @@ async def f_group_migration(
             overwrite=overwrite.result,
             duplicate=duplicate.result,
             exclude_member=exclude_member.result,
+            keep_source=keep_source.result,
         )
 
         if source_quotes_num <= 0:

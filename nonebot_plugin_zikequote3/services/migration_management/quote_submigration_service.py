@@ -46,13 +46,14 @@ async def s_migrate_quotes(
             total_show_time=q.total_show_time
         ))
         
+    # 如果不保留源群，清空源群语录 (Move模式)
+    # 必须在写入前清空，以释放 ID，避免主键冲突
+    if not keep_source:
+        logger.info(f"正在清空源群 {source_group} 的语录 (Move模式)...")
+        quote_dao.delete_quotes_by_group(source_group)
+
     if quotes_to_create:
         logger.info(f"正在向目标群 {target_group} 写入 {len(quotes_to_create)} 条语录...")
         quote_dao.batch_create_quotes(quotes_to_create)
-        
-    # 如果不保留源群，清空源群语录
-    if not keep_source:
-        logger.info(f"正在清空源群 {source_group} 的语录...")
-        quote_dao.delete_quotes_by_group(source_group)
         
     return True

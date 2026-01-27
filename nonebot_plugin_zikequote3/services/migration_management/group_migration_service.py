@@ -57,6 +57,7 @@ async def s_prepare_comparison_process(
     overwrite: bool,
     duplicate: bool,
     exclude_member: bool,
+    keep_source: bool,
 ):
     """
     统计迁移过程所需的所有信息
@@ -67,31 +68,39 @@ async def s_prepare_comparison_process(
         overwrite (bool): 迁移是否完全覆盖目标群语录
         duplicate (bool): 是否去重
         exclude_member (bool): 是否排除非目标群成员语录
+        keep_source (bool): 是否保留来源群语录记录
     
     Returns:
-        Tuple[str, int], Tuple[str, int], Tuple[str, int], Tuple[int, int]: 
+        Tuple[str, int], Tuple[str, int], Tuple[str, int], Tuple[int, int]:
         分别为来源群语录及数量，目标群语录及数量，最终合并结果语录及数量，(迁移前成员数, 迁移后成员数)
     """
     import itertools
     from ...services.quote_management.showcase.basic_quote_service import s_get_quote_by_group
     from ...services.user_management.group_relationship_service import s_get_all_users_by_group
 
-    def duplicate_id_process(quotes: List[Quote]):
+    def duplicate_id_process(quotes: List[Quote], force_new_ids_for_source: bool = False, source_ids: set | None = None):
         """
         重复 ID 处理
         """
-        # 现有 quote_id 的最大值作为起始
-        existing_ids = {q.quote_id for q in quotes}
-        start_id = max(int(id_) for id_ in existing_ids) + 1 if existing_ids else 10**10
-        # 递增 ID
+        # 获取全局最大 ID
+        max_id = db.dao.get_quote_dao().get_max_quote_id()
+        # 也要考虑当前列表中的 ID (因为可能比 DB 中的大)
+        current_max = max(int(q.quote_id) for q in quotes) if quotes else 0
+        start_id = max(max_id, current_max) + 1
+        
         new_id_gen = (str(i) for i in itertools.count(start_id))
-        # 只修改重复 id 项
         seen = set()
+        
         for q in quotes:
+            # 如果需要强制为源群语录生成新 ID
+            if force_new_ids_for_source and source_ids and q.quote_id in source_ids:
+                q.quote_id = next(new_id_gen)
+                continue
+
             if q.quote_id in seen:
                 q.quote_id = next(new_id_gen)
             seen.add(q.quote_id)
-        return quotes        
+        return quotes
 
 
     def duplicate_quote_content_process(quotes: List[Quote]):
@@ -116,6 +125,9 @@ async def s_prepare_comparison_process(
         target_group_users = [s.qq_id for s in await s_get_all_users_by_group(str(target))]
 
     with service_exception("统计迁移语录信息"):
+        # 记录源群 ID 集合，用于后续判断
+        source_ids = {q.quote_id for q in source_group_quotes}
+
         # 覆写模式
         if not overwrite:
             final_group_quotes = source_group_quotes + target_group_quotes
@@ -135,7 +147,12 @@ async def s_prepare_comparison_process(
             final_group_quotes = duplicate_quote_content_process(final_group_quotes)
 
         # 处理可能的重复 ID
-        final_group_quotes = duplicate_id_process(final_group_quotes)
+        # 如果保留源群，则源群过来的语录必须生成新 ID
+        final_group_quotes = duplicate_id_process(
+            final_group_quotes,
+            force_new_ids_for_source=keep_source,
+            source_ids=source_ids
+        )
 
         source_quotes_num = len(source_group_quotes)
         target_quotes_num = len(target_group_quotes)
@@ -171,6 +188,10 @@ async def s_execute_group_migration(
     from .quote_submigration_service import s_migrate_quotes
     from .userinfo_submigration_service import s_migrate_user_infos
     
+    # 在执行迁移前备份数据库
+    logger.info("正在创建数据库备份...")
+    db.backup_database()
+
     async with service_exception_a("执行语录迁移"):
         await s_migrate_quotes(
             final_quotes=final_quotes,
