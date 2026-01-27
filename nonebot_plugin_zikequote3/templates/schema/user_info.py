@@ -57,7 +57,7 @@ def render_user_info(
     )
     
     return render_template(
-        "htmls/card.html.jinja2",
+        "htmls/user_info.html.jinja2",
         inline_css=inline_css,
         ranking_value=user_info_data.ranking_value,
         quote_count=user_info_data.quote_count,
