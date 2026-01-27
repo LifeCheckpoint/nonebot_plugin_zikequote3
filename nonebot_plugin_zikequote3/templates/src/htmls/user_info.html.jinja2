@@ -1,0 +1,87 @@
+{#
+    用户信息模板
+
+    - inline_css: 内联CSS样式
+
+    - ranking_value: 可选，用户当前群语录排名
+    - quote_count: 用户累计语录数
+    - primary_nick: 用户当前昵称
+    - primary_group_card: 用户当前群名片
+    - avatar: 头像 (可以为 Base64 或 URL)
+    - history_nicks: 曾用昵称列表
+    - history_group_cards: 曾用群名片列表
+    - guide_text: 引导文本
+#}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <style>
+    {{ inline_css | safe }}
+    </style>
+</head>
+<body>
+
+    <div class="user-profile-card">
+        <!-- 左侧黑色侧边栏 -->
+        <div class="rank-sidebar">
+            <div style="text-align: center">
+                <div class="rank-label">RANKING</div>
+                {% if ranking_value %}
+                <div class="rank-value">#{{ ranking_value }}</div>
+                {% else %}
+                <div class="rank-value">未知</div>
+                {% endif %}
+            </div>
+            
+            <div class="quote-total">
+                <div class="quote-count">{{ quote_count }}</div>
+                <div class="quote-label">QUOTES</div>
+            </div>
+        </div>
+
+        <!-- 右侧主内容区域 -->
+        <div class="main-body">
+            <div class="header-section">
+                <div class="nick-container">
+                    <h2 class="primary-nick">{{ primary_nick }}</h2>
+                    <span class="qq-id">123456789</span>
+                    <div class="current-tag">@{{ primary_group_card }}</div>
+                </div>
+                <div class="avatar-box">
+                    <img src="{{ avatar }}" alt="用户头像不见啦？(⊙x⊙;)">
+                </div>
+            </div>
+
+            <div class="history-panel">
+                <div class="history-row">
+                    <div class="history-label">曾用QQ昵称</div>
+                    <div class="history-content">
+                        {% for nick in history_nicks %}
+                        <span class="history-tag">{{ nick }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="history-row">
+                    <div class="history-label">曾用群名片</div>
+                    <div class="history-content">
+                        {% for card in history_group_cards %}
+                        <span class="history-tag">{{ card }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 页脚 -->
+            <div class="footer-bar">
+                <div class="watermark">@ZikQuote3</div>
+                <div class="guide-text">
+                    {{ guide_text | safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -52,6 +52,7 @@ from .schema import listing
 from .schema import rank
 from .schema import md
 from .schema import migration
+from .schema import user_info
 
 __all__ = [
     "card",
@@ -60,4 +61,5 @@ __all__ = [
     "rank",
     "md",
     "migration",
+    "user_info"
 ]
