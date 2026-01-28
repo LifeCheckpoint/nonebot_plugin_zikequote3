@@ -57,13 +57,18 @@ async def s_get_user_info_html(group_id: str, qq_id: str) -> str:
                 break
 
     async with service_exception_a("获取用户历史记录"):
+        filter_history_name: Callable[[str], bool] = lambda n: n is not None and \
+                                                               n != current_nick and \
+                                                               n != current_card and \
+                                                               n.strip() != ""
+
         # 获取曾用昵称
         history_nicks_objs = db.dao.get_user_nickname_dao().get_all_nicknames(qq_id)
-        history_nicks = [n.name for n in history_nicks_objs]
+        history_nicks = [n.name for n in history_nicks_objs if filter_history_name(n.name)]
         
         # 获取曾用群名片
         history_group_cards_objs = db.dao.get_group_nickname_dao().get_all_group_nicknames(qq_id, group_id)
-        history_group_cards = [n.name for n in history_group_cards_objs]
+        history_group_cards = [n.name for n in history_group_cards_objs if filter_history_name(n.name)]
 
     async with service_exception_a("生成用户信息卡片 HTML"):
         return render_user_info(
