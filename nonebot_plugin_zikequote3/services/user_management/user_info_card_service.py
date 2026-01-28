@@ -6,7 +6,7 @@ async def s_get_user_info_html(group_id: str, qq_id: str) -> str:
     """
     from ...services.user_management.user_service import s_get_user_current_display_name
     from ...services.user_management.avatar_service import s_get_user_avatar
-    from ...templates.schema.user_info import render_user_info
+    from ...templates.schema.user_info import render_user_info, TemplateUserInfoData
     from ...utils.base64_encoder import to_data_uri
 
     async with service_exception_a("获取用户信息"):
@@ -67,12 +67,14 @@ async def s_get_user_info_html(group_id: str, qq_id: str) -> str:
 
     async with service_exception_a("生成用户信息卡片 HTML"):
         return render_user_info(
-            ranking_value=ranking_value,
-            quote_count=quote_count,
-            qq_id=qq_id,
-            primary_nick=current_nick,
-            primary_group_card=current_card,
-            avatar=avatar_bs64,
-            history_nicks=history_nicks,
-            history_group_cards=history_group_cards,
+            TemplateUserInfoData(
+                ranking_value=ranking_value,
+                quote_count=quote_count,
+                qq_id=qq_id,
+                primary_nick=current_nick,
+                primary_group_card=current_card,
+                avatar=avatar_bs64,
+                history_nicks=history_nicks,
+                history_group_cards=history_group_cards,
+            )
         )
