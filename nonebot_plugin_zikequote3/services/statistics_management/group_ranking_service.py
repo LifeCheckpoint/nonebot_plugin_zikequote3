@@ -6,8 +6,13 @@ async def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int)
     """
     from ...services.user_management.user_service import s_get_user_current_display_name
     from ...services.user_management.avatar_service import s_get_user_avatar
-    from ...templates import rank
-    from ...templates.schema.rank import Stats, BasicRankingItem, LineChartData
+    from ...templates.schema.rank import (
+        render_rank,
+        TemplateRankingStatsData,
+        TemplateBasicRankingItemData,
+        TemplateLineChartData,
+        TemplateRankingData
+    )
     from ...utils.base64_encoder import to_data_uri
     from ..quote_management.collection.queue_service import s_get_queue_length
     from dateutil.relativedelta import relativedelta
@@ -31,7 +36,7 @@ async def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int)
     if total_count == 0:
         raise ValueError("当前群组语录数为 0")
 
-    stats_data = Stats(
+    stats_data = TemplateRankingStatsData(
         total_quotes=total_count,
         pending_quotes=pending_count,
         contributors=countributors,
@@ -46,7 +51,7 @@ async def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int)
         group_name = group.name
 
     async with service_exception_a("获取个人排行"):
-        ranking_data: List[BasicRankingItem] = []
+        ranking_data: List[TemplateBasicRankingItemData] = []
         authors = db.dao.get_group_member_dao().get_members_by_group(group_id)
         
         for author in authors:
@@ -69,7 +74,7 @@ async def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int)
                 avatar_bs64 = to_data_uri(avatar_bytes) if avatar_bytes else None
 
                 # 加入列表
-                ranking_data.append(BasicRankingItem(
+                ranking_data.append(TemplateBasicRankingItemData(
                     qq=author.qq_id,
                     author=name,
                     count=num,
@@ -118,7 +123,7 @@ async def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int)
             
             frontiers_series_data.append(daily_counts)
         
-        line_chart_data = LineChartData(
+        line_chart_data = TemplateLineChartData(
             topN=top_n,
             dates=generate_date_range_mm_dd(
                 one_month_ago_start.date(),
@@ -128,10 +133,12 @@ async def s_get_ranking_html(group_id: str, time: str, max_showcase_number: int)
         )
 
     async with service_exception_a("获取语录排行数据"):
-        return rank.render_rank(
-            group_name=group_name,
-            date_time=time,
-            basic_ranking=ranking_data,
-            line_chart=line_chart_data,
-            stats=stats_data,
+        return render_rank(
+            TemplateRankingData(
+                group_name=group_name,
+                date_time=time,
+                basic_ranking=ranking_data,
+                line_chart=line_chart_data,
+                stats=stats_data,
+            )
         )
