@@ -2,26 +2,31 @@
 高亮代码显示模板
 """
 from .. import render_template, read_resource_file
+from pydantic import BaseModel
 
 
-def render_code_frame(
-    title: str,
-    subtitle: str,
-    language: str,
-    code: str,
-    primary_color: str = "#667eea",
-    secondary_color: str = "#764ba2"
-) -> str:
+class TemplateCodeFrameData(BaseModel):
+    """代码高亮显示渲染数据类"""
+
+    """标题"""
+    title: str
+
+    """副标题"""
+    subtitle: str
+
+    """代码语言"""
+    language: str
+
+    """代码内容"""
+    code: str
+
+
+def render_code_frame(data: TemplateCodeFrameData) -> str:
     """
     渲染代码高亮显示
     
     Args:
-        title: 标题
-        subtitle: 副标题
-        language: 代码语言（例如 'python', 'javascript', 'toml'）
-        code: 代码内容
-        primary_color: 主色调
-        secondary_color: 副色调
+        data: 代码显示渲染数据
         
     Returns:
         渲染后的 HTML 字符串
@@ -43,15 +48,11 @@ def render_code_frame(
         inline_css=inline_css,
         inline_github_dark_min_css=inline_github_dark_min_css,
         inline_highlight_min_js=inline_highlight_min_js,
-        title=title,
-        subtitle=subtitle,
-        language=f"language-{language}",
-        code=code,
-        primary_color=primary_color,
-        secondary_color=secondary_color
+        **data.model_dump()
     )
 
 
 __all__ = [
-    'render_code_frame',
+    "TemplateCodeFrameData",
+    "render_code_frame",
 ]
