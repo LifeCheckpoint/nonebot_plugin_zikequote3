@@ -107,6 +107,14 @@ def render_rank(data: TemplateRankingData) -> str:
         })
     
     
+    stat_data_list = [
+        {"value": data.stats.total_quotes, "label": "总语录数"},
+        {"value": data.stats.pending_quotes, "label": "待收集语录"},
+        {"value": data.stats.contributors, "label": "贡献者数量"},
+        {"value": round(data.stats.average_quotes, 1), "label": "人均语录数"},
+        {"value": data.stats.total_shows, "label": "总展示次数"},
+    ]
+
     return render_template(
         "htmls/rank.html.jinja2",
         echarts_js=str(echarts_js.absolute()),
@@ -119,8 +127,8 @@ def render_rank(data: TemplateRankingData) -> str:
 
         max_avatar_threshold=max_avatar_threshold,
         basic_ranking_data=ranking_data,
-        line_chart_data=data.line_chart,
-        stat_data=data.stats,
+        line_chart_data=data.line_chart.model_dump(),
+        stat_data=stat_data_list,
     )
 
 

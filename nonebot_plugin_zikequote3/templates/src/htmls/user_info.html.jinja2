@@ -47,9 +47,9 @@
                 <div class="nick-container">
                     <h2 class="primary-nick">{{ primary_nick }}</h2>
                     <span class="qq-id">{{ qq_id }}</span>
-                    {{ if primary_group_card }}
+                    {% if primary_group_card %}
                     <div class="current-tag">@{{ primary_group_card }}</div>
-                    {{ endif }}
+                    {% endif %}
                 </div>
                 <div class="avatar-box">
                     <img src="{{ avatar }}" alt="用户头像不见啦？(⊙x⊙;)">

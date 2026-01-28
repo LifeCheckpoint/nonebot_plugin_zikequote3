@@ -33,9 +33,6 @@ class TemplateUserInfoData(BaseModel):
     """曾用群名片列表"""
     history_group_cards: List[str] = []
 
-    """引导文本"""
-    guide_text: str = ""
-
 
 def render_user_info(data: TemplateUserInfoData) -> str:
     """
