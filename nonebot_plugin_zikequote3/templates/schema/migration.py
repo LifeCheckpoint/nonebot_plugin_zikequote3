@@ -4,61 +4,64 @@
 
 from typing import List, Optional
 from pydantic import BaseModel
-from .. import render_template
-from ...imports import PluginPath
+from .. import render_template, read_resource_file
 
 
-class DiffItem(BaseModel):
+class TemplateDiffItemData(BaseModel):
+    """差异项数据类"""
+
+    """差异项名称"""
     label: str
+
+    """旧值"""
     oldval: str
+
+    """新值"""
     newval: str
 
+class TemplateMigrationData(BaseModel):
+    """迁移渲染数据类"""
 
-def render_migration_diff(
-    status_title: Optional[str],
-    title: str,
-    description: str,
-    diff_items: List[DiffItem],
-    left_button: Optional[str],
-    right_button: Optional[str],
-) -> str:
+    """可选，标题上方的状态提示小标题"""
+    status_title: Optional[str] = None
+
+    """提示主标题"""
+    title: str
+
+    """描述信息"""
+    description: str
+
+    """差异项目，包含名称、旧值、新值"""
+    diff_items: List[TemplateDiffItemData]
+
+    """左按钮（第二按钮）提示信息"""
+    left_button: Optional[str] = None
+
+    """右按钮（主按钮）提示信息"""
+    right_button: Optional[str] = None
+
+
+def render_migration_diff(data: TemplateMigrationData) -> str:
     """
     渲染差异项，用于迁移比对等
 
     Args:
-        status_title: 可选，标题上方的状态提示小标题
-        title: 提示主标题
-        description: 描述信息
-        diff_items: 差异项目，包含名称、旧值、新值
-        left_button: 可选，左按钮（第二按钮）提示信息
-        right_button: 可选，右按钮（主按钮）提示信息
+        data: 迁移渲染数据
 
     Returns:
         渲染后的 HTML 字符串
     """
 
-    migration_css = PluginPath.module_templates_root / "src" / "assets" / "css" / "migration.css"
-
-    # 准备差异数据
-    diff_data = [{
-        "label": item.label,
-        "oldval": item.oldval,
-        "newval": item.newval
-    } for item in diff_items]
+    migration_css = read_resource_file("css/migration.css")
 
     return render_template(
         "htmls/migration.html.jinja2",
-        inline_css=migration_css.read_text(encoding="utf-8"),
-        
-        status_title=status_title,
-        title=title,
-        description=description,
-        diff_items=diff_data,
-        left_button=left_button,
-        right_button=right_button
+        inline_css=migration_css,
+        **data.model_dump()
     )
 
 __all__ = [
-    "DiffItem",
+    "TemplateDiffItemData",
+    "TemplateMigrationData",
     "render_migration_diff",
 ]
