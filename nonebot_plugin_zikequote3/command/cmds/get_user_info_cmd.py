@@ -15,6 +15,8 @@ async def f_get_user_info(
     from ...services.user_management.user_service import s_search_users_by_name
     from ...services.user_management.user_service import s_user_exists
 
+    logger.debug("获取用户信息")
+
     async with event_exception_failmsg_a(matcher_get_user_info, "解析参数"):
         user_qq: str | None = None
         
@@ -49,5 +51,5 @@ async def f_get_user_info(
             raise ValueError("没有找到有效的用户哦.·´¯`(>▂<)´¯`·. ")
     
         html = await s_get_user_info_html(str(event.group_id), user_qq)
-        img = await html_img_render(html, width=600, height=100) 
+        img = await html_img_render(html, width=400, height=100) 
         await matcher_get_user_info.finish(MsgSeg.image(img))

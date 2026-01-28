@@ -34,7 +34,6 @@ cmdname_get_quote_list = (
 )
 alc_get_quote_list = Alconna(
     cmdname_get_quote_list[0],
-    cmdname_get_quote_list[1:],
     Arg("range?", "re:\\d{1,4}(?:-\\d+)?", None, notice="页码范围，格式如 3 或 2-5"),
     Arg("at_user?", At, None, notice="At 段用户"),
     Arg("qq?", "re:\\d{5,}", None, notice="指定 QQ 号"),
@@ -42,28 +41,29 @@ alc_get_quote_list = Alconna(
 )
 matcher_get_quote_list = on_alconna(
     alc_get_quote_list,
+    aliases=set(cmdname_get_quote_list[1:]),
     use_cmd_start=True, priority=10, block=True, skip_for_unmatch=False,
 )
 perm_nodes.n_listing.patch_matcher(matcher_get_quote_list)
 
 
 cmdname_get_user_info = (
-    "语录用户信息", "语录用户", "语录用户信息", "用户语录信息", "语录作者",
+    "语录用户信息", "语录用户", "用户语录信息", "语录作者",
     "查看用户信息", "语录作者信息", "查看语录用户信息", "查看语录作者信息", "用户作者信息",
     "获取语录用户信息", "获取语录用户", "获取语录作者", "语录作者用户", "作者信息",
 )
 alc_get_user_info = Alconna(
     cmdname_get_user_info[0],
-    cmdname_get_user_info[1:],
     Arg("at_user?", At, None, notice="At 段用户"),
     Arg("qq?", "re:\\d{5,}", None, notice="指定 QQ 号"),
     Arg("nickname?", AllParam(str), "", notice="指定昵称"),
 )
 matcher_get_user_info = on_alconna(
     alc_get_user_info,
+    aliases=set(cmdname_get_user_info[1:]),
     use_cmd_start=True, priority=10, block=True, skip_for_unmatch=False,
 )
-perm_nodes.n_get_user.patch_matcher(matcher_get_user_info)
+perm_nodes.n_listing.patch_matcher(matcher_get_user_info)
 
 
 # endregion
@@ -175,7 +175,6 @@ cmdname_search_quote = (
 )
 alc_search_quote = Alconna(
     cmdname_search_quote[0],
-    cmdname_search_quote[1:],
     Option("-qq", Arg("qq", int, None, notice="用于筛选的QQ号")),
     Option("-m|--max-result", Arg("max_result", int, None, notice="最大返回结果数量，至少为1")),
     Option("-ni|--no-image", dest="no_image", action=store_true, default=False, help_text="是否排除包含图片的语录"),
@@ -184,6 +183,7 @@ alc_search_quote = Alconna(
 )
 matcher_search_quote = on_alconna(
     alc_search_quote,
+    aliases=set(cmdname_search_quote[1:]),
     use_cmd_start=True, priority=10, block=True, skip_for_unmatch=False,
 )
 perm_nodes.n_search.patch_matcher(matcher_search_quote)
@@ -292,7 +292,6 @@ cmdname_group_migration = (
 )
 alc_group_migration = Alconna(
     cmdname_group_migration[0],
-    cmdname_group_migration[1:],
     Arg("source?", "re:\\d{5,}", None, notice="源群号"),
     Arg("target?", "re:\\d{5,}", None, notice="新群号"),
     Option("-o|--overwrite", dest="overwrite", action=store_true, default=False, help_text="是否完全覆盖而非与目标群语录合并，默认为否"),
@@ -303,6 +302,7 @@ alc_group_migration = Alconna(
 )
 matcher_group_migration = on_alconna(
     alc_group_migration,
+    aliases=set(cmdname_group_migration[1:]),
     use_cmd_start=True, priority=10, block=True, skip_for_unmatch=False,
 )
 perm_nodes.n_group_migration.patch_matcher(matcher_group_migration)
