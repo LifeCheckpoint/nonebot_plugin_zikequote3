@@ -69,6 +69,7 @@ async def s_get_user_info_html(group_id: str, qq_id: str) -> str:
         return render_user_info(
             ranking_value=ranking_value,
             quote_count=quote_count,
+            qq_id=qq_id,
             primary_nick=current_nick,
             primary_group_card=current_card,
             avatar=avatar_bs64,

@@ -6,7 +6,8 @@
     - ranking_value: 可选，用户当前群语录排名
     - quote_count: 用户累计语录数
     - primary_nick: 用户当前昵称
-    - primary_group_card: 用户当前群名片
+    - qq_id: 用户QQ号
+    - primary_group_card: (可选) 用户当前群名片
     - avatar: 头像 (可以为 Base64 或 URL)
     - history_nicks: 曾用昵称列表
     - history_group_cards: 曾用群名片列表
@@ -45,8 +46,10 @@
             <div class="header-section">
                 <div class="nick-container">
                     <h2 class="primary-nick">{{ primary_nick }}</h2>
-                    <span class="qq-id">123456789</span>
+                    <span class="qq-id">{{ qq_id }}</span>
+                    {{ if primary_group_card }}
                     <div class="current-tag">@{{ primary_group_card }}</div>
+                    {{ endif }}
                 </div>
                 <div class="avatar-box">
                     <img src="{{ avatar }}" alt="用户头像不见啦？(⊙x⊙;)">
@@ -54,6 +57,7 @@
             </div>
 
             <div class="history-panel">
+                {% if history_nicks %}
                 <div class="history-row">
                     <div class="history-label">曾用QQ昵称</div>
                     <div class="history-content">
@@ -62,7 +66,9 @@
                         {% endfor %}
                     </div>
                 </div>
+                {% endif %}
 
+                {% if history_group_cards %}
                 <div class="history-row">
                     <div class="history-label">曾用群名片</div>
                     <div class="history-content">
@@ -71,11 +77,12 @@
                         {% endfor %}
                     </div>
                 </div>
+                {% endif %}
             </div>
 
             <!-- 页脚 -->
             <div class="footer-bar">
-                <div class="watermark">@ZikQuote3</div>
+                <div class="watermark">@ZikeQuote3</div>
                 <div class="guide-text">
                     {{ guide_text | safe }}
                 </div>

@@ -51,5 +51,5 @@ async def f_get_user_info(
             raise ValueError("没有找到有效的用户哦.·´¯`(>▂<)´¯`·. ")
     
         html = await s_get_user_info_html(str(event.group_id), user_qq)
-        img = await html_img_render(html, width=400, height=100) 
+        img = await html_img_render(html, width=450, height=100) 
         await matcher_get_user_info.finish(MsgSeg.image(img))

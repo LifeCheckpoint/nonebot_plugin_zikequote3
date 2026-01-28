@@ -10,6 +10,7 @@ class UserInfoData(BaseModel):
     """用户信息数据类"""
     ranking_value: Optional[int] = None
     quote_count: int
+    qq_id: str
     primary_nick: str
     primary_group_card: Optional[str] = None
     avatar: str
@@ -21,6 +22,7 @@ class UserInfoData(BaseModel):
 def render_user_info(
     ranking_value: Optional[int],
     quote_count: int,
+    qq_id: str,
     primary_nick: str,
     primary_group_card: Optional[str],
     avatar: str,
@@ -33,6 +35,7 @@ def render_user_info(
     Args:
         ranking_value: 可选，用户当前群语录排名
         quote_count: 用户累计语录数
+        qq_id: 用户 QQ 号
         primary_nick: 用户当前昵称
         primary_group_card: 用户当前群名片
         avatar: 头像 (可以为 Base64 或 URL)
@@ -49,6 +52,7 @@ def render_user_info(
     user_info_data = UserInfoData(
         ranking_value=ranking_value,
         quote_count=quote_count,
+        qq_id=qq_id,
         primary_nick=primary_nick,
         primary_group_card=primary_group_card,
         avatar=avatar,
@@ -60,6 +64,7 @@ def render_user_info(
         "htmls/user_info.html.jinja2",
         inline_css=inline_css,
         ranking_value=user_info_data.ranking_value,
+        qq_id=user_info_data.qq_id,
         quote_count=user_info_data.quote_count,
         primary_nick=user_info_data.primary_nick,
         primary_group_card=user_info_data.primary_group_card,
