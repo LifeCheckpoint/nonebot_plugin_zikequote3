@@ -14,6 +14,9 @@ class PluginPath:
     module_resources_root = plugin_root / "resources"
     module_services_root = plugin_root / "services"
     module_templates_root = plugin_root / "templates"
+    module_templates_htmls_root = module_templates_root / "src" / "htmls"
+    module_templates_css_root = module_templates_root / "src" / "assets" / "css"
+    module_templates_js_root = module_templates_root / "src" / "assets" / "js"
     module_utils_root = plugin_root / "utils"
 
     data_db_path = store.get_data_dir("ZikeQuote3") / "zikequote3.db"

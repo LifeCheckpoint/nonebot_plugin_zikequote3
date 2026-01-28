@@ -88,6 +88,12 @@ class ConnectionManager:
         logger.info(f"数据库备份已创建: {backup_path}")
         return backup_path
 
+    def backup_database(self) -> Optional[Path]:
+        """
+        手动触发数据库备份
+        """
+        return self._backup_database()
+
     def _collect_sequential_migrations(self, migrations_dir: Path):
         """
         读取迁移目录中形如 vX_to_vY.sql 的文件，

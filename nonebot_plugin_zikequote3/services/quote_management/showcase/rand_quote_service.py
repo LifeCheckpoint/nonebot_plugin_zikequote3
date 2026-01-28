@@ -120,7 +120,7 @@ def s_get_quote_card_html(group_id: str, quote: Quote) -> str:
     from ....services.user_management.user_service import s_get_user_current_display_name
     from ....services.review_management.review_service import AUTHOR_AI
     from ....templates import card
-    from ....templates.schema.card import Comment
+    from ....templates.schema.card import TemplateCommentData, TemplateQuoteCardData
     
     with service_exception("获取语录作者信息"):
         author = s_get_user_current_display_name(quote.author_id, group_id)
@@ -136,7 +136,7 @@ def s_get_quote_card_html(group_id: str, quote: Quote) -> str:
             if comment_author == AUTHOR_AI:
                 comment_author = "AI"
             
-            comments.append(Comment(
+            comments.append(TemplateCommentData(
                 comment_id=r.review_id,
                 author_name=comment_author,
                 content=r.content,
@@ -149,10 +149,12 @@ def s_get_quote_card_html(group_id: str, quote: Quote) -> str:
     
     with service_exception("渲染语录卡"):
         return card.render_card(
-            quote_id=quote.quote_id,
-            quote=quote.content,
-            image_uri=image_data,
-            author_name=author,
-            comments=comments
+            TemplateQuoteCardData(
+                quote_id=quote.quote_id,
+                quote=quote.content,
+                image_uri=image_data,
+                author_name=author,
+                comments=comments
+            )
         )
-    
+        

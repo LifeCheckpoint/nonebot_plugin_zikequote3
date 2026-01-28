@@ -1,7 +1,6 @@
 from typing import List, Dict, Any, Optional
 from sqlite3 import Row
 from datetime import datetime
-import sqlite3
 
 from .base_dao import BaseDAO
 from ..models.quotes import Quote, QuoteCreate, QuoteUpdate
@@ -187,6 +186,36 @@ class QuoteDAO(BaseDAO[Quote]):
             cursor.execute(sql, (quote_id,))
             return cursor.rowcount > 0
     
+    def delete_quotes_by_group(self, group_id: str) -> bool:
+        """
+        删除群组的所有语录
+        
+        Args:
+            group_id: 群号
+            
+        Returns:
+            bool: 删除是否成功
+        """
+        sql = "DELETE FROM quotes WHERE group_id = ?"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (group_id,))
+            return True
+
+    def get_max_quote_id(self) -> int:
+        """
+        获取当前数据库中最大的语录ID
+        
+        Returns:
+            int: 最大ID，如果无数据则返回0
+        """
+        sql = "SELECT MAX(CAST(quote_id AS INTEGER)) FROM quotes"
+        
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql)
+            result = cursor.fetchone()
+            return result[0] if result and result[0] is not None else 0
+
     def get_quotes_by_group(self, group_id: str, limit: Optional[int] = None, offset: int = 0) -> List[Quote]:
         """
         根据群组获取语录列表

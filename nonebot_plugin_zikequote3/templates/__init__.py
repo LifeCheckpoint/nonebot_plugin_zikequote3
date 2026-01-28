@@ -51,11 +51,15 @@ from .schema import code_frame
 from .schema import listing
 from .schema import rank
 from .schema import md
+from .schema import migration
+from .schema import user_info
 
 __all__ = [
-    'card',
-    'code_frame', 
-    'listing',
-    'rank',
-    'md',
+    "card",
+    "code_frame", 
+    "listing",
+    "rank",
+    "md",
+    "migration",
+    "user_info"
 ]

@@ -11,3 +11,6 @@ async def s_ensure_user_group_mapping(group_id: str, qq_id: str, bot: Bot):
             qq_id=qq_id
         )
         logger.info(f"创建用户-群映射：用户 {qq_id} - 群 {group_id}")
+
+async def s_get_all_users_by_group(group_id: str):
+    return db.dao.get_group_member_dao().get_members_by_group(group_id=group_id)

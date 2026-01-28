@@ -1,6 +1,15 @@
 from ..imports import cfg, default_cfg, PluginPath
 
 from openai import AsyncOpenAI
+
+# Fix Pydantic - OpenAI 库兼容性问题修复: object of type 'Omit' has no len()
+try:
+    from openai import Omit
+    if not hasattr(Omit, '__len__'):
+        Omit.__len__ = lambda self: 0 # type: ignore
+except ImportError:
+    pass
+
 from pathlib import Path
 from pydantic import BaseModel
 from pydantic_ai.direct import model_request

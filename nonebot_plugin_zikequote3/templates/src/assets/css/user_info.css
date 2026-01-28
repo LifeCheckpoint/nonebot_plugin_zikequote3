@@ -1,0 +1,211 @@
+:root {
+    --font-main: '句读黑体 Hans Medium', 'SF Pro Display', 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'SF Mono', 'Monaco', 'Courier New', monospace;
+    
+    --bg-color: #f2f4f7;
+    --card-bg: #ffffff;
+    --sidebar-bg: #1a1a1a; 
+    --text-main: #111111;
+    --text-sub: #666666;
+    --text-history: #b0b0b0;
+    --accent-blue: #007aff;
+    --border-light: rgba(0, 0, 0, 0.06);
+}
+
+body {
+    background-color: var(--bg-color);
+    font-family: var(--font-main);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+}
+
+.user-profile-card {
+    width: 450px;
+    background: var(--card-bg);
+    border-radius: 22px;
+    display: flex; /* 改用flex布局，方便形状控制 */
+    box-shadow: 0 15px 45px rgba(0,0,0,0.07);
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+}
+
+/* 左侧突出形状 - 黑色侧栏 */
+.rank-sidebar {
+    width: 105px;
+    background: var(--sidebar-bg);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 0;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.rank-label {
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    opacity: 0.4;
+    font-weight: 500;
+}
+
+.rank-value {
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: #fff;
+    margin-top: 2px;
+}
+
+.quote-total {
+    text-align: center;
+}
+
+.quote-count {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.quote-label {
+    font-size: 0.65rem;
+    opacity: 0.4;
+    margin-top: 4px;
+    letter-spacing: 1px;
+}
+
+/* 右侧内容区域 */
+.main-body {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    min-width: 0; /* 防止溢出 */
+}
+
+/* 顶部信息区域 */
+.header-section {
+    padding: 28px 24px 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.nick-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.primary-nick {
+    font-size: 1.45rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin: 0;
+    line-height: 1.2;
+}
+
+.qq-id {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--text-history);
+    margin-top: 2px;
+}
+
+.current-tag {
+    font-size: 0.85rem;
+    color: var(--accent-blue);
+    margin-top: 10px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    background: rgba(0, 122, 255, 0.05); /* 淡淡的背景色 */
+    padding: 2px 8px;
+    border-radius: 6px;
+    width: fit-content;
+}
+
+.avatar-box {
+    width: 60px;
+    height: 60px;
+    border-radius: 30%;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border: 1px solid var(--border-light);
+}
+
+.avatar-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 曾用名区域 */
+.history-panel {
+    padding: 0 24px 28px 24px;
+    flex-grow: 1;
+}
+
+.history-row {
+    margin-top: 18px;
+}
+
+.history-label {
+    font-size: 0.65rem;
+    color: var(--text-history);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.history-content {
+    font-size: 0.8rem;
+    color: #d1d1d1; /* 极浅色 */
+    line-height: 1.4;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* 这种标签设计几乎融于背景 */
+.history-tag {
+    border: 1px solid #f2f2f2;
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: #bcbcbc;
+}
+
+/* 底部操作页脚 */
+.footer-bar {
+    background: #fafafa;
+    border-top: 1px solid var(--border-light);
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.watermark {
+    font-size: 0.75rem;
+    color: #ccc;
+    font-family: var(--font-mono);
+}
+
+.guide-text {
+    font-size: 0.75rem;
+    color: var(--text-sub);
+}
+
+.guide-key {
+    background: #ededed;
+    color: #555;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin: 0 2px;
+    border-bottom: 2px solid #ddd;
+}

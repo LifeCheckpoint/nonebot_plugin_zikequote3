@@ -10,6 +10,28 @@ All notable changes to this project will be documented in this file.
 > - 图片储存检查
 > - 其它依托于 LLM 的大型统计 / 语义化功能
 > - 定期数据备份功能
+> - 依赖注入重构，SQLModel 重构
+> - 后端管理功能
+
+## \[0.4.0alpha2\] - 2026-01-28
+
+### Added
+
+- 新增语录迁移功能，支持老群语录向新群语录迁移
+
+### Changed
+
+- 模型空响应不再导致 IndexError 上报
+- 简化优化了渲染模板的 schema 结构
+
+### Fixed
+
+- 修复用户退群更新信息导致 ActionFailed 的问题
+- 修复用户头像获取失败导致语录收集失败问题
+- 修复语录列表命令中的 Finished 异常捕获问题
+- 修复语录列表显示页码不正确的问题
+- 修复由于并发冲突导致用户创建时的数据库约束错误问题
+- 修复 OpenAI 接口与 PydanticAI 接口不兼容的问题
 
 ## \[0.4.0alpha1\] - 2025-10-30 \[BREAKING CHANGES\]
 

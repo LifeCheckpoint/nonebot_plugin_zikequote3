@@ -20,6 +20,7 @@ class PermissionServiceNodes:
         self.n_ranking: ISubService = n_perm_s.create_subservice("ranking")
         self.n_listing: ISubService = n_perm_s.create_subservice("listing")
         self.n_listing_self: ISubService = self.n_listing.create_subservice("self")
+        self.n_get_user: ISubService = self.n_listing.create_subservice("get_user")
         self.n_listing_others: ISubService = self.n_listing.create_subservice("others")
         self.n_review: ISubService = n_perm_s.create_subservice("review")
         self.n_review_add: ISubService = self.n_review.create_subservice("add")
@@ -44,4 +45,5 @@ class PermissionServiceNodes:
         self.n_settings_reset_group: ISubService = self.n_settings_reset.create_subservice("group")
         self.n_settings_reset_global: ISubService = self.n_settings_reset.create_subservice("global")
         self.n_forcerefresh: ISubService = n_perm_s.create_subservice("force_refresh")
+        self.n_group_migration: ISubService = n_perm_s.create_subservice("group_migration")
         self.n_others: ISubService = n_perm_s.create_subservice("others")

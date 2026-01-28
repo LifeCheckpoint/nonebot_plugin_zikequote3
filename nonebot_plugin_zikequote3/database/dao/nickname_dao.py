@@ -290,6 +290,22 @@ class GroupNicknameDAO(BaseDAO[GroupNickname]):
             cursor.execute(sql, (qq_id, group_id))
             rows = cursor.fetchall()
             return [self._row_to_model(row) for row in rows]
+
+    def get_nicknames_by_group(self, group_id: str) -> List[GroupNickname]:
+        """
+        获取群组中的所有名片记录
+        
+        Args:
+            group_id: 群号
+            
+        Returns:
+            List[GroupNickname]: 群名片列表
+        """
+        sql = "SELECT * FROM group_nicknames WHERE group_id = ?"
+        with self.connection_manager.cursor() as cursor:
+            cursor.execute(sql, (group_id,))
+            rows = cursor.fetchall()
+            return [self._row_to_model(row) for row in rows]
     
     def get_user_all_group_nicknames(self, qq_id: str) -> List[GroupNickname]:
         """

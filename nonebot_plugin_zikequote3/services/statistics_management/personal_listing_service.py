@@ -18,8 +18,8 @@ def s_get_listing_html(
         :param to_page: 结束语录索引（包含），1-based
     """
     from ...services.user_management.user_service import s_get_user_current_display_name
-    from ...templates import listing
-    from ...services.statistics_management.quote_type_transform import s_transform_quotedata_to_quotebox
+    from ...templates.schema.listing import render_list, TemplateQuoteListData
+    from ...services.statistics_management.quote_searching_service import s_transform_quotedata_to_quotebox
     from ...utils.hitokoto import get_hitokoto
 
     with service_exception("获取用户信息"):
@@ -80,9 +80,11 @@ def s_get_listing_html(
             hitokoto_text = None
 
     with service_exception("生成语录列表 HTML"):
-        return listing.render_list(
-            title=title_text,
-            desc=desc_text,
-            addition=hitokoto_text,
-            quotes=quotes_boxes,
+        return render_list(
+            TemplateQuoteListData(
+                title=title_text,
+                desc=desc_text,
+                addition=hitokoto_text,
+                quotes=quotes_boxes,
+            )
         )

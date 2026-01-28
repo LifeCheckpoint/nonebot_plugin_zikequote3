@@ -12,3 +12,5 @@ from .remove_quote_cmd import *
 from .remove_quote_comment_cmd import *
 from .search_quote_cmd import *
 from .update_quote_force_cmd import *
+from .group_migration import *
+from .get_user_info_cmd import *

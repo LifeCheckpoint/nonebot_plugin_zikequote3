@@ -1,8 +1,9 @@
 """
 Markdown 模板
 """
-from .. import render_template, read_resource_file
+# TODO: Refactor
 
+from .. import render_template, read_resource_file
 
 def render_markdown(content: str) -> str:
     """
