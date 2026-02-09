@@ -6,9 +6,13 @@ import pytest
 
 from nonebot_plugin_zikequote3.database.repositories.group_config_repository import GroupConfigRepository
 from nonebot_plugin_zikequote3.database.repositories.group_member_repository import GroupMemberRepository
+from nonebot_plugin_zikequote3.database.repositories.group_nickname_repository import GroupNicknameRepository
 from nonebot_plugin_zikequote3.database.repositories.group_repository import GroupRepository
 from nonebot_plugin_zikequote3.database.repositories.image_repository import ImageRepository
 from nonebot_plugin_zikequote3.database.repositories.mapping_repository import MappingRepository
+from nonebot_plugin_zikequote3.database.repositories.msg_queue_repository import MsgQueueRepository
+from nonebot_plugin_zikequote3.database.repositories.review_repository import ReviewRepository
+from nonebot_plugin_zikequote3.database.repositories.user_nickname_repository import UserNicknameRepository
 from nonebot_plugin_zikequote3.database.repositories.user_repository import UserRepository
 
 
@@ -40,3 +44,23 @@ def mapping_repo(async_session) -> MappingRepository:
 @pytest.fixture
 def group_config_repo(async_session) -> GroupConfigRepository:
     return GroupConfigRepository(async_session)
+
+
+@pytest.fixture
+def user_nickname_repo(async_session) -> UserNicknameRepository:
+    return UserNicknameRepository(async_session)
+
+
+@pytest.fixture
+def group_nickname_repo(async_session) -> GroupNicknameRepository:
+    return GroupNicknameRepository(async_session)
+
+
+@pytest.fixture
+def review_repo(async_session) -> ReviewRepository:
+    return ReviewRepository(async_session)
+
+
+@pytest.fixture
+def msg_queue_repo(async_session) -> MsgQueueRepository:
+    return MsgQueueRepository(async_session)
