@@ -5,6 +5,7 @@ dishka DI 容器单元测试。
 - DatabaseProvider 提供 AsyncEngine 和 AsyncSession
 - InfraProvider 提供 ImageStore
 - RepositoryProvider 提供全部 11 个 Repository
+- ServiceProvider 提供全部 9 个 Service
 - create_container() 组装容器
 - AsyncSession 在 REQUEST 作用域结束后被正确关闭
 """
@@ -31,6 +32,17 @@ from nonebot_plugin_zikequote3.database.repositories import (
     UserNicknameRepository,
     UserRepository,
 )
+from nonebot_plugin_zikequote3.services.new.config_service import ConfigService
+from nonebot_plugin_zikequote3.services.new.group_service import GroupService
+from nonebot_plugin_zikequote3.services.new.migration_service import MigrationService
+from nonebot_plugin_zikequote3.services.new.quote_collection_service import (
+    QuoteCollectionService,
+)
+from nonebot_plugin_zikequote3.services.new.quote_read_service import QuoteReadService
+from nonebot_plugin_zikequote3.services.new.quote_write_service import QuoteWriteService
+from nonebot_plugin_zikequote3.services.new.review_service import ReviewService
+from nonebot_plugin_zikequote3.services.new.statistics_service import StatisticsService
+from nonebot_plugin_zikequote3.services.new.user_service import UserService
 from nonebot_plugin_zikequote3.di.container import create_container
 from nonebot_plugin_zikequote3.di.providers.database_provider import DatabaseProvider
 
@@ -204,4 +216,39 @@ class TestRepositoryProvider:
         async with container() as request_scope:
             repo = await request_scope.get(repo_type)
             assert isinstance(repo, repo_type)
+        await container.close()
+
+
+# ---------------------------------------------------------------------------
+# ServiceProvider 测试
+# ---------------------------------------------------------------------------
+
+
+class TestServiceProvider:
+    """ServiceProvider 单元测试 —— 验证全部 9 个 Service 可被正确提供。"""
+
+    _ALL_SERVICE_TYPES = [
+        UserService,
+        GroupService,
+        QuoteWriteService,
+        QuoteReadService,
+        QuoteCollectionService,
+        ReviewService,
+        StatisticsService,
+        ConfigService,
+        MigrationService,
+    ]
+
+    @pytest.mark.parametrize(
+        "service_type", _ALL_SERVICE_TYPES, ids=lambda t: t.__name__
+    )
+    async def test_provide_service(self, service_type) -> None:
+        """ServiceProvider 能在 REQUEST 作用域提供指定 Service。"""
+        container = create_container(
+            db_path=":memory:",
+            image_store_path=Path("__test_images_not_used__"),
+        )
+        async with container() as request_scope:
+            svc = await request_scope.get(service_type)
+            assert isinstance(svc, service_type)
         await container.close()
