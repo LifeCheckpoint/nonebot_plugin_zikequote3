@@ -1,0 +1,384 @@
+"""
+命令定义（matcher 注册）—— dishka DI 版本。
+
+替代旧的 command_definition.py，消除 ``from ..imports import *``，
+改用显式导入所需的 NoneBot 类型和第三方库。
+
+所有 matcher 变量名、命令名、别名、优先级均与旧版保持一致，
+供 handler 文件引用。
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+from nonebot import on_command, on_message
+from nonebot_plugin_alconna import on_alconna
+from arclet.alconna import Alconna, Arg, Option, AllParam, store_true, store_false
+from nonebot_plugin_alconna.uniseg.segment import At
+
+# ---------------------------------------------------------------------------
+# 权限节点 —— 显式创建，不再依赖 imports.py 的全局 perm_nodes
+# ---------------------------------------------------------------------------
+from nonebot_plugin_access_control_api.service import create_plugin_service
+from ..services.permission_management.permission_node_definition import (
+    PermissionServiceNodes,
+)
+
+perm_nodes = PermissionServiceNodes(create_plugin_service("zikequote3"))
+
+# ---------------------------------------------------------------------------
+# 默认配置 —— 仅加载本地 TOML 默认值，不依赖数据库
+# ---------------------------------------------------------------------------
+import tomlkit
+from ..config import parse_config_from_toml
+
+_default_cfg_path = Path(__file__).resolve().parent.parent / "config.toml"
+_default_cfg_toml = tomlkit.parse(_default_cfg_path.read_text(encoding="utf-8"))
+default_cfg = parse_config_from_toml(_default_cfg_toml)
+
+
+# ===================================================================
+# region 自动收集事件
+# ===================================================================
+
+matcher_collecting_listener = on_message(
+    priority=15, block=False
+)
+perm_nodes.n_becollected_llm.patch_matcher(matcher_collecting_listener)
+
+
+# endregion
+
+# ===================================================================
+# region 语录统计命令
+# ===================================================================
+
+cmdname_get_ranking = (
+    "语录rank", "语录ranking", "语录排行", "语录排行榜",
+    "语录统计", "语录统计信息", "语录群排行", "排行语录",
+    "统计语录",
+)
+matcher_get_ranking = on_command(
+    cmdname_get_ranking[0],
+    aliases=set(cmdname_get_ranking[1:]),
+    priority=10, block=True
+)
+perm_nodes.n_ranking.patch_matcher(matcher_get_ranking)
+
+
+cmdname_get_quote_list = (
+    "语录列表", "语录list", "语录列表", "列语录",
+    "个人语录", "个人语录列表", "语录个人列表",
+)
+alc_get_quote_list = Alconna(
+    cmdname_get_quote_list[0],
+    Arg("range?", "re:\\d{1,4}(?:-\\d+)?", None, notice="页码范围，格式如 3 或 2-5"),
+    Arg("at_user?", At, None, notice="At 段用户"),
+    Arg("qq?", "re:\\d{5,}", None, notice="指定 QQ 号"),
+    Arg("nickname?", AllParam(str), "", notice="指定昵称"),
+)
+matcher_get_quote_list = on_alconna(
+    alc_get_quote_list,
+    aliases=set(cmdname_get_quote_list[1:]),
+    use_cmd_start=True, priority=10, block=True, skip_for_unmatch=False,
+)
+perm_nodes.n_listing.patch_matcher(matcher_get_quote_list)
+
+
+cmdname_get_user_info = (
+    "语录用户信息", "语录用户", "用户语录信息", "语录作者",
+    "查看用户信息", "语录作者信息", "查看语录用户信息", "查看语录作者信息", "用户作者信息",
+    "获取语录用户信息", "获取语录用户", "获取语录作者", "语录作者用户", "作者信息",
+)
+alc_get_user_info = Alconna(
+    cmdname_get_user_info[0],
+    Arg("at_user?", At, None, notice="At 段用户"),
+    Arg("qq?", "re:\\d{5,}", None, notice="指定 QQ 号"),
+    Arg("nickname?", AllParam(str), "", notice="指定昵称"),
+)
+matcher_get_user_info = on_alconna(
+    alc_get_user_info,
+    aliases=set(cmdname_get_user_info[1:]),
+    use_cmd_start=True, priority=10, block=True, skip_for_unmatch=False,
+)
+perm_nodes.n_listing.patch_matcher(matcher_get_user_info)
+
+
+# endregion
+
+# ===================================================================
+# region 语录修改命令
+# ===================================================================
+
+cmdname_add_quote = ("加语录", "添加语录", "新增语录", "语录添加")
+matcher_add_quote = on_command(
+    cmdname_add_quote[0],
+    aliases=set(cmdname_add_quote[1:]),
+    priority=10, block=True
+)
+perm_nodes.n_quote_add.patch_matcher(matcher_add_quote)
+
+
+cmdname_add_quote_image = (
+    "加语录图", "加语录图片", "加语录图像", "语录加图", "语录加图片", "语录加图像",
+    "添加语录图", "添加语录图片", "添加语录图像", "语录添加图", "语录添加图片", "语录添加图像",
+    "新增语录图", "新增语录图片", "新增语录图像", "语录新增图", "语录新增图片", "语录新增图像",
+    "附加语录图", "附加语录图片", "附加语录图像", "语录附加图", "语录附加图片", "语录附加图像",
+    # 搁这儿排列组合呢
+)
+matcher_add_quote_image = on_command(
+    cmdname_add_quote_image[0],
+    aliases=set(cmdname_add_quote_image[1:]),
+    priority=10, block=True
+)
+perm_nodes.n_quote_attachimage.patch_matcher(matcher_add_quote_image)
+
+
+cmdname_remove_quote = ("删语录", "删除语录", "语录删除")
+matcher_remove_quote = on_command(
+    cmdname_remove_quote[0],
+    aliases=set(cmdname_remove_quote[1:]),
+    priority=10, block=True
+)
+perm_nodes.n_quote_delete.patch_matcher(matcher_remove_quote)
+
+
+cmdname_remove_quote_image = (
+    "删语录图", "删语录图片", "删语录图像", "语录删图", "语录删图片", "语录删图像",
+    "删除语录图", "删除语录图片", "删除语录图像", "语录删除图", "语录删除图片", "语录删除图像",
+    "移除语录图", "移除语录图片", "移除语录图像", "语录移除图", "语录移除图片", "语录移除图像",
+)
+matcher_remove_quote_image = on_command(
+    cmdname_remove_quote_image[0],
+    aliases=set(cmdname_remove_quote_image[1:]),
+    priority=10, block=True
+)
+perm_nodes.n_quote_removeimage.patch_matcher(matcher_remove_quote_image)
+
+
+cmdname_add_quote_comment = ("评语录", "评论语录", "评价语录", "评")
+matcher_add_quote_comment = on_command(
+    cmdname_add_quote_comment[0],
+    aliases=set(cmdname_add_quote_comment[1:]),
+    priority=10, block=True
+)
+perm_nodes.n_review_add.patch_matcher(matcher_add_quote_comment)
+
+# 允许不使用前缀直接评论
+matcher_add_quote_comment_no_prefix = None
+if default_cfg.comment.enable_comment_without_prefix:
+    matcher_add_quote_comment_no_prefix = on_message(
+        priority=15, block=False
+    )
+    perm_nodes.n_review_add.patch_matcher(matcher_add_quote_comment_no_prefix)
+
+
+cmdname_remove_quote_comment = ("删评论", "删除评论", "删除语录评论", "删除语录评价", "删语评")
+matcher_remove_quote_comment = on_command(
+    cmdname_remove_quote_comment[0],
+    aliases=set(cmdname_remove_quote_comment[1:]),
+    priority=10, block=True
+)
+perm_nodes.n_review_delete.patch_matcher(matcher_remove_quote_comment)
+
+
+# endregion
+
+# ===================================================================
+# region 语录查询命令
+# ===================================================================
+
+cmdname_random_quote = (
+    "语录", "quote", "随机语录", "随机quote",
+    "名人名言", "群友名言", "群友语录", "神人语录",
+    "随机神人语录"
+)
+matcher_random_quote = on_command(
+    cmdname_random_quote[0],
+    aliases=set(cmdname_random_quote[1:]),
+    priority=11, block=True
+)
+perm_nodes.n_get_text.patch_matcher(matcher_random_quote)
+
+
+cmdname_random_quote_card = ("语录卡", "语录卡片", "语录card")
+matcher_random_quote_card = on_command(
+    cmdname_random_quote_card[0],
+    aliases=set(cmdname_random_quote_card[1:]),
+    priority=10, block=True
+)
+perm_nodes.n_get_card.patch_matcher(matcher_random_quote_card)
+
+
+cmdname_search_quote = (
+    "查语录", "查询语录", "语录搜索", "语录查找",
+    "搜语录", "找语录", "搜语录", "找语录",
+    "搜索语录", "查找语录", "寻找语录", "检索语录"
+)
+alc_search_quote = Alconna(
+    cmdname_search_quote[0],
+    Option("-qq", Arg("qq", int, None, notice="用于筛选的QQ号")),
+    Option("-m|--max-result", Arg("max_result", int, None, notice="最大返回结果数量，至少为1")),
+    Option("-ni|--no-image", dest="no_image", action=store_true, default=False, help_text="是否排除包含图片的语录"),
+    Option("-r|--regex", dest="use_regex", action=store_true, default=False, help_text="是否使用正则表达式进行搜索"),
+    Arg("keyword", AllParam(str), "", notice="搜索的关键词或模式"),
+)
+matcher_search_quote = on_alconna(
+    alc_search_quote,
+    aliases=set(cmdname_search_quote[1:]),
+    use_cmd_start=True, priority=10, block=True, skip_for_unmatch=False,
+)
+perm_nodes.n_search.patch_matcher(matcher_search_quote)
+
+
+cmdname_random_quote_image = (
+    "语录图", "语录查图", "语录取图", "查语录图", "取语录图",
+    "语录查图片", "语录取图片", "查语录图片", "取语录图片",
+    "语录原图", "语录图片", "语录img", "语录图像",
+    "获取语录图片", "获取语录原图", "获取语录img", "获取语录图像",
+)
+matcher_random_quote_image = on_command(
+    cmdname_random_quote_image[0],
+    aliases=set(cmdname_random_quote_image[1:]),
+    priority=10, block=True
+)
+perm_nodes.n_get_image.patch_matcher(matcher_random_quote_image)
+
+
+# endregion
+
+# ===================================================================
+# region 普通操作命令
+# ===================================================================
+
+cmdname_update_quote_force = (
+    "语录强制更新", "更新语录", "语录更新", "强制更新语录",
+    "强制语录更新", "刷新语录", "语录刷新", "强制刷新语录",
+    "强制语录刷新",
+)
+matcher_update_quote_force = on_command(
+    cmdname_update_quote_force[0],
+    aliases=set(cmdname_update_quote_force[1:]),
+    priority=10, block=True
+)
+perm_nodes.n_forcerefresh.patch_matcher(matcher_update_quote_force)
+
+# endregion
+
+# ===================================================================
+# region 插件配置命令
+# ===================================================================
+
+cmdname_get_current_config = (
+    "当前语录设置", "查看语录设置", "查看语录配置",
+    "语录配置查看", "语录设置查看", "查看当前语录设置", "查看当前语录配置"
+)
+matcher_get_current_config = on_command(
+    cmdname_get_current_config[0],
+    aliases=set(cmdname_get_current_config[1:]),
+    priority=10, block=True
+)
+perm_nodes.n_settings_get.patch_matcher(matcher_get_current_config)
+
+
+cmdname_modify_config = (
+    "修改语录设置", "修改语录配置", "设置语录设置", "设置语录配置",
+    "更改语录设置", "更改语录配置", "更新语录设置", "更新语录配置",
+    "set_quote_setting", "set_quote_config"
+)
+matcher_modify_config = on_command(
+    cmdname_modify_config[0],
+    aliases=set(cmdname_modify_config[1:]),
+    priority=10, block=True
+)
+perm_nodes.n_settings_modify_group.patch_matcher(matcher_modify_config)
+
+
+cmdname_batch_modify_config = (
+    "批量修改语录设置", "批量修改语录配置", "批量设置语录设置", "批量设置语录配置",
+    "批量更改语录设置", "批量更改语录配置", "批量更新语录设置", "批量更新语录配置",
+)
+matcher_batch_modify_config = on_command(
+    cmdname_batch_modify_config[0],
+    aliases=set(cmdname_batch_modify_config[1:]),
+    priority=10, block=True
+)
+perm_nodes.n_settings_modify_global.patch_matcher(matcher_batch_modify_config)
+
+
+cmdname_reset_config = (
+    "重置语录设置", "重置语录配置", "恢复语录设置", "恢复语录配置",
+)
+matcher_reset_config = on_command(
+    cmdname_reset_config[0],
+    aliases=set(cmdname_reset_config[1:]),
+    priority=10, block=True
+)
+perm_nodes.n_settings_reset_group.patch_matcher(matcher_reset_config)
+
+
+cmdname_reload_config = (
+    "重载语录设置", "重载语录配置", "重新加载语录设置", "重新加载语录配置",
+    "刷新语录设置", "刷新语录配置",
+)
+matcher_reload_config = on_command(
+    cmdname_reload_config[0],
+    aliases=set(cmdname_reload_config[1:]),
+    priority=10, block=True
+)
+perm_nodes.n_settings_modify.patch_matcher(matcher_reload_config)
+
+# endregion
+
+# ===================================================================
+# region 其他命令
+# ===================================================================
+
+cmdname_group_migration = (
+    "迁移群语录", "迁移所有群语录", "移动群语录", "移动所有群语录",
+)
+alc_group_migration = Alconna(
+    cmdname_group_migration[0],
+    Arg("source?", "re:\\d{5,}", None, notice="源群号"),
+    Arg("target?", "re:\\d{5,}", None, notice="新群号"),
+    Option("-o|--overwrite", dest="overwrite", action=store_true, default=False, help_text="是否完全覆盖而非与目标群语录合并，默认为否"),
+    Option("-d|--duplicate", dest="duplicate", action=store_true, default=False, help_text="是否基于内容进行去重，默认不进行"),
+    Option("-em|--exclude_member", dest="exclude_member", action=store_true, default=False, help_text="是否彻底删除源群中不在新群成员的语录，默认为否"),
+    Option("-cmi|--clear_member_info", dest="clear_member_info", action=store_true, default=False, help_text="是否抹除源群的用户群昵称信息，默认为否"),
+    Option("-ks|--keep_source", dest="keep_source", action=store_true, default=False, help_text="是否保留源群所有语录信息与记录，默认为否"),
+)
+matcher_group_migration = on_alconna(
+    alc_group_migration,
+    aliases=set(cmdname_group_migration[1:]),
+    use_cmd_start=True, priority=10, block=True, skip_for_unmatch=False,
+)
+perm_nodes.n_group_migration.patch_matcher(matcher_group_migration)
+
+
+cmdname_get_privacy = (
+    "语录隐私政策", "语录隐私", "语录政策", "语录隐私条款",
+    "查看语录隐私政策", "查看语录隐私", "查看语录政策", "查看语录隐私条款",
+    "语录隐私政策查看", "语录隐私查看", "语录政策查看", "语录隐私条款查看",
+)
+matcher_get_privacy = on_command(
+    cmdname_get_privacy[0],
+    aliases=set(cmdname_get_privacy[1:]),
+    priority=10, block=True
+)
+perm_nodes.n_perm_s.patch_matcher(matcher_get_privacy)
+
+
+cmdname_stop_using_zikequote3 = (
+    "停用语录", "停用zikequote3", "停用Zikequote3", "停用ZikeQuote3",
+    "停用语录功能",
+)
+matcher_stop_using_zikequote3 = on_command(
+    cmdname_stop_using_zikequote3[0],
+    aliases=set(cmdname_stop_using_zikequote3[1:]),
+    priority=10, block=True
+)
+perm_nodes.n_perm_s.patch_matcher(matcher_stop_using_zikequote3)
+
+
+# endregion
