@@ -19,7 +19,7 @@ from nonebot_plugin_alconna import Match, Query
 
 from ..command_definition_new import matcher_group_migration
 from ...di import get_container
-from ...services.new import MigrationService, GroupService
+from ...services import MigrationService, GroupService
 from ...utils.error_report import event_exception_failmsg_a
 from ...utils.token_generate import TokenManager
 

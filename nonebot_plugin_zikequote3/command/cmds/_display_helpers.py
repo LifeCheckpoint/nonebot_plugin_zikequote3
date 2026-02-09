@@ -13,7 +13,7 @@ from typing import Sequence
 
 from ...database.models.quotes import Quote
 from ...database.image_store import ImageStore
-from ...services.new import QuoteReadService, UserService
+from ...services import QuoteReadService, UserService
 from ...templates.schema.listing import TemplateQuoteBoxData
 
 logger = logging.getLogger(__name__)

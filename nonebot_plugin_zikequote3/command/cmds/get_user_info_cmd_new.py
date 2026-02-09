@@ -18,7 +18,7 @@ from nonebot_plugin_alconna.uniseg.segment import At
 
 from ..command_definition_new import matcher_get_user_info
 from ...di import get_container
-from ...services.new import StatisticsService, UserService
+from ...services import StatisticsService, UserService
 from ...utils.error_report import event_exception_failmsg_a
 from ...utils.base64_encoder import to_data_uri
 from ...templates.schema.user_info import TemplateUserInfoData, render_user_info

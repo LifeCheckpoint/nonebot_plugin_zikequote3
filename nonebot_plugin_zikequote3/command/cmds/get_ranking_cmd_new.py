@@ -20,7 +20,7 @@ from nonebot.params import CommandArg
 
 from ..command_definition_new import matcher_get_ranking, default_cfg
 from ...di import get_container
-from ...services.new import (
+from ...services import (
     GroupService,
     QuoteReadService,
     StatisticsService,

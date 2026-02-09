@@ -21,7 +21,7 @@ from pydantic import BaseModel
 
 from ..command_definition_new import matcher_search_quote
 from ...di import get_container
-from ...services.new import StatisticsService, QuoteReadService, UserService
+from ...services import StatisticsService, QuoteReadService, UserService
 from ...database.image_store import ImageStore
 from ...utils.error_report import event_exception_failmsg_a
 from ...templates.schema.listing import TemplateQuoteListData, render_list

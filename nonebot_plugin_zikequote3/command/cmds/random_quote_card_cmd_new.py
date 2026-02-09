@@ -21,7 +21,7 @@ from nonebot.params import CommandArg
 
 from ..command_definition_new import matcher_random_quote_card
 from ...di import get_container
-from ...services.new import QuoteReadService, QuoteWriteService, UserService
+from ...services import QuoteReadService, QuoteWriteService, UserService
 from ...database.image_store import ImageStore
 from ...utils.error_report import event_exception_failmsg_a, event_exception
 from ...templates.schema.card import TemplateCommentData, TemplateQuoteCardData

@@ -20,7 +20,7 @@ from nonebot_plugin_alconna.uniseg.segment import At
 from ..command_definition_new import matcher_get_quote_list
 from ..parse_helper.datatype_parse import parse_page_range
 from ...di import get_container
-from ...services.new import QuoteReadService, StatisticsService, UserService
+from ...services import QuoteReadService, StatisticsService, UserService
 from ...database.image_store import ImageStore
 from ...utils.error_report import event_exception_failmsg_a
 from ...templates.schema.listing import TemplateQuoteListData, render_list
