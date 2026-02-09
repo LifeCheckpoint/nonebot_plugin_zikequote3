@@ -40,13 +40,19 @@ from nonebot_plugin_zikequote3.database.repositories.user_nickname_repository im
 from nonebot_plugin_zikequote3.database.repositories.user_repository import (
     UserRepository,
 )
+from nonebot_plugin_zikequote3.database.repositories.group_config_repository import (
+    GroupConfigRepository,
+)
+from nonebot_plugin_zikequote3.services.new.config_service import ConfigService
 from nonebot_plugin_zikequote3.services.new.group_service import GroupService
+from nonebot_plugin_zikequote3.services.new.migration_service import MigrationService
 from nonebot_plugin_zikequote3.services.new.quote_collection_service import (
     QuoteCollectionService,
 )
 from nonebot_plugin_zikequote3.services.new.quote_read_service import QuoteReadService
 from nonebot_plugin_zikequote3.services.new.quote_write_service import QuoteWriteService
 from nonebot_plugin_zikequote3.services.new.review_service import ReviewService
+from nonebot_plugin_zikequote3.services.new.statistics_service import StatisticsService
 from nonebot_plugin_zikequote3.services.new.user_service import UserService
 
 
@@ -101,6 +107,11 @@ def mock_review_repo() -> AsyncMock:
 @pytest.fixture
 def mock_msg_queue_repo() -> AsyncMock:
     return AsyncMock(spec=MsgQueueRepository)
+
+
+@pytest.fixture
+def mock_group_config_repo() -> AsyncMock:
+    return AsyncMock(spec=GroupConfigRepository)
 
 
 # ---- Service fixtures ---- #
@@ -209,4 +220,37 @@ def review_service(
     return ReviewService(
         review_repo=mock_review_repo,
         quote_repo=mock_quote_repo,
+    )
+
+
+@pytest.fixture
+def statistics_service(
+    mock_quote_repo: AsyncMock,
+    mock_group_member_repo: AsyncMock,
+) -> StatisticsService:
+    return StatisticsService(
+        quote_repo=mock_quote_repo,
+        group_member_repo=mock_group_member_repo,
+    )
+
+
+@pytest.fixture
+def config_service(
+    mock_group_config_repo: AsyncMock,
+) -> ConfigService:
+    return ConfigService(
+        group_config_repo=mock_group_config_repo,
+    )
+
+
+@pytest.fixture
+def migration_service(
+    mock_quote_repo: AsyncMock,
+    mock_group_member_repo: AsyncMock,
+    mock_group_nickname_repo: AsyncMock,
+) -> MigrationService:
+    return MigrationService(
+        quote_repo=mock_quote_repo,
+        group_member_repo=mock_group_member_repo,
+        group_nickname_repo=mock_group_nickname_repo,
     )
