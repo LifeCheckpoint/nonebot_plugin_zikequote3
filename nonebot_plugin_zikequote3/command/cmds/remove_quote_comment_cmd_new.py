@@ -18,7 +18,7 @@ from nonebot.params import CommandArg
 
 from ..command_definition_new import matcher_remove_quote_comment
 from ...di import get_container
-from ...services.new import ReviewService
+from ...services import ReviewService
 from ...utils.error_report import event_exception_failmsg_a
 
 logger = logging.getLogger(__name__)
