@@ -1,5 +1,5 @@
 """
-Service 单元测试 conftest —— 为 UserService / GroupService 提供 mock Repository fixtures。
+Service 单元测试 conftest —— 为所有 Service 提供 mock Repository fixtures。
 
 所有 Repository 均使用 ``AsyncMock``，不需要真实数据库。
 """
@@ -19,6 +19,18 @@ from nonebot_plugin_zikequote3.database.repositories.group_nickname_repository i
 from nonebot_plugin_zikequote3.database.repositories.group_repository import (
     GroupRepository,
 )
+from nonebot_plugin_zikequote3.database.repositories.image_repository import (
+    ImageRepository,
+)
+from nonebot_plugin_zikequote3.database.repositories.mapping_repository import (
+    MappingRepository,
+)
+from nonebot_plugin_zikequote3.database.repositories.quote_repository import (
+    QuoteRepository,
+)
+from nonebot_plugin_zikequote3.database.repositories.review_repository import (
+    ReviewRepository,
+)
 from nonebot_plugin_zikequote3.database.repositories.user_nickname_repository import (
     UserNicknameRepository,
 )
@@ -26,6 +38,8 @@ from nonebot_plugin_zikequote3.database.repositories.user_repository import (
     UserRepository,
 )
 from nonebot_plugin_zikequote3.services.new.group_service import GroupService
+from nonebot_plugin_zikequote3.services.new.quote_read_service import QuoteReadService
+from nonebot_plugin_zikequote3.services.new.quote_write_service import QuoteWriteService
 from nonebot_plugin_zikequote3.services.new.user_service import UserService
 
 
@@ -57,6 +71,26 @@ def mock_group_member_repo() -> AsyncMock:
     return AsyncMock(spec=GroupMemberRepository)
 
 
+@pytest.fixture
+def mock_quote_repo() -> AsyncMock:
+    return AsyncMock(spec=QuoteRepository)
+
+
+@pytest.fixture
+def mock_image_repo() -> AsyncMock:
+    return AsyncMock(spec=ImageRepository)
+
+
+@pytest.fixture
+def mock_mapping_repo() -> AsyncMock:
+    return AsyncMock(spec=MappingRepository)
+
+
+@pytest.fixture
+def mock_review_repo() -> AsyncMock:
+    return AsyncMock(spec=ReviewRepository)
+
+
 # ---- Service fixtures ---- #
 
 
@@ -85,4 +119,34 @@ def group_service(
         group_repo=mock_group_repo,
         group_member_repo=mock_group_member_repo,
         group_nickname_repo=mock_group_nickname_repo,
+    )
+
+
+@pytest.fixture
+def quote_write_service(
+    mock_quote_repo: AsyncMock,
+    mock_image_repo: AsyncMock,
+    mock_mapping_repo: AsyncMock,
+    user_service: UserService,
+) -> QuoteWriteService:
+    return QuoteWriteService(
+        quote_repo=mock_quote_repo,
+        image_repo=mock_image_repo,
+        mapping_repo=mock_mapping_repo,
+        user_service=user_service,
+    )
+
+
+@pytest.fixture
+def quote_read_service(
+    mock_quote_repo: AsyncMock,
+    mock_review_repo: AsyncMock,
+    mock_image_repo: AsyncMock,
+    user_service: UserService,
+) -> QuoteReadService:
+    return QuoteReadService(
+        quote_repo=mock_quote_repo,
+        review_repo=mock_review_repo,
+        image_repo=mock_image_repo,
+        user_service=user_service,
     )
