@@ -26,7 +26,7 @@ from ..command_definition_new import (
     matcher_reload_config,
 )
 from ...di import get_container
-from ...services.new import ConfigService
+from ...services import ConfigService
 from ...utils.error_report import event_exception_failmsg_a
 
 logger = logging.getLogger(__name__)
