@@ -6,7 +6,7 @@
 
 注意：
 - 旧版本使用 HTML 截图生成迁移确认卡片，新版本暂用文本方式展示。
-- waiter 和 token_manager 是工具模块，保留引用。
+- TokenManager 通过 DI 容器获取（APP scope 单例）。
 """
 
 from __future__ import annotations
@@ -25,9 +25,6 @@ from ...utils.token_generate import TokenManager
 
 logger = logging.getLogger(__name__)
 
-# Token 管理器实例
-_token_manager = TokenManager()
-
 
 @matcher_group_migration.handle()
 async def handle_group_migration(
@@ -45,6 +42,7 @@ async def handle_group_migration(
     async with container() as request_scope:
         migration_svc = await request_scope.get(MigrationService)
         group_svc = await request_scope.get(GroupService)
+        token_mgr = await request_scope.get(TokenManager)
 
         # 群聊存在性确认
         async with event_exception_failmsg_a(
@@ -127,7 +125,7 @@ async def handle_group_migration(
 
         # 生成 Token，发出提示并等待用户确认
         check_wait_time = 60
-        token = _token_manager.generate(ttl=check_wait_time)
+        token = token_mgr.generate(ttl=check_wait_time)
         logger.warning("迁移语录请求")
         logger.warning(
             "来源群：%s -> 目标群：%s", source.result, target.result,
@@ -152,7 +150,7 @@ async def handle_group_migration(
         if len(msgs) != 2 or msgs[0] != "确认":
             await matcher_group_migration.finish("已取消迁移操作~")
 
-        token_suc, reason = _token_manager.verify_and_use(msgs[1].strip())
+        token_suc, reason = token_mgr.verify_and_use(msgs[1].strip())
         if not token_suc:
             await matcher_group_migration.finish(
                 f"Token 验证失败喵~ 原因：{reason}"

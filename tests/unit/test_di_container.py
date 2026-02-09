@@ -19,6 +19,7 @@ from dishka import AsyncContainer, Scope
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from nonebot_plugin_zikequote3.database.image_store import ImageStore
+from nonebot_plugin_zikequote3.utils.token_generate import TokenManager
 from nonebot_plugin_zikequote3.database.repositories import (
     GroupConfigRepository,
     GroupMemberRepository,
@@ -134,6 +135,29 @@ class TestInfraProvider:
             store = await app_scope.get(ImageStore)
             assert isinstance(store, ImageStore)
             assert store.storage_path == tmp_path / "images"
+        await container.close()
+
+    async def test_provide_token_manager(self) -> None:
+        """InfraProvider 能正确提供 TokenManager。"""
+        container = create_container(
+            db_path=":memory:",
+            image_store_path=Path("__test_images_not_used__"),
+        )
+        async with container() as app_scope:
+            tm = await app_scope.get(TokenManager)
+            assert isinstance(tm, TokenManager)
+        await container.close()
+
+    async def test_token_manager_is_singleton(self) -> None:
+        """同一 APP 作用域内获取的 TokenManager 是同一实例。"""
+        container = create_container(
+            db_path=":memory:",
+            image_store_path=Path("__test_images_not_used__"),
+        )
+        async with container() as app_scope:
+            tm1 = await app_scope.get(TokenManager)
+            tm2 = await app_scope.get(TokenManager)
+            assert tm1 is tm2
         await container.close()
 
 
