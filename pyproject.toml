@@ -33,6 +33,9 @@ dependencies = [
   "nonebot-plugin-htmlrender>=0.6.7",
   "aiohttp>=3.13.1",
   "nonebot-plugin-waiter>=0.8.1",
+  "sqlalchemy[asyncio]>=2.0.0",
+  "aiosqlite>=0.20.0",
+  "dishka>=1.0.0",
 ]
 
 [project.optional-dependencies]
