@@ -15,7 +15,7 @@ import logging
 from nonebot.adapters.onebot.v11 import GroupMessageEvent
 from nonebot.typing import T_State
 
-from ..command_definition_new import matcher_update_quote_force
+from ..command_definition import matcher_update_quote_force
 from ...di import get_container
 from ...services import QuoteCollectionService
 from ...utils.error_report import event_exception_failmsg_a

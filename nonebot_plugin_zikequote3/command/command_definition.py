@@ -1,9 +1,46 @@
-from ..imports import on_message, on_command, on_alconna, perm_nodes, default_cfg
+"""
+命令定义（matcher 注册）—— dishka DI 版本。
+
+替代旧的 command_definition.py，消除 ``from ..imports import *``，
+改用显式导入所需的 NoneBot 类型和第三方库。
+
+所有 matcher 变量名、命令名、别名、优先级均与旧版保持一致，
+供 handler 文件引用。
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+from nonebot import on_command, on_message
+from nonebot_plugin_alconna import on_alconna
 from arclet.alconna import Alconna, Arg, Option, AllParam, store_true, store_false
 from nonebot_plugin_alconna.uniseg.segment import At
 
+# ---------------------------------------------------------------------------
+# 权限节点 —— 显式创建，不再依赖 imports.py 的全局 perm_nodes
+# ---------------------------------------------------------------------------
+from nonebot_plugin_access_control_api.service import create_plugin_service
+from ..services.permission_management.permission_node_definition import (
+    PermissionServiceNodes,
+)
 
+perm_nodes = PermissionServiceNodes(create_plugin_service("zikequote3"))
+
+# ---------------------------------------------------------------------------
+# 默认配置 —— 仅加载本地 TOML 默认值，不依赖数据库
+# ---------------------------------------------------------------------------
+import tomlkit
+from ..config import parse_config_from_toml
+
+_default_cfg_path = Path(__file__).resolve().parent.parent / "config.toml"
+_default_cfg_toml = tomlkit.parse(_default_cfg_path.read_text(encoding="utf-8"))
+default_cfg = parse_config_from_toml(_default_cfg_toml)
+
+
+# ===================================================================
 # region 自动收集事件
+# ===================================================================
 
 matcher_collecting_listener = on_message(
     priority=15, block=False
@@ -13,7 +50,9 @@ perm_nodes.n_becollected_llm.patch_matcher(matcher_collecting_listener)
 
 # endregion
 
+# ===================================================================
 # region 语录统计命令
+# ===================================================================
 
 cmdname_get_ranking = (
     "语录rank", "语录ranking", "语录排行", "语录排行榜",
@@ -68,7 +107,9 @@ perm_nodes.n_listing.patch_matcher(matcher_get_user_info)
 
 # endregion
 
+# ===================================================================
 # region 语录修改命令
+# ===================================================================
 
 cmdname_add_quote = ("加语录", "添加语录", "新增语录", "语录添加")
 matcher_add_quote = on_command(
@@ -94,10 +135,10 @@ matcher_add_quote_image = on_command(
 perm_nodes.n_quote_attachimage.patch_matcher(matcher_add_quote_image)
 
 
-cmdname_remove_quote_image = ("删语录", "删除语录", "语录删除")
+cmdname_remove_quote = ("删语录", "删除语录", "语录删除")
 matcher_remove_quote = on_command(
-    cmdname_remove_quote_image[0],
-    aliases=set(cmdname_remove_quote_image[1:]),
+    cmdname_remove_quote[0],
+    aliases=set(cmdname_remove_quote[1:]),
     priority=10, block=True
 )
 perm_nodes.n_quote_delete.patch_matcher(matcher_remove_quote)
@@ -144,7 +185,9 @@ perm_nodes.n_review_delete.patch_matcher(matcher_remove_quote_comment)
 
 # endregion
 
+# ===================================================================
 # region 语录查询命令
+# ===================================================================
 
 cmdname_random_quote = (
     "语录", "quote", "随机语录", "随机quote",
@@ -170,7 +213,7 @@ perm_nodes.n_get_card.patch_matcher(matcher_random_quote_card)
 
 cmdname_search_quote = (
     "查语录", "查询语录", "语录搜索", "语录查找",
-    "搜语录", "找语录", "搜语录", "找语录", 
+    "搜语录", "找语录", "搜语录", "找语录",
     "搜索语录", "查找语录", "寻找语录", "检索语录"
 )
 alc_search_quote = Alconna(
@@ -205,7 +248,9 @@ perm_nodes.n_get_image.patch_matcher(matcher_random_quote_image)
 
 # endregion
 
+# ===================================================================
 # region 普通操作命令
+# ===================================================================
 
 cmdname_update_quote_force = (
     "语录强制更新", "更新语录", "语录更新", "强制更新语录",
@@ -221,10 +266,12 @@ perm_nodes.n_forcerefresh.patch_matcher(matcher_update_quote_force)
 
 # endregion
 
+# ===================================================================
 # region 插件配置命令
+# ===================================================================
 
 cmdname_get_current_config = (
-    "当前语录设置", "查看语录设置", "查看语录配置", 
+    "当前语录设置", "查看语录设置", "查看语录配置",
     "语录配置查看", "语录设置查看", "查看当前语录设置", "查看当前语录配置"
 )
 matcher_get_current_config = on_command(
@@ -236,7 +283,7 @@ perm_nodes.n_settings_get.patch_matcher(matcher_get_current_config)
 
 
 cmdname_modify_config = (
-    "修改语录设置", "修改语录配置", "设置语录设置", "设置语录配置", 
+    "修改语录设置", "修改语录配置", "设置语录设置", "设置语录配置",
     "更改语录设置", "更改语录配置", "更新语录设置", "更新语录配置",
     "set_quote_setting", "set_quote_config"
 )
@@ -249,7 +296,7 @@ perm_nodes.n_settings_modify_group.patch_matcher(matcher_modify_config)
 
 
 cmdname_batch_modify_config = (
-    "批量修改语录设置", "批量修改语录配置", "批量设置语录设置", "批量设置语录配置", 
+    "批量修改语录设置", "批量修改语录配置", "批量设置语录设置", "批量设置语录配置",
     "批量更改语录设置", "批量更改语录配置", "批量更新语录设置", "批量更新语录配置",
 )
 matcher_batch_modify_config = on_command(
@@ -284,8 +331,9 @@ perm_nodes.n_settings_modify.patch_matcher(matcher_reload_config)
 
 # endregion
 
+# ===================================================================
 # region 其他命令
-
+# ===================================================================
 
 cmdname_group_migration = (
     "迁移群语录", "迁移所有群语录", "移动群语录", "移动所有群语录",

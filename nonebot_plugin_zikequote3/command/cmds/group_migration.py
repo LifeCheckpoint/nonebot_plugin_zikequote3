@@ -17,7 +17,7 @@ from typing import Any
 from nonebot.adapters.onebot.v11 import GroupMessageEvent
 from nonebot_plugin_alconna import Match, Query
 
-from ..command_definition_new import matcher_group_migration
+from ..command_definition import matcher_group_migration
 from ...di import get_container
 from ...services import MigrationService, GroupService
 from ...utils.error_report import event_exception_failmsg_a

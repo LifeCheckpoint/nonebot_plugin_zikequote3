@@ -19,7 +19,7 @@ from nonebot_plugin_alconna import Match, Query
 from nonebot_plugin_alconna.uniseg import UniMessage
 from pydantic import BaseModel
 
-from ..command_definition_new import matcher_search_quote
+from ..command_definition import matcher_search_quote
 from ...di import get_container
 from ...services import StatisticsService, QuoteReadService, UserService
 from ...database.image_store import ImageStore

@@ -16,7 +16,7 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot.adapters import Message
 from nonebot.params import CommandArg
 
-from ..command_definition_new import matcher_remove_quote_comment
+from ..command_definition import matcher_remove_quote_comment
 from ...di import get_container
 from ...services import ReviewService
 from ...utils.error_report import event_exception_failmsg_a

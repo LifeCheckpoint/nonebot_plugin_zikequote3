@@ -18,7 +18,7 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot.adapters import Message
 from nonebot.params import CommandArg
 
-from ..command_definition_new import matcher_get_ranking, default_cfg
+from ..command_definition import matcher_get_ranking, default_cfg
 from ...di import get_container
 from ...services import (
     GroupService,

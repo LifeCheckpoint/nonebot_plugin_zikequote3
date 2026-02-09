@@ -112,7 +112,7 @@ class TestDatabaseTableCreation:
 
 
 class TestStartupFlow:
-    """模拟 __init__new.py 中 _startup 的完整初始化流程。"""
+    """模拟 __init__.py 中 _startup 的完整初始化流程。"""
 
     async def test_full_startup_simulation(self, tmp_path: Path) -> None:
         """

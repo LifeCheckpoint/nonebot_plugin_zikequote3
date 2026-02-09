@@ -16,7 +16,7 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot_plugin_alconna import Match
 from nonebot_plugin_alconna.uniseg.segment import At
 
-from ..command_definition_new import matcher_get_user_info
+from ..command_definition import matcher_get_user_info
 from ...di import get_container
 from ...services import StatisticsService, UserService
 from ...utils.error_report import event_exception_failmsg_a

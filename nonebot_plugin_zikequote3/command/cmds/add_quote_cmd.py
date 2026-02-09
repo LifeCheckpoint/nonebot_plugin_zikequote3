@@ -14,7 +14,7 @@ from nonebot.adapters.onebot.v11 import (
     GroupMessageEvent,
 )
 
-from ..command_definition_new import matcher_add_quote
+from ..command_definition import matcher_add_quote
 from ...di import get_container
 from ...services import QuoteWriteService, UserService, GroupService
 from ...database.image_store import ImageStore

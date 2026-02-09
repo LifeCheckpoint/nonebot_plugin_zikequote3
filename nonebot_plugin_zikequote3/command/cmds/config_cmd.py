@@ -18,7 +18,7 @@ from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment as Msg
 from nonebot.adapters import Message
 from nonebot.params import CommandArg
 
-from ..command_definition_new import (
+from ..command_definition import (
     matcher_get_current_config,
     matcher_modify_config,
     matcher_batch_modify_config,

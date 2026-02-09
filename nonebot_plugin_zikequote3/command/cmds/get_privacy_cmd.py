@@ -11,7 +11,7 @@ import logging
 
 from nonebot.adapters.onebot.v11 import MessageSegment as MsgSeg
 
-from ..command_definition_new import matcher_get_privacy
+from ..command_definition import matcher_get_privacy
 from ...paths import PluginPath
 from ...templates import md as md_template
 from ...html_capture import html_img_render

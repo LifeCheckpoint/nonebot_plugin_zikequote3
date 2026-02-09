@@ -18,7 +18,7 @@ from typing import Any
 
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent
 
-from ..command_definition_new import matcher_collecting_listener
+from ..command_definition import matcher_collecting_listener
 from ...di import get_container
 from ...services import (
     QuoteCollectionService,

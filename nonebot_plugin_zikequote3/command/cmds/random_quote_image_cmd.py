@@ -17,7 +17,7 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot.adapters import Message
 from nonebot.params import CommandArg
 
-from ..command_definition_new import matcher_random_quote_image
+from ..command_definition import matcher_random_quote_image
 from ...di import get_container
 from ...services import QuoteReadService, QuoteWriteService, UserService
 from ...database.image_store import ImageStore

@@ -17,7 +17,7 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot_plugin_alconna import Match
 from nonebot_plugin_alconna.uniseg.segment import At
 
-from ..command_definition_new import matcher_get_quote_list
+from ..command_definition import matcher_get_quote_list
 from ..parse_helper.datatype_parse import parse_page_range
 from ...di import get_container
 from ...services import QuoteReadService, StatisticsService, UserService

@@ -16,7 +16,7 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot.adapters import Message
 from nonebot.params import CommandArg
 
-from ..command_definition_new import (
+from ..command_definition import (
     matcher_add_quote_comment,
     matcher_add_quote_comment_no_prefix,
 )
