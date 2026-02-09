@@ -25,6 +25,9 @@ from nonebot_plugin_zikequote3.database.repositories.image_repository import (
 from nonebot_plugin_zikequote3.database.repositories.mapping_repository import (
     MappingRepository,
 )
+from nonebot_plugin_zikequote3.database.repositories.msg_queue_repository import (
+    MsgQueueRepository,
+)
 from nonebot_plugin_zikequote3.database.repositories.quote_repository import (
     QuoteRepository,
 )
@@ -38,8 +41,12 @@ from nonebot_plugin_zikequote3.database.repositories.user_repository import (
     UserRepository,
 )
 from nonebot_plugin_zikequote3.services.new.group_service import GroupService
+from nonebot_plugin_zikequote3.services.new.quote_collection_service import (
+    QuoteCollectionService,
+)
 from nonebot_plugin_zikequote3.services.new.quote_read_service import QuoteReadService
 from nonebot_plugin_zikequote3.services.new.quote_write_service import QuoteWriteService
+from nonebot_plugin_zikequote3.services.new.review_service import ReviewService
 from nonebot_plugin_zikequote3.services.new.user_service import UserService
 
 
@@ -89,6 +96,11 @@ def mock_mapping_repo() -> AsyncMock:
 @pytest.fixture
 def mock_review_repo() -> AsyncMock:
     return AsyncMock(spec=ReviewRepository)
+
+
+@pytest.fixture
+def mock_msg_queue_repo() -> AsyncMock:
+    return AsyncMock(spec=MsgQueueRepository)
 
 
 # ---- Service fixtures ---- #
@@ -149,4 +161,52 @@ def quote_read_service(
         review_repo=mock_review_repo,
         image_repo=mock_image_repo,
         user_service=user_service,
+    )
+
+
+@pytest.fixture
+def quote_collection_service(
+    mock_msg_queue_repo: AsyncMock,
+    mock_quote_repo: AsyncMock,
+    mock_image_repo: AsyncMock,
+    mock_mapping_repo: AsyncMock,
+    mock_user_repo: AsyncMock,
+    mock_user_nickname_repo: AsyncMock,
+    mock_group_nickname_repo: AsyncMock,
+    mock_group_member_repo: AsyncMock,
+    mock_group_repo: AsyncMock,
+) -> QuoteCollectionService:
+    us = UserService(
+        user_repo=mock_user_repo,
+        user_nickname_repo=mock_user_nickname_repo,
+        group_nickname_repo=mock_group_nickname_repo,
+        group_member_repo=mock_group_member_repo,
+    )
+    qws = QuoteWriteService(
+        quote_repo=mock_quote_repo,
+        image_repo=mock_image_repo,
+        mapping_repo=mock_mapping_repo,
+        user_service=us,
+    )
+    gs = GroupService(
+        group_repo=mock_group_repo,
+        group_member_repo=mock_group_member_repo,
+        group_nickname_repo=mock_group_nickname_repo,
+    )
+    return QuoteCollectionService(
+        msg_queue_repo=mock_msg_queue_repo,
+        quote_write_service=qws,
+        user_service=us,
+        group_service=gs,
+    )
+
+
+@pytest.fixture
+def review_service(
+    mock_review_repo: AsyncMock,
+    mock_quote_repo: AsyncMock,
+) -> ReviewService:
+    return ReviewService(
+        review_repo=mock_review_repo,
+        quote_repo=mock_quote_repo,
     )
