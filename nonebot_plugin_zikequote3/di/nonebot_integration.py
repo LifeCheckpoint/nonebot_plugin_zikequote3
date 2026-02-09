@@ -3,19 +3,22 @@ NoneBot2 与 dishka 的桥接层。
 
 由于 dishka 没有官方 NoneBot2 集成，此模块提供：
 - setup_dishka(): 将 AsyncContainer 绑定到 NoneBot Driver 生命周期
-- inject: 从 dishka 导入的注入装饰器（供 handler 使用）
+- get_container(): 获取已绑定的 AsyncContainer 实例（供 handler 使用）
 
 注意：此模块依赖 NoneBot2 运行时，单元测试中不测试此模块。
 """
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from dishka import AsyncContainer
 
 if TYPE_CHECKING:
     from nonebot.internal.driver import Driver
+
+# 模块级容器引用，由 setup_dishka() 设置
+_container: Optional[AsyncContainer] = None
 
 
 def setup_dishka(container: AsyncContainer, driver: "Driver") -> None:
@@ -29,7 +32,27 @@ def setup_dishka(container: AsyncContainer, driver: "Driver") -> None:
         container: 已组装好的 dishka AsyncContainer。
         driver: NoneBot Driver 实例。
     """
+    global _container
+    _container = container
 
     @driver.on_shutdown
     async def _shutdown_container() -> None:
+        global _container
         await container.close()
+        _container = None
+
+
+def get_container() -> AsyncContainer:
+    """
+    获取已绑定的 dishka AsyncContainer 实例。
+
+    必须在 ``setup_dishka()`` 调用之后使用（即 NoneBot startup 之后）。
+
+    Raises:
+        RuntimeError: 容器尚未初始化。
+    """
+    if _container is None:
+        raise RuntimeError(
+            "dishka 容器尚未初始化，请确保 setup_dishka() 已被调用"
+        )
+    return _container

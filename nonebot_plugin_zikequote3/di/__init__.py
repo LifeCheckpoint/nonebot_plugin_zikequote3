@@ -5,5 +5,6 @@ dishka 依赖注入集成层。
 """
 
 from .container import create_container
+from .nonebot_integration import get_container
 
-__all__ = ["create_container"]
+__all__ = ["create_container", "get_container"]
