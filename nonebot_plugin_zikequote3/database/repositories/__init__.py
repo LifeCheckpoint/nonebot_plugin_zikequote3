@@ -10,6 +10,7 @@ from .group_repository import GroupRepository
 from .image_repository import ImageRepository
 from .mapping_repository import MappingRepository
 from .msg_queue_repository import MsgQueueRepository
+from .quote_repository import QuoteRepository
 from .review_repository import ReviewRepository
 from .user_nickname_repository import UserNicknameRepository
 from .user_repository import UserRepository
@@ -23,6 +24,7 @@ __all__ = [
     "ImageRepository",
     "MappingRepository",
     "MsgQueueRepository",
+    "QuoteRepository",
     "ReviewRepository",
     "UserNicknameRepository",
     "UserRepository",
