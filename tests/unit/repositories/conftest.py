@@ -11,6 +11,7 @@ from nonebot_plugin_zikequote3.database.repositories.group_repository import Gro
 from nonebot_plugin_zikequote3.database.repositories.image_repository import ImageRepository
 from nonebot_plugin_zikequote3.database.repositories.mapping_repository import MappingRepository
 from nonebot_plugin_zikequote3.database.repositories.msg_queue_repository import MsgQueueRepository
+from nonebot_plugin_zikequote3.database.repositories.quote_repository import QuoteRepository
 from nonebot_plugin_zikequote3.database.repositories.review_repository import ReviewRepository
 from nonebot_plugin_zikequote3.database.repositories.user_nickname_repository import UserNicknameRepository
 from nonebot_plugin_zikequote3.database.repositories.user_repository import UserRepository
@@ -64,3 +65,8 @@ def review_repo(async_session) -> ReviewRepository:
 @pytest.fixture
 def msg_queue_repo(async_session) -> MsgQueueRepository:
     return MsgQueueRepository(async_session)
+
+
+@pytest.fixture
+def quote_repo(async_session) -> QuoteRepository:
+    return QuoteRepository(async_session)

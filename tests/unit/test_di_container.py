@@ -4,6 +4,7 @@ dishka DI 容器单元测试。
 测试内容：
 - DatabaseProvider 提供 AsyncEngine 和 AsyncSession
 - InfraProvider 提供 ImageStore
+- RepositoryProvider 提供全部 11 个 Repository
 - create_container() 组装容器
 - AsyncSession 在 REQUEST 作用域结束后被正确关闭
 """
@@ -17,6 +18,19 @@ from dishka import AsyncContainer, Scope
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from nonebot_plugin_zikequote3.database.image_store import ImageStore
+from nonebot_plugin_zikequote3.database.repositories import (
+    GroupConfigRepository,
+    GroupMemberRepository,
+    GroupNicknameRepository,
+    GroupRepository,
+    ImageRepository,
+    MappingRepository,
+    MsgQueueRepository,
+    QuoteRepository,
+    ReviewRepository,
+    UserNicknameRepository,
+    UserRepository,
+)
 from nonebot_plugin_zikequote3.di.container import create_container
 from nonebot_plugin_zikequote3.di.providers.database_provider import DatabaseProvider
 
@@ -155,4 +169,39 @@ class TestCreateContainer:
         async with container() as req2:
             s2 = await req2.get(AsyncSession)
         assert s1 is not s2
+        await container.close()
+
+
+# ---------------------------------------------------------------------------
+# RepositoryProvider 测试
+# ---------------------------------------------------------------------------
+
+
+class TestRepositoryProvider:
+    """RepositoryProvider 单元测试 —— 验证全部 11 个 Repository 可被正确提供。"""
+
+    _ALL_REPO_TYPES = [
+        UserRepository,
+        GroupRepository,
+        GroupMemberRepository,
+        ImageRepository,
+        MappingRepository,
+        GroupConfigRepository,
+        UserNicknameRepository,
+        GroupNicknameRepository,
+        ReviewRepository,
+        MsgQueueRepository,
+        QuoteRepository,
+    ]
+
+    @pytest.mark.parametrize("repo_type", _ALL_REPO_TYPES, ids=lambda t: t.__name__)
+    async def test_provide_repository(self, repo_type) -> None:
+        """RepositoryProvider 能在 REQUEST 作用域提供指定 Repository。"""
+        container = create_container(
+            db_path=":memory:",
+            image_store_path=Path("__test_images_not_used__"),
+        )
+        async with container() as request_scope:
+            repo = await request_scope.get(repo_type)
+            assert isinstance(repo, repo_type)
         await container.close()
