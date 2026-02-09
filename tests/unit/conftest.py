@@ -4,14 +4,40 @@
 提供基于 SQLAlchemy async + aiosqlite 的内存数据库基础设施。
 ORM 模型尚未定义，init_db fixture 为占位版本，等子任务 4/5 完成后激活。
 
-注意：覆盖了 nonebug 的 _nonebot_init fixture，单元测试不需要 nonebot 环境。
+注意：
+- 覆盖了 nonebug 的 _nonebot_init fixture，单元测试不需要 nonebot 环境。
+- 在导入插件子模块前，预注册父包 stub 以绕过 nonebot 初始化链。
 """
 
+import sys
+import types
+from pathlib import Path
+
+# ---------------------------------------------------------------------------
+# 预注册父包 stub，避免导入 database.sa 时触发
+# nonebot_plugin_zikequote3/__init__.py → imports.py → nonebot 初始化链
+# ---------------------------------------------------------------------------
+_plugin_root = Path(__file__).resolve().parent.parent.parent / "nonebot_plugin_zikequote3"
+
+if "nonebot_plugin_zikequote3" not in sys.modules:
+    _stub_pkg = types.ModuleType("nonebot_plugin_zikequote3")
+    _stub_pkg.__path__ = [str(_plugin_root)]
+    sys.modules["nonebot_plugin_zikequote3"] = _stub_pkg
+
+_database_root = _plugin_root / "database"
+if "nonebot_plugin_zikequote3.database" not in sys.modules:
+    _stub_db = types.ModuleType("nonebot_plugin_zikequote3.database")
+    _stub_db.__path__ = [str(_database_root)]
+    sys.modules["nonebot_plugin_zikequote3.database"] = _stub_db
+
+# ---------------------------------------------------------------------------
+# 现在可以安全导入 SA 基础设施模块
+# ---------------------------------------------------------------------------
 import pytest
-from sqlalchemy.ext.asyncio import (
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine,
+
+from nonebot_plugin_zikequote3.database.sa import (
+    create_async_engine_factory,
+    create_async_session_factory,
 )
 
 
@@ -35,23 +61,16 @@ async def nonebug_init():
 
 @pytest.fixture(scope="session")
 async def async_engine():
-    """创建 session 级别的异步内存数据库引擎。"""
-    engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:",
-        echo=False,
-    )
+    """创建 session 级别的异步内存数据库引擎（使用 SA 工厂，含 PRAGMA 监听器）。"""
+    engine = create_async_engine_factory(":memory:")
     yield engine
     await engine.dispose()
 
 
 @pytest.fixture(scope="session")
 def async_session_factory(async_engine):
-    """创建 session 级别的异步 session 工厂。"""
-    return async_sessionmaker(
-        bind=async_engine,
-        class_=AsyncSession,
-        expire_on_commit=False,
-    )
+    """创建 session 级别的异步 session 工厂（使用 SA 工厂）。"""
+    return create_async_session_factory(async_engine)
 
 
 @pytest.fixture(scope="session")
