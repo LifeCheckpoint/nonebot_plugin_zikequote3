@@ -1,76 +1,105 @@
-from ...imports import *
-from ..command_definition import *
+"""
+评论语录命令处理器（dishka DI 版本）。
+
+替代旧的 add_quote_comment_cmd.py，消除星号导入和延迟导入，
+通过 dishka 容器获取服务依赖。
+"""
+
+from __future__ import annotations
+
+import logging
+
+from nonebot.adapters.onebot.v11 import (
+    Bot,
+    GroupMessageEvent,
+)
+from nonebot.adapters import Message
+from nonebot.params import CommandArg
+
+from ..command_definition_new import (
+    matcher_add_quote_comment,
+    matcher_add_quote_comment_no_prefix,
+)
+from ...di import get_container
+from ...services import QuoteWriteService, ReviewService, GroupService
+from ...utils.error_report import event_exception_failmsg_a, event_exception
+
+logger = logging.getLogger(__name__)
 
 
 @matcher_add_quote_comment.handle()
-async def f_add_quote_comment(event: GroupME, bot: Bot, arg: Message = CommandArg()):
-    """
-    评论语录
-
-    语录评论方式：
-    `(reply) /评语录 评价`
-    """
-    from ...services.quote_management.mapping_service import s_get_mapping_by_msgid
-    from ...services.review_management.review_service import s_add_review
-    from ...services.user_management.group_relationship_service import s_ensure_user_group_mapping
-    
-    # 判断 reply
+async def handle_add_quote_comment(
+    event: GroupMessageEvent,
+    bot: Bot,
+    arg: Message = CommandArg(),
+) -> None:
+    """评论语录（带命令前缀）。"""
     reply = event.reply
     content = arg.extract_plain_text().strip()
-    if reply == None or content == "":
+    if reply is None or content == "":
         await matcher_add_quote_comment.finish("请回复一条语录并输入评论内容哦~")
 
-    async with event_exception_failmsg_a(matcher_add_quote_comment, "添加评论"):
-        # 获取语录 ID
-        quote_id = s_get_mapping_by_msgid(str(reply.message_id))
-        if quote_id is None:
-            raise ValueError("未找到对应语录，无法评论呢~")
-        
-        # 添加评论
-        s_add_review(
-            user_id=str(event.sender.user_id),
-            quote_id=quote_id,
-            content=content,
-        )
+    group_id = str(event.group_id)
 
-        await matcher_add_quote_comment.send("评论添加成功~(≧▽≦)")
-    
-    # 检查用户-群映射存在性
-    with event_exception(operation="ignore"):
-        await s_ensure_user_group_mapping(str(event.group_id), str(event.sender.user_id), bot)
-    
-    # TODO: 添加消息映射
+    container = get_container()
+    async with container() as request_scope:
+        quote_write_svc = await request_scope.get(QuoteWriteService)
+        review_svc = await request_scope.get(ReviewService)
+        group_svc = await request_scope.get(GroupService)
 
-
-
-if matcher_add_quote_comment_no_prefix is not None:
-    @matcher_add_quote_comment_no_prefix.handle()
-    async def f_add_quote_comment_no_prefix(event: GroupME, bot: Bot):
-        """
-        静默评论语录（无前缀）
-
-        语录评论方式：
-        `(reply) 评价`
-        """
-        from ...services.quote_management.mapping_service import s_get_mapping_by_msgid
-        from ...services.review_management.review_service import s_add_review
-        
-        # 判断 reply
-        reply = event.reply
-        content = event.get_plaintext().strip()
-        if reply == None or content == "":
-            return  # 不处理
-
-        async with event_exception_failmsg_a(matcher_add_quote_comment_no_prefix, "添加评论"):
+        async with event_exception_failmsg_a(matcher_add_quote_comment, "添加评论"):
             # 获取语录 ID
-            quote_id = s_get_mapping_by_msgid(str(reply.message_id))
+            quote_id = await quote_write_svc.get_quote_id_by_msg_id(str(reply.message_id))
             if quote_id is None:
-                # 正常消息，不要处理
-                return
-            
+                raise ValueError("未找到对应语录，无法评论呢~")
+
             # 添加评论
-            s_add_review(
-                user_id=str(event.sender.user_id),
+            await review_svc.add_review(
                 quote_id=quote_id,
+                author_id=str(event.sender.user_id),
                 content=content,
             )
+
+            await matcher_add_quote_comment.send("评论添加成功~(≧▽≦)")
+
+        # 检查用户-群映射存在性
+        with event_exception(operation="ignore"):
+            await group_svc.ensure_member(group_id, str(event.sender.user_id))
+
+
+# 无前缀评论（静默模式）
+if matcher_add_quote_comment_no_prefix is not None:
+
+    @matcher_add_quote_comment_no_prefix.handle()
+    async def handle_add_quote_comment_no_prefix(
+        event: GroupMessageEvent,
+        bot: Bot,
+    ) -> None:
+        """静默评论语录（无前缀）。"""
+        reply = event.reply
+        content = event.get_plaintext().strip()
+        if reply is None or content == "":
+            return  # 不处理
+
+        container = get_container()
+        async with container() as request_scope:
+            quote_write_svc = await request_scope.get(QuoteWriteService)
+            review_svc = await request_scope.get(ReviewService)
+
+            async with event_exception_failmsg_a(
+                matcher_add_quote_comment_no_prefix, "添加评论"
+            ):
+                # 获取语录 ID
+                quote_id = await quote_write_svc.get_quote_id_by_msg_id(
+                    str(reply.message_id)
+                )
+                if quote_id is None:
+                    # 正常消息，不要处理
+                    return
+
+                # 添加评论
+                await review_svc.add_review(
+                    quote_id=quote_id,
+                    author_id=str(event.sender.user_id),
+                    content=content,
+                )
