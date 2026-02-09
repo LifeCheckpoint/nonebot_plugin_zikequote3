@@ -2,7 +2,7 @@
 单元测试 conftest —— Repository 测试用的内存数据库 fixtures。
 
 提供基于 SQLAlchemy async + aiosqlite 的内存数据库基础设施。
-ORM 模型尚未定义，init_db fixture 为占位版本，等子任务 4/5 完成后激活。
+init_db fixture 会通过 Base.metadata.create_all 创建所有 ORM 模型对应的表。
 
 注意：
 - 覆盖了 nonebug 的 _nonebot_init fixture，单元测试不需要 nonebot 环境。
@@ -38,6 +38,16 @@ import pytest
 from nonebot_plugin_zikequote3.database.sa import (
     create_async_engine_factory,
     create_async_session_factory,
+)
+from nonebot_plugin_zikequote3.database.sa.base import Base
+
+# 导入所有 ORM 模型，确保 Base.metadata 注册了全部表
+from nonebot_plugin_zikequote3.database.sa.models import (  # noqa: F401
+    GroupMemberModel,
+    GroupModel,
+    GroupNicknameModel,
+    UserModel,
+    UserNicknameModel,
 )
 
 
@@ -76,18 +86,12 @@ def async_session_factory(async_engine):
 @pytest.fixture(scope="session")
 async def init_db(async_engine):
     """
-    初始化数据库表结构（占位版本）。
+    初始化数据库表结构。
 
-    当前 ORM 模型尚未定义，此 fixture 暂时为空操作。
-    等子任务 4/5 完成 ORM 模型定义后，替换为：
-
-        from nonebot_plugin_zikequote3.database.orm import Base
-        async with async_engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-
-    届时 import 路径需根据实际 ORM 模块位置调整。
+    通过 ``Base.metadata.create_all`` 根据已注册的 ORM 模型创建所有表。
     """
-    # TODO: 子任务 4/5 完成后激活 metadata.create_all
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
     yield
 
 

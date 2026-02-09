@@ -108,22 +108,24 @@ class TestPragmaConfiguration:
 
 
 class TestMetadataCreateAll:
-    """验证 Base.metadata.create_all 在空数据库上可执行。"""
+    """验证 Base.metadata.create_all 可正确创建已注册的 ORM 模型表。"""
 
-    async def test_create_all_empty(self):
-        """无模型时 create_all 应成功且不创建任何表。"""
+    async def test_create_all_creates_registered_tables(self):
+        """create_all 应成功创建所有已注册 ORM 模型对应的表。"""
         engine = create_async_engine_factory(":memory:")
         try:
             async with engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
 
-            # 验证没有创建任何用户表
             async with engine.connect() as conn:
                 result = await conn.exec_driver_sql(
                     "SELECT name FROM sqlite_master "
                     "WHERE type='table' AND name NOT LIKE 'sqlite_%'"
                 )
-                tables = result.scalars().all()
-                assert tables == [], f"Expected no tables, got {tables}"
+                tables = set(result.scalars().all())
+                expected = {"users", "groups", "group_members", "user_nicknames", "group_nicknames"}
+                assert expected.issubset(tables), (
+                    f"Expected at least {expected}, got {tables}"
+                )
         finally:
             await engine.dispose()
