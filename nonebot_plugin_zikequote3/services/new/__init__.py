@@ -10,6 +10,9 @@ from .quote_write_service import QuoteWriteService
 from .quote_read_service import QuoteReadService
 from .quote_collection_service import QuoteCollectionService
 from .review_service import ReviewService
+from .statistics_service import StatisticsService
+from .config_service import ConfigService
+from .migration_service import MigrationService
 
 __all__ = [
     "UserService",
@@ -18,4 +21,7 @@ __all__ = [
     "QuoteReadService",
     "QuoteCollectionService",
     "ReviewService",
+    "StatisticsService",
+    "ConfigService",
+    "MigrationService",
 ]
