@@ -9,7 +9,7 @@ import pytest
 
 from nonebot_plugin_zikequote3.database.models.msgs_queue import MsgQueue
 from nonebot_plugin_zikequote3.exceptions import ValidationException
-from nonebot_plugin_zikequote3.services.new.quote_collection_service import (
+from nonebot_plugin_zikequote3.services.quote_collection_service import (
     CollectionLockError,
     QuoteCollectionService,
     SelectedQuote,
@@ -262,7 +262,7 @@ class TestCollectAndSave:
         mock_image_repo.image_exists.return_value = False
 
         with patch(
-            "nonebot_plugin_zikequote3.services.new.quote_write_service._generate_quote_id",
+            "nonebot_plugin_zikequote3.services.quote_write_service._generate_quote_id",
             return_value="99999999999",
         ):
             mock_quote_repo.create_quote.return_value = None

@@ -13,7 +13,7 @@ import pytest
 from nonebot_plugin_zikequote3.database.models.group_members import GroupMember
 from nonebot_plugin_zikequote3.database.models.group_nicknames import GroupNickname
 from nonebot_plugin_zikequote3.database.models.quotes import Quote
-from nonebot_plugin_zikequote3.services.new.migration_service import MigrationService
+from nonebot_plugin_zikequote3.services.migration_service import MigrationService
 
 
 def _make_quote(

@@ -18,7 +18,7 @@ from nonebot_plugin_zikequote3.exceptions import (
     ImageNotFoundError,
     QuoteNotFoundError,
 )
-from nonebot_plugin_zikequote3.services.new.quote_read_service import QuoteReadService
+from nonebot_plugin_zikequote3.services.quote_read_service import QuoteReadService
 
 
 # ------------------------------------------------------------------ #

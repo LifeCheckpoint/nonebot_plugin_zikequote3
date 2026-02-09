@@ -14,7 +14,7 @@ from aiohttp import ClientTimeout
 from nonebot_plugin_zikequote3.database.models.group_nicknames import GroupNickname
 from nonebot_plugin_zikequote3.database.models.user_nicknames import UserNickname
 from nonebot_plugin_zikequote3.database.models.users import User
-from nonebot_plugin_zikequote3.services.new.user_service import UserService
+from nonebot_plugin_zikequote3.services.user_service import UserService
 
 
 # ================================================================== #
@@ -367,7 +367,7 @@ class TestFetchAvatar:
         mock_client_cm.__aenter__.return_value = mock_session
 
         with patch(
-            "nonebot_plugin_zikequote3.services.new.user_service.aiohttp"
+            "nonebot_plugin_zikequote3.services.user_service.aiohttp"
         ) as mock_aiohttp:
             mock_aiohttp.ClientTimeout = ClientTimeout
             mock_aiohttp.ClientSession.return_value = mock_client_cm

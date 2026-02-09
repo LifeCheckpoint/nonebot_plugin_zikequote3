@@ -17,7 +17,7 @@ from nonebot_plugin_zikequote3.exceptions import (
     QuoteNotFoundError,
     ValidationException,
 )
-from nonebot_plugin_zikequote3.services.new.quote_write_service import (
+from nonebot_plugin_zikequote3.services.quote_write_service import (
     QuoteWriteService,
     _generate_quote_id,
 )

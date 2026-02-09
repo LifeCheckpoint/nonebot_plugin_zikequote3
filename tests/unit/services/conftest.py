@@ -43,17 +43,17 @@ from nonebot_plugin_zikequote3.database.repositories.user_repository import (
 from nonebot_plugin_zikequote3.database.repositories.group_config_repository import (
     GroupConfigRepository,
 )
-from nonebot_plugin_zikequote3.services.new.config_service import ConfigService
-from nonebot_plugin_zikequote3.services.new.group_service import GroupService
-from nonebot_plugin_zikequote3.services.new.migration_service import MigrationService
-from nonebot_plugin_zikequote3.services.new.quote_collection_service import (
+from nonebot_plugin_zikequote3.services.config_service import ConfigService
+from nonebot_plugin_zikequote3.services.group_service import GroupService
+from nonebot_plugin_zikequote3.services.migration_service import MigrationService
+from nonebot_plugin_zikequote3.services.quote_collection_service import (
     QuoteCollectionService,
 )
-from nonebot_plugin_zikequote3.services.new.quote_read_service import QuoteReadService
-from nonebot_plugin_zikequote3.services.new.quote_write_service import QuoteWriteService
-from nonebot_plugin_zikequote3.services.new.review_service import ReviewService
-from nonebot_plugin_zikequote3.services.new.statistics_service import StatisticsService
-from nonebot_plugin_zikequote3.services.new.user_service import UserService
+from nonebot_plugin_zikequote3.services.quote_read_service import QuoteReadService
+from nonebot_plugin_zikequote3.services.quote_write_service import QuoteWriteService
+from nonebot_plugin_zikequote3.services.review_service import ReviewService
+from nonebot_plugin_zikequote3.services.statistics_service import StatisticsService
+from nonebot_plugin_zikequote3.services.user_service import UserService
 
 
 # ---- Mock Repository fixtures ---- #

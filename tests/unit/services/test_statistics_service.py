@@ -12,7 +12,7 @@ import pytest
 from nonebot_plugin_zikequote3.database.models.group_members import GroupMember
 from nonebot_plugin_zikequote3.database.models.quotes import Quote
 from nonebot_plugin_zikequote3.exceptions import ResourceNotFoundError, ValidationException
-from nonebot_plugin_zikequote3.services.new.statistics_service import StatisticsService
+from nonebot_plugin_zikequote3.services.statistics_service import StatisticsService
 
 
 # ---------------------------------------------------------------------------

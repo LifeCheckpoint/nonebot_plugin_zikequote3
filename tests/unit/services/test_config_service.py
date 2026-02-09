@@ -10,7 +10,7 @@ import pytest
 
 from nonebot_plugin_zikequote3.database.models.group_configs import GroupConfigs
 from nonebot_plugin_zikequote3.exceptions import ResourceNotFoundError, ValidationException
-from nonebot_plugin_zikequote3.services.new.config_service import ConfigService
+from nonebot_plugin_zikequote3.services.config_service import ConfigService
 
 
 # ---------------------------------------------------------------------------

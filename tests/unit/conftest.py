@@ -36,12 +36,6 @@ if "nonebot_plugin_zikequote3.services" not in sys.modules:
     _stub_svc.__path__ = [str(_services_root)]
     sys.modules["nonebot_plugin_zikequote3.services"] = _stub_svc
 
-_services_new_root = _services_root / "new"
-if "nonebot_plugin_zikequote3.services.new" not in sys.modules:
-    _stub_svc_new = types.ModuleType("nonebot_plugin_zikequote3.services.new")
-    _stub_svc_new.__path__ = [str(_services_new_root)]
-    sys.modules["nonebot_plugin_zikequote3.services.new"] = _stub_svc_new
-
 # ---------------------------------------------------------------------------
 # 现在可以安全导入 SA 基础设施模块
 # ---------------------------------------------------------------------------

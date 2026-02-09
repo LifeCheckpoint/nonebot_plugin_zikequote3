@@ -10,7 +10,7 @@ import pytest
 from nonebot_plugin_zikequote3.database.models.quotes import Quote
 from nonebot_plugin_zikequote3.database.models.reviews import Review
 from nonebot_plugin_zikequote3.exceptions import QuoteNotFoundError, ResourceNotFoundError
-from nonebot_plugin_zikequote3.services.new.review_service import ReviewService
+from nonebot_plugin_zikequote3.services.review_service import ReviewService
 
 
 # ------------------------------------------------------------------ #
