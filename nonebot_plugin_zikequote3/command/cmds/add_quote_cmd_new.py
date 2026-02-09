@@ -16,7 +16,7 @@ from nonebot.adapters.onebot.v11 import (
 
 from ..command_definition_new import matcher_add_quote
 from ...di import get_container
-from ...services.new import QuoteWriteService, UserService, GroupService
+from ...services import QuoteWriteService, UserService, GroupService
 from ...database.image_store import ImageStore
 from ...utils.error_report import event_exception_failmsg_a, event_exception
 
