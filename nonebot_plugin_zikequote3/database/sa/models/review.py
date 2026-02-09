@@ -7,7 +7,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, String, Text
+from sqlalchemy import DateTime, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nonebot_plugin_zikequote3.database.sa.base import Base
@@ -23,7 +23,7 @@ class ReviewModel(Base):
 
     review_id: Mapped[str] = mapped_column(String, primary_key=True)
     time_stamp: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default="CURRENT_TIMESTAMP"
+        DateTime, nullable=False, default=func.now()
     )
     author_id: Mapped[str] = mapped_column(
         String, ForeignKey("users.qq_id"), nullable=False

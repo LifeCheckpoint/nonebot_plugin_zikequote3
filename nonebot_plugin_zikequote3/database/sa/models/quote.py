@@ -7,14 +7,16 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nonebot_plugin_zikequote3.database.sa.base import Base
 
 if TYPE_CHECKING:
+    from .group import GroupModel
     from .image import ImageModel
     from .review import ReviewModel
+    from .user import UserModel
 
 
 class QuoteModel(Base):
@@ -24,7 +26,7 @@ class QuoteModel(Base):
 
     quote_id: Mapped[str] = mapped_column(String, primary_key=True)
     time_stamp: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default="CURRENT_TIMESTAMP"
+        DateTime, nullable=False, default=func.now()
     )
     author_id: Mapped[str] = mapped_column(
         String, ForeignKey("users.qq_id"), nullable=False

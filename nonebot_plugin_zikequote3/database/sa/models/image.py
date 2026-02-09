@@ -7,7 +7,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import DateTime, String
+from sqlalchemy import DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from nonebot_plugin_zikequote3.database.sa.base import Base
@@ -25,7 +25,7 @@ class ImageModel(Base):
     stored_filename: Mapped[str] = mapped_column(String, nullable=False)
     file_path: Mapped[str] = mapped_column(String, nullable=False)
     time_stamp: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default="CURRENT_TIMESTAMP"
+        DateTime, nullable=False, default=func.now()
     )
     checksum_sha256: Mapped[str] = mapped_column(String, nullable=False)
 

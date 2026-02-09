@@ -43,11 +43,20 @@ from nonebot_plugin_zikequote3.database.sa.base import Base
 
 # 导入所有 ORM 模型，确保 Base.metadata 注册了全部表
 from nonebot_plugin_zikequote3.database.sa.models import (  # noqa: F401
+    # 基础实体
     GroupMemberModel,
     GroupModel,
     GroupNicknameModel,
     UserModel,
     UserNicknameModel,
+    # 业务实体
+    GroupConfigModel,
+    ImageModel,
+    MsgIdQuoteIdMapModel,
+    MsgQueueModel,
+    QueueGroupMessageCountModel,
+    QuoteModel,
+    ReviewModel,
 )
 
 

@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, Text
+from sqlalchemy import DateTime, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from nonebot_plugin_zikequote3.database.sa.base import Base
@@ -25,7 +25,7 @@ class MsgQueueModel(Base):
         String, ForeignKey("users.qq_id", ondelete="CASCADE"), nullable=False
     )
     time_stamp: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default="CURRENT_TIMESTAMP"
+        DateTime, nullable=False, default=func.now()
     )
     content: Mapped[str] = mapped_column(Text, nullable=False)
 
