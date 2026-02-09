@@ -4,23 +4,21 @@
 替代旧的 collecting_listener_cmd.py，消除星号导入和延迟导入，
 通过 dishka 容器获取服务依赖。
 
-注意：
-- 旧版本通过全局 cfg[group_id].collecting 访问收集配置（msg_max_length、
-  update_personal_info_probability 等），新版本暂时保留对旧配置模块的引用。
-- LLM 筛选流程由 QuoteCollectionService.collect_and_save 封装。
+收集配置通过 ConfigService.get_parsed_config() 获取，
+LLM 筛选流程由 QuoteCollectionService.collect_and_save 封装。
 """
 
 from __future__ import annotations
 
 import logging
 import random
-from typing import Any
 
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent
 
 from ..command_definition import matcher_collecting_listener
 from ...di import get_container
 from ...services import (
+    ConfigService,
     QuoteCollectionService,
     GroupService,
     UserService,
@@ -28,29 +26,6 @@ from ...services import (
 from ...utils.error_report import event_exception_a, event_exception
 
 logger = logging.getLogger(__name__)
-
-
-def _load_collecting_config(group_id: int) -> dict[str, Any]:
-    """
-    从旧配置模块加载收集相关配置。
-
-    TODO: 后续应通过 ConfigService 获取，不再依赖旧的全局 cfg。
-    """
-    defaults: dict[str, Any] = {
-        "msg_max_length": 500,
-        "update_personal_info_probability": 0.05,
-        "pickup_interval": 80,
-    }
-    try:
-        from ...imports import cfg
-        group_cfg = cfg[group_id].collecting
-        return {
-            "msg_max_length": group_cfg.msg_max_length,
-            "update_personal_info_probability": group_cfg.update_personal_info_probability,
-            "pickup_interval": group_cfg.pickup_interval,
-        }
-    except Exception:
-        return defaults
 
 
 @matcher_collecting_listener.handle()
@@ -67,21 +42,22 @@ async def handle_collecting_listener(
     user_id = str(event.user_id)
     msg = event.get_plaintext().strip()
 
-    # 加载收集配置
-    col_cfg = _load_collecting_config(event.group_id)
-    max_length: int = col_cfg["msg_max_length"]
-    update_prob: float = col_cfg["update_personal_info_probability"]
-    pickup_interval: int = col_cfg["pickup_interval"]
-
-    # 验证收录条件
-    if not msg or msg == "" or len(msg) > max_length:
-        return
-
     container = get_container()
     async with container() as request_scope:
+        config_svc = await request_scope.get(ConfigService)
         collection_svc = await request_scope.get(QuoteCollectionService)
         group_svc = await request_scope.get(GroupService)
         user_svc = await request_scope.get(UserService)
+
+        # 通过 ConfigService 加载收集配置
+        parsed_cfg = await config_svc.get_parsed_config(group_id)
+        max_length: int = parsed_cfg.collecting.msg_max_length
+        update_prob: float = parsed_cfg.collecting.update_personal_info_probability
+        pickup_interval: int = parsed_cfg.collecting.pickup_interval
+
+        # 验证收录条件
+        if not msg or msg == "" or len(msg) > max_length:
+            return
 
         # 入队与阈值检查
         is_threshold = False

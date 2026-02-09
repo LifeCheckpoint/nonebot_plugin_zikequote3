@@ -92,13 +92,7 @@ async def handle_modify_config(
             except Exception as e:
                 raise ValueError(f"输入的参数，好奇怪喵X_X: {e}")
 
-            # TODO: ConfigService 目前没有 modify_single_value 方法，
-            # 旧版本使用 config.modify_group_config(group_id, schema_str, new_value)。
-            # 需要后续在 ConfigService 中补充按 schema_path 修改单个配置值的方法。
-            # 暂时使用旧模块的方式处理。
-            from ...config import modify_group_config
-            modify_group_config(event.group_id, schema_str, new_value, reload=True)
-
+            await config_svc.modify_single_value(group_id, schema_str, new_value)
             await matcher_modify_config.finish("配置修改成功~")
 
 # endregion
@@ -140,13 +134,13 @@ async def handle_reset_config(event: GroupMessageEvent) -> None:
 
 @matcher_reload_config.handle()
 async def handle_reload_config(event: GroupMessageEvent) -> None:
-    """重载当前群组配置。"""
-    # TODO: 旧版本使用 imports.notify_reload_config() 热更新全局配置。
-    # 该功能依赖旧的全局配置加载机制，暂时保留对旧模块的引用。
-    async with event_exception_failmsg_a(matcher_reload_config, "重载配置"):
-        from ...imports import notify_reload_config
-        notify_reload_config()
+    """重载当前群组配置。
 
-    await matcher_reload_config.finish("配置重载成功~")
+    新架构中配置通过 ConfigService 从数据库按需读取，
+    不再依赖旧的全局缓存重载机制。此命令仅作确认用途。
+    """
+    await matcher_reload_config.finish(
+        "新版本配置已改为实时从数据库读取，无需手动重载~"
+    )
 
 # endregion

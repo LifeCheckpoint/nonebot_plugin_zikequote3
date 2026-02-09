@@ -137,3 +137,133 @@ class TestParseConfigParam:
     def test_invalid_literal_raises(self) -> None:
         with pytest.raises(ValidationException):
             ConfigService.parse_config_param(["key", "not_a_literal"])
+
+
+# ---------------------------------------------------------------------------
+# get_parsed_config
+# ---------------------------------------------------------------------------
+
+
+class TestGetParsedConfig:
+    """get_parsed_config 测试。"""
+
+    async def test_returns_default_when_no_config(
+        self, config_service: ConfigService, mock_group_config_repo: AsyncMock
+    ) -> None:
+        mock_group_config_repo.get_toml_config_by_group_id.return_value = None
+        result = await config_service.get_parsed_config("g1")
+        # 应返回默认 ConfigSchema
+        assert result.collecting.pickup_interval == 80
+        assert result.collecting.msg_max_length == 35
+
+    async def test_returns_parsed_config(
+        self, config_service: ConfigService, mock_group_config_repo: AsyncMock
+    ) -> None:
+        toml_str = "[collecting]\npickup_interval = 200\nmsg_max_length = 50"
+        mock_group_config_repo.get_toml_config_by_group_id.return_value = toml_str
+        result = await config_service.get_parsed_config("g1")
+        assert result.collecting.pickup_interval == 200
+        assert result.collecting.msg_max_length == 50
+
+    async def test_returns_default_on_invalid_toml(
+        self, config_service: ConfigService, mock_group_config_repo: AsyncMock
+    ) -> None:
+        mock_group_config_repo.get_toml_config_by_group_id.return_value = "[broken ="
+        result = await config_service.get_parsed_config("g1")
+        # 解析失败应回退到默认值
+        assert result.collecting.pickup_interval == 80
+
+
+# ---------------------------------------------------------------------------
+# get_config_value
+# ---------------------------------------------------------------------------
+
+
+class TestGetConfigValue:
+    """get_config_value 测试。"""
+
+    async def test_get_existing_value(
+        self, config_service: ConfigService, mock_group_config_repo: AsyncMock
+    ) -> None:
+        toml_str = "[collecting]\npickup_interval = 120"
+        mock_group_config_repo.get_toml_config_by_group_id.return_value = toml_str
+        result = await config_service.get_config_value("g1", "collecting", "pickup_interval")
+        assert result == 120
+
+    async def test_get_default_value_when_no_config(
+        self, config_service: ConfigService, mock_group_config_repo: AsyncMock
+    ) -> None:
+        mock_group_config_repo.get_toml_config_by_group_id.return_value = None
+        result = await config_service.get_config_value("g1", "collecting", "pickup_interval")
+        assert result == 80  # 默认值
+
+    async def test_invalid_section_raises(
+        self, config_service: ConfigService, mock_group_config_repo: AsyncMock
+    ) -> None:
+        mock_group_config_repo.get_toml_config_by_group_id.return_value = None
+        with pytest.raises(ValidationException, match="配置节"):
+            await config_service.get_config_value("g1", "nonexistent", "key")
+
+    async def test_invalid_key_raises(
+        self, config_service: ConfigService, mock_group_config_repo: AsyncMock
+    ) -> None:
+        mock_group_config_repo.get_toml_config_by_group_id.return_value = None
+        with pytest.raises(ValidationException, match="配置项"):
+            await config_service.get_config_value("g1", "collecting", "nonexistent_key")
+
+
+# ---------------------------------------------------------------------------
+# modify_single_value
+# ---------------------------------------------------------------------------
+
+
+class TestModifySingleValue:
+    """modify_single_value 测试。"""
+
+    async def test_modify_existing_config(
+        self, config_service: ConfigService, mock_group_config_repo: AsyncMock
+    ) -> None:
+        toml_str = "[collecting]\npickup_interval = 80"
+        mock_group_config_repo.get_toml_config_by_group_id.return_value = toml_str
+        fake = GroupConfigs(group_id="g1", toml_config="")
+        mock_group_config_repo.update_or_create_group_config.return_value = fake
+
+        await config_service.modify_single_value("g1", "collecting.pickup_interval", 200)
+        mock_group_config_repo.update_or_create_group_config.assert_awaited_once()
+        call_args = mock_group_config_repo.update_or_create_group_config.call_args
+        assert call_args[0][0] == "g1"
+        assert "200" in call_args[0][1]
+
+    async def test_modify_creates_config_when_none(
+        self, config_service: ConfigService, mock_group_config_repo: AsyncMock
+    ) -> None:
+        mock_group_config_repo.get_toml_config_by_group_id.return_value = None
+        fake = GroupConfigs(group_id="g1", toml_config="")
+        mock_group_config_repo.update_or_create_group_config.return_value = fake
+
+        await config_service.modify_single_value("g1", "collecting.pickup_interval", 150)
+        mock_group_config_repo.update_or_create_group_config.assert_awaited_once()
+
+    async def test_invalid_path_format_raises(
+        self, config_service: ConfigService
+    ) -> None:
+        with pytest.raises(ValidationException, match="section.key"):
+            await config_service.modify_single_value("g1", "only_one_part", 10)
+
+    async def test_invalid_section_raises(
+        self, config_service: ConfigService
+    ) -> None:
+        with pytest.raises(ValidationException, match="配置节"):
+            await config_service.modify_single_value("g1", "nonexistent.key", 10)
+
+    async def test_invalid_key_raises(
+        self, config_service: ConfigService
+    ) -> None:
+        with pytest.raises(ValidationException, match="配置项"):
+            await config_service.modify_single_value("g1", "collecting.nonexistent", 10)
+
+    async def test_nonreloadable_item_raises(
+        self, config_service: ConfigService
+    ) -> None:
+        with pytest.raises(ValidationException, match="不可修改"):
+            await config_service.modify_single_value("g1", "llm.api_key_path", "new")

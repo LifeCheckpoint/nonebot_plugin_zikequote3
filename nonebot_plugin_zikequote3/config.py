@@ -53,8 +53,14 @@ class SentryConfig(BaseModel):
     dsn_path: str = "utils/sentry_dsn"
 
 class ConfigureConfig(BaseModel):
-    nonreloadable_items: List[str] = Field(default_factory=list)
-    cfg_version: int = 0
+    nonreloadable_items: List[str] = Field(
+        default_factory=lambda: [
+            "llm.api_key_path",
+            "sentry.dsn_path",
+            "configure.nonreloadable_items",
+        ]
+    )
+    cfg_version: int = 4
 
 class ConfigSchema(BaseModel):
     general: GeneralConfig = Field(default_factory=GeneralConfig)
@@ -126,13 +132,13 @@ def reload_config():
 
     # 从数据库读取所有自定义群组配置
     from .imports import db
+
+    # 预先初始化，避免 except 分支导致变量未绑定
+    _cfg_toml: DefaultingDict[int, tomlkit.TOMLDocument] = DefaultingDict(_default_cfg_toml, {})
+    _cfg: DefaultingDict[int, ConfigSchema] = DefaultingDict(_defaul_cfg, {})
+
     try:
         group_configs = db.dao.get_group_configs_dao().get_all_group_configs()
-        
-        # 转换为默认值字典
-        # 通过默认值字典，下游无需再判断 group_id 是否存在，因为不存在时会自动返回配置默认值
-        _cfg_toml: DefaultingDict[int, tomlkit.TOMLDocument] = DefaultingDict(_default_cfg_toml, {})
-        _cfg: DefaultingDict[int, ConfigSchema] = DefaultingDict(_defaul_cfg, {})
 
         for gc in group_configs:
             try:

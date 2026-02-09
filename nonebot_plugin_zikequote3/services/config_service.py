@@ -12,11 +12,12 @@ from __future__ import annotations
 
 import logging
 from ast import literal_eval
-from typing import Optional
+from typing import Any, Optional
 
 import tomlkit
 from tomlkit.exceptions import TOMLKitError
 
+from ..config import ConfigSchema, parse_config_from_toml
 from ..database.models.group_configs import GroupConfigs
 from ..database.repositories.group_config_repository import GroupConfigRepository
 from ..exceptions import ResourceNotFoundError, ValidationException
@@ -113,6 +114,127 @@ class ConfigService:
 
         await self._group_config_repo.delete_group_config(group_id)
         logger.info("群组 %s 配置已删除", group_id)
+
+    async def modify_single_value(
+        self,
+        group_id: str,
+        schema_str: str,
+        new_value: Any,
+    ) -> None:
+        """
+        按 ``section.key`` 路径修改群组配置中的单个值并持久化。
+
+        如果群组尚无自定义配置，则基于 ``ConfigSchema`` 默认值创建。
+
+        Args:
+            group_id: 群组 ID。
+            schema_str: 形如 ``"collecting.pickup_interval"`` 的路径。
+            new_value: 新值（已经过 Python 类型解析）。
+
+        Raises:
+            ValidationException: 路径格式错误、section/key 不存在或属于不可修改项。
+        """
+        # 校验路径格式
+        parts = schema_str.split(".")
+        if len(parts) != 2:
+            raise ValidationException(
+                f"配置项路径必须为 'section.key' 格式，收到: '{schema_str}'"
+            )
+        section, key = parts
+
+        # 校验 section/key 是否存在于 ConfigSchema
+        default_cfg = ConfigSchema()
+        if not hasattr(default_cfg, section):
+            raise ValidationException(f"配置节 '{section}' 不存在")
+        section_model = getattr(default_cfg, section)
+        if not hasattr(section_model, key):
+            raise ValidationException(
+                f"配置项 '{key}' 在节 '{section}' 中不存在"
+            )
+
+        # 校验不可修改项
+        nonreloadable = default_cfg.configure.nonreloadable_items
+        if schema_str in nonreloadable:
+            raise ValidationException(f"配置项 '{schema_str}' 不可修改")
+
+        # 获取或创建 TOML 文档
+        toml_str = await self._group_config_repo.get_toml_config_by_group_id(
+            group_id
+        )
+        if toml_str:
+            doc = tomlkit.parse(toml_str)
+        else:
+            # 基于默认值创建完整 TOML 文档
+            doc = tomlkit.parse(
+                tomlkit.dumps(default_cfg.model_dump())  # type: ignore[arg-type]
+            )
+
+        # 确保 section 存在
+        if section not in doc:
+            doc[section] = tomlkit.table()
+
+        doc[section][key] = new_value  # type: ignore[index]
+
+        new_toml = tomlkit.dumps(doc)
+        await self._group_config_repo.update_or_create_group_config(
+            group_id, new_toml
+        )
+        logger.info(
+            "群组 %s 配置项 '%s' 已更新为 %r", group_id, schema_str, new_value
+        )
+
+    async def get_parsed_config(self, group_id: str) -> ConfigSchema:
+        """
+        获取群组的结构化配置（Pydantic 模型）。
+
+        如果群组无自定义配置，返回全局默认值。
+
+        Args:
+            group_id: 群组 ID。
+
+        Returns:
+            解析后的 ``ConfigSchema`` 实例。
+        """
+        toml_str = await self._group_config_repo.get_toml_config_by_group_id(
+            group_id
+        )
+        if toml_str is None:
+            return ConfigSchema()
+        try:
+            doc = tomlkit.parse(toml_str)
+            return parse_config_from_toml(doc)
+        except Exception:
+            logger.warning(
+                "群组 %s 的 TOML 配置解析失败，使用默认配置", group_id
+            )
+            return ConfigSchema()
+
+    async def get_config_value(
+        self, group_id: str, section: str, key: str
+    ) -> Any:
+        """
+        获取群组配置中指定 ``section.key`` 的值。
+
+        Args:
+            group_id: 群组 ID。
+            section: 配置节名称，如 ``"collecting"``。
+            key: 配置项名称，如 ``"pickup_interval"``。
+
+        Returns:
+            配置值。
+
+        Raises:
+            ValidationException: section 或 key 不存在。
+        """
+        cfg = await self.get_parsed_config(group_id)
+        if not hasattr(cfg, section):
+            raise ValidationException(f"配置节 '{section}' 不存在")
+        section_model = getattr(cfg, section)
+        if not hasattr(section_model, key):
+            raise ValidationException(
+                f"配置项 '{key}' 在节 '{section}' 中不存在"
+            )
+        return getattr(section_model, key)
 
     # ------------------------------------------------------------------ #
     #  验证

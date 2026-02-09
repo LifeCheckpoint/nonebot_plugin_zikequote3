@@ -1,4 +1,4 @@
-from ...imports import *
+from typing import Optional, Tuple
 
 def parse_page_range(s: Optional[str]) -> Tuple[Optional[int], Optional[int]]:
     """
