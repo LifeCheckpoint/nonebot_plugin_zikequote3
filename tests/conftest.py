@@ -3,8 +3,7 @@
 
 - pytest-asyncio mode 已在 pyproject.toml 中配置为 "auto"
 - asyncio_default_fixture_loop_scope 已设为 "session"
-- import_mode 设为 "importlib" 避免触发包级 __init__.py
-- nonebot 初始化逻辑已移至 integration/conftest.py（仅集成测试需要）
+- testpaths 设为 ["tests"]，测试目录与包隔离，避免触发 nonebot 初始化
 """
 
 import pytest
