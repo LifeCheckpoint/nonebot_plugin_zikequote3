@@ -21,7 +21,7 @@ from ..command_definition_new import (
     matcher_add_quote_comment_no_prefix,
 )
 from ...di import get_container
-from ...services.new import QuoteWriteService, ReviewService, GroupService
+from ...services import QuoteWriteService, ReviewService, GroupService
 from ...utils.error_report import event_exception_failmsg_a, event_exception
 
 logger = logging.getLogger(__name__)
