@@ -20,15 +20,15 @@ from ...database.repositories.quote_repository import QuoteRepository
 from ...database.repositories.review_repository import ReviewRepository
 from ...database.repositories.user_nickname_repository import UserNicknameRepository
 from ...database.repositories.user_repository import UserRepository
-from ...services.new.config_service import ConfigService
-from ...services.new.group_service import GroupService
-from ...services.new.migration_service import MigrationService
-from ...services.new.quote_collection_service import QuoteCollectionService
-from ...services.new.quote_read_service import QuoteReadService
-from ...services.new.quote_write_service import QuoteWriteService
-from ...services.new.review_service import ReviewService
-from ...services.new.statistics_service import StatisticsService
-from ...services.new.user_service import UserService
+from ...services.config_service import ConfigService
+from ...services.group_service import GroupService
+from ...services.migration_service import MigrationService
+from ...services.quote_collection_service import QuoteCollectionService
+from ...services.quote_read_service import QuoteReadService
+from ...services.quote_write_service import QuoteWriteService
+from ...services.review_service import ReviewService
+from ...services.statistics_service import StatisticsService
+from ...services.user_service import UserService
 
 
 class ServiceProvider(Provider):
