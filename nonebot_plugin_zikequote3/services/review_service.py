@@ -12,10 +12,10 @@ import logging
 import random
 from typing import Optional, Sequence
 
-from ...database.models.reviews import Review
-from ...database.repositories.quote_repository import QuoteRepository
-from ...database.repositories.review_repository import ReviewRepository
-from ...exceptions import QuoteNotFoundError, ResourceNotFoundError
+from ..database.models.reviews import Review
+from ..database.repositories.quote_repository import QuoteRepository
+from ..database.repositories.review_repository import ReviewRepository
+from ..exceptions import QuoteNotFoundError, ResourceNotFoundError
 
 logger = logging.getLogger(__name__)
 

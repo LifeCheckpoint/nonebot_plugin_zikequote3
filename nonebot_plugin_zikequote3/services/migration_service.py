@@ -15,11 +15,11 @@ import itertools
 import logging
 from typing import Any, Dict, List, Optional, Sequence
 
-from ...database.models.quotes import Quote, QuoteCreate
-from ...database.repositories.group_member_repository import GroupMemberRepository
-from ...database.repositories.group_nickname_repository import GroupNicknameRepository
-from ...database.repositories.quote_repository import QuoteRepository
-from ...exceptions import ResourceNotFoundError, ValidationException
+from ..database.models.quotes import Quote, QuoteCreate
+from ..database.repositories.group_member_repository import GroupMemberRepository
+from ..database.repositories.group_nickname_repository import GroupNicknameRepository
+from ..database.repositories.quote_repository import QuoteRepository
+from ..exceptions import ResourceNotFoundError, ValidationException
 
 logger = logging.getLogger(__name__)
 

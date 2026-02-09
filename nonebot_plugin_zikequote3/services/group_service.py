@@ -14,13 +14,13 @@ from __future__ import annotations
 import logging
 from typing import Optional, Sequence
 
-from ...database.models.group_members import GroupMember
-from ...database.models.group_nicknames import GroupNickname
-from ...database.models.groups import Group
-from ...database.repositories.group_member_repository import GroupMemberRepository
-from ...database.repositories.group_nickname_repository import GroupNicknameRepository
-from ...database.repositories.group_repository import GroupRepository
-from ...exceptions import ResourceNotFoundError
+from ..database.models.group_members import GroupMember
+from ..database.models.group_nicknames import GroupNickname
+from ..database.models.groups import Group
+from ..database.repositories.group_member_repository import GroupMemberRepository
+from ..database.repositories.group_nickname_repository import GroupNicknameRepository
+from ..database.repositories.group_repository import GroupRepository
+from ..exceptions import ResourceNotFoundError
 
 logger = logging.getLogger(__name__)
 

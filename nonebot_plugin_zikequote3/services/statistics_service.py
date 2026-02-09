@@ -15,10 +15,10 @@ import logging
 import re
 from typing import Any, Dict, Optional, Sequence, Tuple
 
-from ...database.models.quotes import Quote
-from ...database.repositories.group_member_repository import GroupMemberRepository
-from ...database.repositories.quote_repository import QuoteRepository
-from ...exceptions import ResourceNotFoundError, ValidationException
+from ..database.models.quotes import Quote
+from ..database.repositories.group_member_repository import GroupMemberRepository
+from ..database.repositories.quote_repository import QuoteRepository
+from ..exceptions import ResourceNotFoundError, ValidationException
 
 logger = logging.getLogger(__name__)
 

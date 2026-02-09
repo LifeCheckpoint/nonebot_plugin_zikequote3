@@ -17,9 +17,9 @@ from typing import Optional
 import tomlkit
 from tomlkit.exceptions import TOMLKitError
 
-from ...database.models.group_configs import GroupConfigs
-from ...database.repositories.group_config_repository import GroupConfigRepository
-from ...exceptions import ResourceNotFoundError, ValidationException
+from ..database.models.group_configs import GroupConfigs
+from ..database.repositories.group_config_repository import GroupConfigRepository
+from ..exceptions import ResourceNotFoundError, ValidationException
 
 logger = logging.getLogger(__name__)
 

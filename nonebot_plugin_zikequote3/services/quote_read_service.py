@@ -17,13 +17,13 @@ import math
 import random
 from typing import Optional, Sequence, Tuple
 
-from ...database.models.images import Image
-from ...database.models.quotes import Quote
-from ...database.models.reviews import Review
-from ...database.repositories.image_repository import ImageRepository
-from ...database.repositories.quote_repository import QuoteRepository
-from ...database.repositories.review_repository import ReviewRepository
-from ...exceptions import (
+from ..database.models.images import Image
+from ..database.models.quotes import Quote
+from ..database.models.reviews import Review
+from ..database.repositories.image_repository import ImageRepository
+from ..database.repositories.quote_repository import QuoteRepository
+from ..database.repositories.review_repository import ReviewRepository
+from ..exceptions import (
     ImageNotFoundError,
     QuoteNotFoundError,
 )

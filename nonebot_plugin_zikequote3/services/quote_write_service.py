@@ -15,11 +15,11 @@ import logging
 import random
 from typing import Optional
 
-from ...database.models.quotes import Quote
-from ...database.repositories.image_repository import ImageRepository
-from ...database.repositories.mapping_repository import MappingRepository
-from ...database.repositories.quote_repository import QuoteRepository
-from ...exceptions import (
+from ..database.models.quotes import Quote
+from ..database.repositories.image_repository import ImageRepository
+from ..database.repositories.mapping_repository import MappingRepository
+from ..database.repositories.quote_repository import QuoteRepository
+from ..exceptions import (
     DatabaseOperationError,
     ImageNotFoundError,
     QuoteNotFoundError,

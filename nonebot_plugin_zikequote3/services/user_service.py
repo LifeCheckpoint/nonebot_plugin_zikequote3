@@ -18,15 +18,15 @@ from typing import Optional, Sequence
 import aiohttp
 from aiohttp import ClientTimeout
 
-from ...database.models.group_members import GroupMember
-from ...database.models.group_nicknames import GroupNickname
-from ...database.models.user_nicknames import UserNickname
-from ...database.models.users import User
-from ...database.repositories.group_member_repository import GroupMemberRepository
-from ...database.repositories.group_nickname_repository import GroupNicknameRepository
-from ...database.repositories.user_nickname_repository import UserNicknameRepository
-from ...database.repositories.user_repository import UserRepository
-from ...exceptions import UserNotFoundError
+from ..database.models.group_members import GroupMember
+from ..database.models.group_nicknames import GroupNickname
+from ..database.models.user_nicknames import UserNickname
+from ..database.models.users import User
+from ..database.repositories.group_member_repository import GroupMemberRepository
+from ..database.repositories.group_nickname_repository import GroupNicknameRepository
+from ..database.repositories.user_nickname_repository import UserNicknameRepository
+from ..database.repositories.user_repository import UserRepository
+from ..exceptions import UserNotFoundError
 
 logger = logging.getLogger(__name__)
 

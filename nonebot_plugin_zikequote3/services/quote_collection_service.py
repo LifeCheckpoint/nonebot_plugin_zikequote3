@@ -17,9 +17,9 @@ import logging
 import random
 from typing import Any, Callable, Coroutine, Optional, Protocol, Sequence
 
-from ...database.models.msgs_queue import MsgQueue
-from ...database.repositories.msg_queue_repository import MsgQueueRepository
-from ...exceptions import ResourceNotFoundError, ValidationException
+from ..database.models.msgs_queue import MsgQueue
+from ..database.repositories.msg_queue_repository import MsgQueueRepository
+from ..exceptions import ResourceNotFoundError, ValidationException
 from .group_service import GroupService
 from .quote_write_service import QuoteWriteService
 from .user_service import UserService
@@ -314,7 +314,7 @@ class QuoteCollectionService:
 
             # 去重检查
             if not allow_duplicate:
-                from ...database.repositories.quote_repository import (
+                from ..database.repositories.quote_repository import (
                     QuoteRepository,
                 )
 
