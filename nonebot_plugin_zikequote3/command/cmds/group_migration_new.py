@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from nonebot.adapters.onebot.v11 import GroupMessageEvent
 from nonebot_plugin_alconna import Match, Query
@@ -50,19 +51,34 @@ async def handle_group_migration(
             matcher_group_migration, "群聊存在性确认"
         ):
             if not source.available or not target.available:
-                await matcher_group_migration.finish("请提供源群号和目标群号哦~")
+                await matcher_group_migration.finish(
+                    "请提供源群号和目标群号哦~"
+                )
 
             if not await group_svc.group_exists(str(source.result)):
-                await matcher_group_migration.finish("呀呀，找不到来源群呢 >.<")
+                await matcher_group_migration.finish(
+                    "呀呀，找不到来源群呢 >.<"
+                )
             if not await group_svc.group_exists(str(target.result)):
                 await matcher_group_migration.finish(
-                    "咦？我还没有目标群的信息哦，请在目标群启用语录功能哦"
+                    "咦？我还没有目标群的信息哦，"
+                    "请在目标群启用语录功能哦"
                 )
 
             if source.result == target.result:
-                await matcher_group_migration.finish("来源群不能与目标群相同哦~")
+                await matcher_group_migration.finish(
+                    "来源群不能与目标群相同哦~"
+                )
 
         # 群聊语录信息统计
+        result: dict[str, Any] = {}
+        source_count = 0
+        target_count = 0
+        final_quotes: list[Any] = []
+        final_count = 0
+        before_members = 0
+        after_members = 0
+
         async with event_exception_failmsg_a(
             matcher_group_migration, "群聊语录信息统计"
         ):
@@ -88,8 +104,8 @@ async def handle_group_migration(
                 )
 
         # 生成确认信息（文本方式）
-        # TODO: 旧版本使用 s_get_group_quote_migration_checkcard_html + html_img_render
-        # 生成迁移确认卡片图片。新版本暂用文本方式展示，后续可恢复图片方式。
+        # TODO: 旧版本使用 HTML 截图生成迁移确认卡片图片，
+        # 新版本暂用文本方式展示，后续可恢复图片方式。
         confirm_text = (
             f"📋 群语录迁移确认\n"
             f"━━━━━━━━━━━━━━━━\n"
@@ -113,14 +129,20 @@ async def handle_group_migration(
         check_wait_time = 60
         token = _token_manager.generate(ttl=check_wait_time)
         logger.warning("迁移语录请求")
-        logger.warning("来源群：%s -> 目标群：%s", source.result, target.result)
+        logger.warning(
+            "来源群：%s -> 目标群：%s", source.result, target.result,
+        )
         logger.warning("TOKEN: %s", token)
 
         import nonebot_plugin_waiter as waiter
 
-        resp = await waiter.prompt(
-            confirm_text + f"请输入「确认 {token}」执行迁移（{check_wait_time}秒内有效）",
-            timeout=check_wait_time,
+        prompt_msg = (
+            confirm_text
+            + f"请输入「确认 {token}」执行迁移"
+            + f"（{check_wait_time}秒内有效）"
+        )
+        resp = await waiter.prompt(  # type: ignore[misc]
+            prompt_msg, timeout=check_wait_time,
         )
 
         if resp is None:
@@ -148,6 +170,7 @@ async def handle_group_migration(
 
         await matcher_group_migration.finish(
             f"迁移成功！\n"
-            f"已将 {source_count} 条语录从 {source.result} 迁移至 {target.result}。\n"
+            f"已将 {source_count} 条语录从 "
+            f"{source.result} 迁移至 {target.result}。\n"
             f"最终目标群语录数：{final_count}。"
         )
