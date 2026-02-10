@@ -1,7 +1,7 @@
 """
 数据库相关的 dishka Provider。
 
-提供 AsyncEngine（APP 作用域单例）和 AsyncSession（REQUEST 作用域，yield 模式自动关闭）。
+提供 AsyncEngine（APP 作用域单例）和 AsyncSession（REQUEST 作用域，含事务 commit/rollback 管理）。
 """
 
 from __future__ import annotations
@@ -58,9 +58,14 @@ class DatabaseProvider(Provider):
         self, session_factory: async_sessionmaker[AsyncSession],
     ) -> AsyncIterator[AsyncSession]:
         """
-        每次 REQUEST 作用域提供一个 AsyncSession。
+        每次 REQUEST 作用域提供一个 AsyncSession，并管理事务生命周期。
 
-        使用 yield 模式确保作用域结束时 session 被正确关闭。
+        事务管理策略（Unit of Work 模式）：
+
+        - Repository 层仅使用 ``flush()`` 将变更写入数据库缓冲区，不负责提交事务。
+        - 当 REQUEST 作用域正常退出时，本方法自动调用 ``commit()`` 提交事务。
+        - 当 REQUEST 作用域因异常退出时，本方法自动调用 ``rollback()`` 回滚事务。
+        - 无论成功或失败，最终都会调用 ``close()`` 释放连接资源。
 
         :param session_factory: 异步会话工厂
         :type session_factory: async_sessionmaker[AsyncSession]
@@ -70,5 +75,9 @@ class DatabaseProvider(Provider):
         session = session_factory()
         try:
             yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
         finally:
             await session.close()
