@@ -194,19 +194,29 @@ cmdname_random_quote = (
     "名人名言", "群友名言", "群友语录", "神人语录",
     "随机神人语录"
 )
-matcher_random_quote = on_command(
+alc_random_quote = Alconna(
     cmdname_random_quote[0],
+    Arg("at_user?", At, None, notice="At 段用户"),
+    Arg("text?", AllParam(str), "", notice="昵称、关键词或语录ID"),
+)
+matcher_random_quote = on_alconna(
+    alc_random_quote,
     aliases=set(cmdname_random_quote[1:]),
-    priority=11, block=True
+    use_cmd_start=True, priority=11, block=True, skip_for_unmatch=False,
 )
 perm_nodes.n_get_text.patch_matcher(matcher_random_quote)
 
 
 cmdname_random_quote_card = ("语录卡", "语录卡片", "语录card")
-matcher_random_quote_card = on_command(
+alc_random_quote_card = Alconna(
     cmdname_random_quote_card[0],
+    Arg("at_user?", At, None, notice="At 段用户"),
+    Arg("text?", AllParam(str), "", notice="昵称、关键词或语录ID"),
+)
+matcher_random_quote_card = on_alconna(
+    alc_random_quote_card,
     aliases=set(cmdname_random_quote_card[1:]),
-    priority=10, block=True
+    use_cmd_start=True, priority=10, block=True, skip_for_unmatch=False,
 )
 perm_nodes.n_get_card.patch_matcher(matcher_random_quote_card)
 
@@ -239,10 +249,15 @@ cmdname_random_quote_image = (
     "语录原图", "语录图片", "语录img", "语录图像",
     "获取语录图片", "获取语录原图", "获取语录img", "获取语录图像",
 )
-matcher_random_quote_image = on_command(
+alc_random_quote_image = Alconna(
     cmdname_random_quote_image[0],
+    Arg("at_user?", At, None, notice="At 段用户"),
+    Arg("text?", AllParam(str), "", notice="昵称、关键词或语录ID"),
+)
+matcher_random_quote_image = on_alconna(
+    alc_random_quote_image,
     aliases=set(cmdname_random_quote_image[1:]),
-    priority=10, block=True
+    use_cmd_start=True, priority=10, block=True, skip_for_unmatch=False,
 )
 perm_nodes.n_get_image.patch_matcher(matcher_random_quote_image)
 

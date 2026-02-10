@@ -17,6 +17,7 @@ from nonebot.exception import FinishedException
 from nonebot_plugin_zikequote3.database.image_store import ImageStore
 from nonebot_plugin_zikequote3.services.quote_read_service import QuoteReadService
 from nonebot_plugin_zikequote3.services.quote_write_service import QuoteWriteService
+from nonebot_plugin_zikequote3.services.user_service import UserService
 
 # 运行时从 stub 模块获取 mock matcher
 _stub_cmd_def = sys.modules[
@@ -32,17 +33,27 @@ from nonebot_plugin_zikequote3.command.cmds.random_quote_image_cmd import (  # n
 )
 
 
+def _make_match(available: bool = False, result=None) -> MagicMock:
+    """创建模拟的 Alconna Match 对象。"""
+    m = MagicMock()
+    m.available = available
+    m.result = result
+    return m
+
+
 def _make_quote(
     *,
     quote_id: str = "Q-IMG-1",
     content: str | None = "图片语录",
     image_content_uuid: str | None = "uuid-abc-123",
+    group_id: str = "123456",
 ) -> MagicMock:
     """创建模拟的语录对象。"""
     q = MagicMock()
     q.quote_id = quote_id
     q.content = content
     q.image_content_uuid = image_content_uuid
+    q.group_id = group_id
     return q
 
 
@@ -69,6 +80,9 @@ class TestHandleRandomQuoteImage:
         mock_write_svc = AsyncMock(spec=QuoteWriteService)
         mock_write_svc.create_msg_quote_mapping = AsyncMock(return_value=None)
 
+        mock_user_svc = AsyncMock(spec=UserService)
+        mock_user_svc.search_users_by_name = AsyncMock(return_value=[])
+
         mock_image_store = MagicMock(spec=ImageStore)
         mock_path = MagicMock(spec=Path)
         mock_path.read_bytes.return_value = b"\x89PNG_FAKE_IMAGE"
@@ -77,19 +91,19 @@ class TestHandleRandomQuoteImage:
         patch_container({
             QuoteReadService: mock_read_svc,
             QuoteWriteService: mock_write_svc,
+            UserService: mock_user_svc,
             ImageStore: mock_image_store,
         })
-
-        mock_arg = MagicMock()
-        mock_arg.extract_plain_text.return_value = ""
 
         # Act — 成功路径使用 send() 而非 finish()，不抛出 FinishedException
         await handle_random_quote_image(
             event=mock_group_event,
             bot=mock_bot,
-            arg=mock_arg,
+            at_user=_make_match(),
+            text=_make_match(),
             quote_read_svc=mock_read_svc,
             quote_write_svc=mock_write_svc,
+            user_svc=mock_user_svc,
             image_store=mock_image_store,
         )
 
@@ -114,25 +128,27 @@ class TestHandleRandomQuoteImage:
         mock_read_svc.get_quotes_by_group = AsyncMock(return_value=quotes)
 
         mock_write_svc = AsyncMock(spec=QuoteWriteService)
+        mock_user_svc = AsyncMock(spec=UserService)
+        mock_user_svc.search_users_by_name = AsyncMock(return_value=[])
         mock_image_store = MagicMock(spec=ImageStore)
 
         patch_container({
             QuoteReadService: mock_read_svc,
             QuoteWriteService: mock_write_svc,
+            UserService: mock_user_svc,
             ImageStore: mock_image_store,
         })
-
-        mock_arg = MagicMock()
-        mock_arg.extract_plain_text.return_value = ""
 
         # Act & Assert
         with pytest.raises(FinishedException):
             await handle_random_quote_image(
                 event=mock_group_event,
                 bot=mock_bot,
-                arg=mock_arg,
+                at_user=_make_match(),
+                text=_make_match(),
                 quote_read_svc=mock_read_svc,
                 quote_write_svc=mock_write_svc,
+                user_svc=mock_user_svc,
                 image_store=mock_image_store,
             )
 
@@ -152,25 +168,27 @@ class TestHandleRandomQuoteImage:
         mock_read_svc.get_quotes_by_group = AsyncMock(return_value=[])
 
         mock_write_svc = AsyncMock(spec=QuoteWriteService)
+        mock_user_svc = AsyncMock(spec=UserService)
+        mock_user_svc.search_users_by_name = AsyncMock(return_value=[])
         mock_image_store = MagicMock(spec=ImageStore)
 
         patch_container({
             QuoteReadService: mock_read_svc,
             QuoteWriteService: mock_write_svc,
+            UserService: mock_user_svc,
             ImageStore: mock_image_store,
         })
-
-        mock_arg = MagicMock()
-        mock_arg.extract_plain_text.return_value = ""
 
         # Act & Assert
         with pytest.raises(FinishedException):
             await handle_random_quote_image(
                 event=mock_group_event,
                 bot=mock_bot,
-                arg=mock_arg,
+                at_user=_make_match(),
+                text=_make_match(),
                 quote_read_svc=mock_read_svc,
                 quote_write_svc=mock_write_svc,
+                user_svc=mock_user_svc,
                 image_store=mock_image_store,
             )
 
@@ -192,25 +210,27 @@ class TestHandleRandomQuoteImage:
         )
 
         mock_write_svc = AsyncMock(spec=QuoteWriteService)
+        mock_user_svc = AsyncMock(spec=UserService)
+        mock_user_svc.search_users_by_name = AsyncMock(return_value=[])
         mock_image_store = MagicMock(spec=ImageStore)
 
         patch_container({
             QuoteReadService: mock_read_svc,
             QuoteWriteService: mock_write_svc,
+            UserService: mock_user_svc,
             ImageStore: mock_image_store,
         })
-
-        mock_arg = MagicMock()
-        mock_arg.extract_plain_text.return_value = ""
 
         # Act & Assert
         with pytest.raises(FinishedException):
             await handle_random_quote_image(
                 event=mock_group_event,
                 bot=mock_bot,
-                arg=mock_arg,
+                at_user=_make_match(),
+                text=_make_match(),
                 quote_read_svc=mock_read_svc,
                 quote_write_svc=mock_write_svc,
+                user_svc=mock_user_svc,
                 image_store=mock_image_store,
             )
 

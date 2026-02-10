@@ -2,7 +2,7 @@
 random_quote_card_cmd 命令处理器单元测试。
 
 覆盖：
-- handle_random_quote_card：随机语录卡片（成功生成卡片 / 无语录 / 渲染失败降级）
+- handle_random_quote_card：随机语录卡片（成功生成卡片 / 无语录 / 渲染失败降级 / 关键词搜索）
 """
 
 from __future__ import annotations
@@ -37,12 +37,21 @@ with patch(
     )
 
 
+def _make_match(available: bool = False, result=None) -> MagicMock:
+    """创建模拟的 Alconna Match 对象。"""
+    m = MagicMock()
+    m.available = available
+    m.result = result
+    return m
+
+
 def _make_quote_result(
     *,
     quote_id: str = "Q-100",
     author_id: str = "111111",
     content: str = "经典语录卡片内容",
     image_content_uuid: str | None = None,
+    group_id: str = "123456",
 ) -> MagicMock:
     """创建模拟的语录查询结果。"""
     q = MagicMock()
@@ -50,6 +59,7 @@ def _make_quote_result(
     q.author_id = author_id
     q.content = content
     q.image_content_uuid = image_content_uuid
+    q.group_id = group_id
     return q
 
 
@@ -80,7 +90,7 @@ class TestHandleRandomQuoteCard:
         # Arrange
         q_result = _make_quote_result()
         mock_read_svc = AsyncMock(spec=QuoteReadService)
-        mock_read_svc.get_random_quote = AsyncMock(return_value=q_result)
+        mock_read_svc.get_quotes_by_group = AsyncMock(return_value=[q_result])
         mock_read_svc.get_quote_with_reviews = AsyncMock(
             return_value=(q_result, [_make_review()]),
         )
@@ -93,6 +103,7 @@ class TestHandleRandomQuoteCard:
         mock_user_svc.get_display_name = AsyncMock(return_value="语录作者")
         mock_user_svc.sync_nickname = AsyncMock(return_value=None)
         mock_user_svc.sync_group_card = AsyncMock(return_value=None)
+        mock_user_svc.search_users_by_name = AsyncMock(return_value=[])
 
         mock_image_store = MagicMock(spec=ImageStore)
         mock_render_svc = AsyncMock(spec=HtmlRenderServiceBase)
@@ -106,14 +117,12 @@ class TestHandleRandomQuoteCard:
             HtmlRenderServiceBase: mock_render_svc,
         })
 
-        mock_arg = MagicMock()
-        mock_arg.extract_plain_text.return_value = ""
-
         # Act — 成功路径使用 send() 发送卡片
         await handle_random_quote_card(
             event=mock_group_event,
             bot=mock_bot,
-            arg=mock_arg,
+            at_user=_make_match(),
+            text=_make_match(),
             quote_read_svc=mock_read_svc,
             quote_write_svc=mock_write_svc,
             user_svc=mock_user_svc,
@@ -122,9 +131,7 @@ class TestHandleRandomQuoteCard:
         )
 
         # 验证服务调用
-        mock_read_svc.get_random_quote.assert_awaited_once_with(
-            "123456", keyword=None,
-        )
+        mock_read_svc.get_quotes_by_group.assert_awaited_once_with("123456")
         mock_render_svc.render.assert_awaited_once()
         matcher_random_quote_card.send.assert_awaited()
 
@@ -137,10 +144,11 @@ class TestHandleRandomQuoteCard:
         """无符合条件的语录：提示用户。"""
         # Arrange
         mock_read_svc = AsyncMock(spec=QuoteReadService)
-        mock_read_svc.get_random_quote = AsyncMock(return_value=None)
+        mock_read_svc.get_quotes_by_group = AsyncMock(return_value=[])
 
         mock_write_svc = AsyncMock(spec=QuoteWriteService)
         mock_user_svc = AsyncMock(spec=UserService)
+        mock_user_svc.search_users_by_name = AsyncMock(return_value=[])
         mock_image_store = MagicMock(spec=ImageStore)
         mock_render_svc = AsyncMock(spec=HtmlRenderServiceBase)
 
@@ -152,15 +160,13 @@ class TestHandleRandomQuoteCard:
             HtmlRenderServiceBase: mock_render_svc,
         })
 
-        mock_arg = MagicMock()
-        mock_arg.extract_plain_text.return_value = ""
-
         # Act & Assert
         with pytest.raises(FinishedException):
             await handle_random_quote_card(
                 event=mock_group_event,
                 bot=mock_bot,
-                arg=mock_arg,
+                at_user=_make_match(),
+                text=_make_match(),
                 quote_read_svc=mock_read_svc,
                 quote_write_svc=mock_write_svc,
                 user_svc=mock_user_svc,
@@ -182,7 +188,7 @@ class TestHandleRandomQuoteCard:
         # Arrange
         q_result = _make_quote_result()
         mock_read_svc = AsyncMock(spec=QuoteReadService)
-        mock_read_svc.get_random_quote = AsyncMock(return_value=q_result)
+        mock_read_svc.get_quotes_by_group = AsyncMock(return_value=[q_result])
         mock_read_svc.get_quote_with_reviews = AsyncMock(
             return_value=(q_result, []),
         )
@@ -190,6 +196,7 @@ class TestHandleRandomQuoteCard:
         mock_write_svc = AsyncMock(spec=QuoteWriteService)
         mock_user_svc = AsyncMock(spec=UserService)
         mock_user_svc.get_display_name = AsyncMock(return_value="作者")
+        mock_user_svc.search_users_by_name = AsyncMock(return_value=[])
 
         mock_image_store = MagicMock(spec=ImageStore)
         mock_render_svc = AsyncMock(spec=HtmlRenderServiceBase)
@@ -205,15 +212,13 @@ class TestHandleRandomQuoteCard:
             HtmlRenderServiceBase: mock_render_svc,
         })
 
-        mock_arg = MagicMock()
-        mock_arg.extract_plain_text.return_value = ""
-
         # Act & Assert
         with pytest.raises(FinishedException):
             await handle_random_quote_card(
                 event=mock_group_event,
                 bot=mock_bot,
-                arg=mock_arg,
+                at_user=_make_match(),
+                text=_make_match(),
                 quote_read_svc=mock_read_svc,
                 quote_write_svc=mock_write_svc,
                 user_svc=mock_user_svc,
@@ -231,11 +236,11 @@ class TestHandleRandomQuoteCard:
         mock_group_event: MagicMock,
         mock_bot: MagicMock,
     ) -> None:
-        """带关键词搜索：传递 keyword 参数。"""
+        """带关键词搜索：通过 QueryResolver 解析为 KEYWORD 意图。"""
         # Arrange
         q_result = _make_quote_result(content="包含关键词的语录")
         mock_read_svc = AsyncMock(spec=QuoteReadService)
-        mock_read_svc.get_random_quote = AsyncMock(return_value=q_result)
+        mock_read_svc.search_quotes = AsyncMock(return_value=[q_result])
         mock_read_svc.get_quote_with_reviews = AsyncMock(
             return_value=(q_result, []),
         )
@@ -246,6 +251,7 @@ class TestHandleRandomQuoteCard:
 
         mock_user_svc = AsyncMock(spec=UserService)
         mock_user_svc.get_display_name = AsyncMock(return_value="作者")
+        mock_user_svc.search_users_by_name = AsyncMock(return_value=[])
 
         mock_image_store = MagicMock(spec=ImageStore)
         mock_render_svc = AsyncMock(spec=HtmlRenderServiceBase)
@@ -259,14 +265,12 @@ class TestHandleRandomQuoteCard:
             HtmlRenderServiceBase: mock_render_svc,
         })
 
-        mock_arg = MagicMock()
-        mock_arg.extract_plain_text.return_value = "关键词"
-
         # Act
         await handle_random_quote_card(
             event=mock_group_event,
             bot=mock_bot,
-            arg=mock_arg,
+            at_user=_make_match(),
+            text=_make_match(available=True, result="关键词"),
             quote_read_svc=mock_read_svc,
             quote_write_svc=mock_write_svc,
             user_svc=mock_user_svc,
@@ -274,7 +278,7 @@ class TestHandleRandomQuoteCard:
             html_render_svc=mock_render_svc,
         )
 
-        # 验证 keyword 参数被传递
-        mock_read_svc.get_random_quote.assert_awaited_once_with(
-            "123456", keyword="关键词",
+        # 验证 search_quotes 被调用（关键词搜索路径）
+        mock_read_svc.search_quotes.assert_awaited_once_with(
+            "关键词", "123456",
         )
