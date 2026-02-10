@@ -1,8 +1,7 @@
 """
-语录排行榜命令处理器（dishka DI 版本）。
+语录排行榜命令处理器。
 
-替代旧的 get_ranking_cmd.py，消除星号导入和延迟导入，
-通过 dishka 容器获取服务依赖。
+通过 @inject 装饰器自动从 dishka 容器获取服务依赖。
 """
 
 from __future__ import annotations
@@ -19,7 +18,7 @@ from nonebot.adapters import Message
 from nonebot.params import CommandArg
 
 from ..command_definition import matcher_get_ranking, default_cfg
-from ...di import get_container
+from ...di import Inject, inject
 from ...services import (
     GroupService,
     QuoteReadService,
@@ -53,9 +52,15 @@ def _generate_date_range_mm_dd(
 
 
 @matcher_get_ranking.handle()
+@inject
 async def handle_get_ranking(
     event: GroupMessageEvent,
     arg: Message = CommandArg(),
+    stats_svc: StatisticsService = Inject(StatisticsService),
+    user_svc: UserService = Inject(UserService),
+    group_svc: GroupService = Inject(GroupService),
+    quote_read_svc: QuoteReadService = Inject(QuoteReadService),
+    html_render_svc: HtmlRenderServiceBase = Inject(HtmlRenderServiceBase),
 ) -> None:
     """展示群内语录排行图片。"""
     group_id = str(event.group_id)
@@ -68,115 +73,107 @@ async def handle_get_ranking(
     else:
         max_showcase_number = max_rank
 
-    container = get_container()
-    async with container() as request_scope:
-        stats_svc = await request_scope.get(StatisticsService)
-        user_svc = await request_scope.get(UserService)
-        group_svc = await request_scope.get(GroupService)
-        quote_read_svc = await request_scope.get(QuoteReadService)
-        html_render_svc = await request_scope.get(HtmlRenderServiceBase)
+    async with command_error_handler(matcher_get_ranking, "获取语录排行"):
+        # 获取统计数据
+        stat = await stats_svc.get_group_statistics(group_id)
+        total_count = stat["total_quotes"]
+        contributors = stat["unique_authors"]
+        total_shows = stat["total_shows"]
 
-        async with command_error_handler(matcher_get_ranking, "获取语录排行"):
-            # 获取统计数据
-            stat = await stats_svc.get_group_statistics(group_id)
-            total_count = stat["total_quotes"]
-            contributors = stat["unique_authors"]
-            total_shows = stat["total_shows"]
+        if total_count == 0:
+            raise ValueError("当前群组语录数为 0")
 
-            if total_count == 0:
-                raise ValueError("当前群组语录数为 0")
+        # pending_count 暂时设为 0（旧版依赖 queue_service）
+        pending_count = 0
 
-            # pending_count 暂时设为 0（旧版依赖 queue_service）
-            pending_count = 0
+        stats_data = TemplateRankingStatsData(
+            total_quotes=total_count,
+            pending_quotes=pending_count,
+            contributors=contributors,
+            average_quotes=(
+                0.0 if contributors == 0
+                else total_count / contributors
+            ),
+            total_shows=total_shows,
+        )
 
-            stats_data = TemplateRankingStatsData(
-                total_quotes=total_count,
-                pending_quotes=pending_count,
-                contributors=contributors,
-                average_quotes=(
-                    0.0 if contributors == 0
-                    else total_count / contributors
-                ),
-                total_shows=total_shows,
-            )
+        # 获取群组名称
+        group_info = await group_svc.get_group(group_id)
+        if group_info is None:
+            raise ValueError(f"无法在数据库中找到群组 {group_id}")
+        group_name = group_info.name
 
-            # 获取群组名称
-            group_info = await group_svc.get_group(group_id)
-            if group_info is None:
-                raise ValueError(f"无法在数据库中找到群组 {group_id}")
-            group_name = group_info.name
+        # 获取个人排行
+        member_counts = await stats_svc.get_group_member_quote_counts(
+            group_id,
+        )
+        ranking_data: List[TemplateBasicRankingItemData] = []
+        for item in member_counts:
+            qq_id = item["qq_id"]
+            count = item["quote_count"]
+            name = await user_svc.get_display_name(qq_id, group_id)
 
-            # 获取个人排行
-            member_counts = await stats_svc.get_group_member_quote_counts(
-                group_id,
-            )
-            ranking_data: List[TemplateBasicRankingItemData] = []
-            for item in member_counts:
-                qq_id = item["qq_id"]
-                count = item["quote_count"]
-                name = await user_svc.get_display_name(qq_id, group_id)
+            # 获取头像
+            avatar_bytes = await user_svc.get_avatar(qq_id)
+            avatar_uri = to_data_uri(avatar_bytes) if avatar_bytes else None
 
-                # 获取头像
-                avatar_bytes = await user_svc.get_avatar(qq_id)
-                avatar_uri = to_data_uri(avatar_bytes) if avatar_bytes else None
-
-                ranking_data.append(TemplateBasicRankingItemData(
-                    qq=qq_id,
-                    author=name,
-                    count=count,
-                    avatar=avatar_uri,
-                ))
-
-            if not ranking_data:
-                raise ValueError("排行数据为空")
-
-            ranking_data.sort(key=lambda x: x.count, reverse=True)
-            ranking_data = ranking_data[:max_showcase_number]
-
-            # 折线图数据（近 15 天走势）
-            top_n = min(5, len(ranking_data))
-            today_start = datetime.datetime.now()
-            fifteen_days_ago = (
-                today_start - datetime.timedelta(days=15)
-            ).replace(hour=0, minute=0, second=0, microsecond=0)
-
-            frontiers_series: List[List[int]] = []
-            for i in range(top_n):
-                qq_id = ranking_data[i].qq
-                all_quotes = list(
-                    await quote_read_svc.get_quotes_by_group_and_author(
-                        group_id, qq_id,
-                    )
-                )
-                daily_counts: List[int] = []
-                current_date = fifteen_days_ago
-                while current_date <= today_start:
-                    next_day = current_date + datetime.timedelta(days=1)
-                    cnt = sum(
-                        1 for q in all_quotes if q.time_stamp < next_day
-                    )
-                    daily_counts.append(cnt)
-                    current_date = next_day
-                frontiers_series.append(daily_counts)
-
-            line_chart_data = TemplateLineChartData(
-                topN=top_n,
-                dates=_generate_date_range_mm_dd(
-                    fifteen_days_ago.date(), today_start.date(),
-                ),
-                seriesData=frontiers_series,
-            )
-
-            # 渲染 HTML 并截图
-            time_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            html = render_rank(TemplateRankingData(
-                group_name=group_name,
-                date_time=time_str,
-                basic_ranking=ranking_data,
-                line_chart=line_chart_data,
-                stats=stats_data,
+            ranking_data.append(TemplateBasicRankingItemData(
+                qq=qq_id,
+                author=name,
+                count=count,
+                avatar=avatar_uri,
             ))
-            img = await html_render_svc.render(
-                html, width=1920, height=1080, wait=3000,
+
+        if not ranking_data:
+            raise ValueError("排行数据为空")
+
+        ranking_data.sort(key=lambda x: x.count, reverse=True)
+        ranking_data = ranking_data[:max_showcase_number]
+
+        # 折线图数据（近 15 天走势）
+        top_n = min(5, len(ranking_data))
+        today_start = datetime.datetime.now()
+        fifteen_days_ago = (
+            today_start - datetime.timedelta(days=15)
+        ).replace(hour=0, minute=0, second=0, microsecond=0)
+
+        frontiers_series: List[List[int]] = []
+        for i in range(top_n):
+            qq_id = ranking_data[i].qq
+            all_quotes = list(
+                await quote_read_svc.get_quotes_by_group_and_author(
+                    group_id, qq_id,
+                )
             )
-            await matcher_get_ranking.finish(MsgSeg.image(img))
+            daily_counts: List[int] = []
+            current_date = fifteen_days_ago
+            while current_date <= today_start:
+                next_day = current_date + datetime.timedelta(days=1)
+                cnt = sum(
+                    1 for q in all_quotes if q.time_stamp < next_day
+                )
+                daily_counts.append(cnt)
+                current_date = next_day
+            frontiers_series.append(daily_counts)
+
+        line_chart_data = TemplateLineChartData(
+            topN=top_n,
+            dates=_generate_date_range_mm_dd(
+                fifteen_days_ago.date(), today_start.date(),
+            ),
+            seriesData=frontiers_series,
+        )
+
+        # 渲染 HTML 并截图
+        time_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        html = render_rank(TemplateRankingData(
+            group_name=group_name,
+            date_time=time_str,
+            basic_ranking=ranking_data,
+            line_chart=line_chart_data,
+            stats=stats_data,
+        ))
+        img = await html_render_svc.render(
+            html, width=1920, height=1080, wait=3000,
+        )
+        await matcher_get_ranking.finish(MsgSeg.image(img))
