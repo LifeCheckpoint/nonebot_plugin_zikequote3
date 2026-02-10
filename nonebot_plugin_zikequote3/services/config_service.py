@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import logging
 from ast import literal_eval
-from typing import Any, Optional
+from typing import Any, Optional, Sequence
 
 import tomlkit
 from tomlkit.exceptions import TOMLKitError
@@ -281,3 +281,76 @@ class ConfigService:
             return schema_str, new_value
         except (ValueError, SyntaxError) as e:
             raise ValidationException(f"配置参数解析失败: {e}") from e
+
+    # ------------------------------------------------------------------ #
+    #  配置完整性修复（版本迁移）
+    # ------------------------------------------------------------------ #
+
+    async def fix_config_integrity(self) -> int:
+        """
+        检查所有群组配置的版本，将旧版本配置迁移到当前默认模板。
+
+        逻辑：
+        1. 获取所有群组配置
+        2. 对每个群组，比较 ``cfg_version`` 与默认配置
+        3. 如果版本不一致，以默认配置为模板，保留群组已有的同名字段值，
+           但强制使用新版本号，然后写回数据库
+
+        Returns:
+            被修复（迁移）的群组数量。
+        """
+        default_cfg = ConfigSchema()
+        default_doc = tomlkit.parse(
+            tomlkit.dumps(default_cfg.model_dump())  # type: ignore[arg-type]
+        )
+        default_version = default_cfg.configure.cfg_version
+
+        all_configs: Sequence[GroupConfigs] = (
+            await self._group_config_repo.get_all_group_configs()
+        )
+
+        fixed_count = 0
+        for gc in all_configs:
+            try:
+                group_doc = tomlkit.parse(gc.toml_config)
+            except TOMLKitError:
+                logger.warning(
+                    "群组 %s 的 TOML 配置解析失败，跳过完整性修复",
+                    gc.group_id,
+                )
+                continue
+
+            group_version = (
+                group_doc.get("configure", {}).get("cfg_version", -1)
+            )
+            if group_version == default_version:
+                continue
+
+            # 版本不一致 → 迁移
+            logger.info(
+                "群组 %s 配置版本 v%s → v%s，执行迁移",
+                gc.group_id,
+                group_version,
+                default_version,
+            )
+            new_doc = default_doc.copy()
+            for section_name in default_doc:
+                if section_name in group_doc:
+                    for key_name in default_doc[section_name]:  # type: ignore[union-attr]
+                        if key_name in group_doc[section_name]:  # type: ignore[operator]
+                            new_doc[section_name][key_name] = (  # type: ignore[index]
+                                group_doc[section_name][key_name]  # type: ignore[index]
+                            )
+            # 强制使用新版本号
+            new_doc["configure"]["cfg_version"] = default_version  # type: ignore[index]
+
+            new_toml = tomlkit.dumps(new_doc)
+            await self._group_config_repo.update_or_create_group_config(
+                gc.group_id, new_toml
+            )
+            fixed_count += 1
+            logger.info("群组 %s 配置已迁移到 v%s", gc.group_id, default_version)
+
+        if fixed_count:
+            logger.info("共修复 %d 个群组的配置完整性", fixed_count)
+        return fixed_count

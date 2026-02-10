@@ -73,13 +73,11 @@ from .utils.token_generate import TokenManager
 token_manager = TokenManager()
 
 
-# 加载 toml 配置并注入 BaseModel
-from .config import reload_config, ConfigPath
-_default_cfg_toml, default_cfg, _cfg_toml, cfg = reload_config()
-# 允许热更新配置
-def notify_reload_config():
-    global _default_cfg_toml, default_cfg, _cfg_toml, cfg
-    _default_cfg_toml, default_cfg, _cfg_toml, cfg = reload_config()
+# 加载本地默认 TOML 配置（不再从数据库加载群组配置，由 ConfigService 异步处理）
+from .config import parse_config_from_toml, ConfigPath
+_default_cfg_toml = tomlkit.parse((PluginPath.plugin_root / "config.toml").read_text(encoding="utf-8"))
+default_cfg = parse_config_from_toml(_default_cfg_toml)
+cfg = default_cfg  # 兼容旧模块，始终返回默认配置
 
 
 # 配置 sentry

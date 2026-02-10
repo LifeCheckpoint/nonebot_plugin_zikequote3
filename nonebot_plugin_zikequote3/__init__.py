@@ -97,7 +97,14 @@ async def _startup() -> None:
         render_device_factor=default_cfg.showcase.render_device_factor,
     )
 
-    # 3) 绑定到 NoneBot Driver（shutdown 时自动关闭容器）
+    # 3) 配置完整性修复（版本迁移）
+    from .services.config_service import ConfigService
+
+    async with container() as request_ctx:
+        config_svc = await request_ctx.get(ConfigService)
+        await config_svc.fix_config_integrity()
+
+    # 4) 绑定到 NoneBot Driver（shutdown 时自动关闭容器）
     setup_dishka(container, driver)
 
 

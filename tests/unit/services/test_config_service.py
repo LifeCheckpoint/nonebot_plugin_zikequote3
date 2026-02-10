@@ -267,3 +267,99 @@ class TestModifySingleValue:
     ) -> None:
         with pytest.raises(ValidationException, match="不可修改"):
             await config_service.modify_single_value("g1", "llm.api_key_path", "new")
+
+
+# ---------------------------------------------------------------------------
+# fix_config_integrity
+# ---------------------------------------------------------------------------
+
+
+class TestFixConfigIntegrity:
+    """fix_config_integrity 配置完整性修复测试。"""
+
+    async def test_no_configs_returns_zero(
+        self, config_service: ConfigService, mock_group_config_repo: AsyncMock
+    ) -> None:
+        """没有群组配置时应返回 0。"""
+        mock_group_config_repo.get_all_group_configs.return_value = []
+        result = await config_service.fix_config_integrity()
+        assert result == 0
+        mock_group_config_repo.update_or_create_group_config.assert_not_awaited()
+
+    async def test_up_to_date_config_not_modified(
+        self, config_service: ConfigService, mock_group_config_repo: AsyncMock
+    ) -> None:
+        """版本一致的配置不应被修改。"""
+        import tomlkit
+        from nonebot_plugin_zikequote3.config import ConfigSchema
+
+        current_version = ConfigSchema().configure.cfg_version
+        toml_str = f"[configure]\ncfg_version = {current_version}\n"
+        fake = GroupConfigs(group_id="g1", toml_config=toml_str)
+        mock_group_config_repo.get_all_group_configs.return_value = [fake]
+
+        result = await config_service.fix_config_integrity()
+        assert result == 0
+        mock_group_config_repo.update_or_create_group_config.assert_not_awaited()
+
+    async def test_outdated_config_gets_migrated(
+        self, config_service: ConfigService, mock_group_config_repo: AsyncMock
+    ) -> None:
+        """版本不一致的配置应被迁移，保留旧值但更新版本号。"""
+        import tomlkit
+        from nonebot_plugin_zikequote3.config import ConfigSchema
+
+        current_version = ConfigSchema().configure.cfg_version
+        old_toml = (
+            "[collecting]\npickup_interval = 200\n"
+            "[configure]\ncfg_version = 1\n"
+        )
+        fake = GroupConfigs(group_id="g1", toml_config=old_toml)
+        mock_group_config_repo.get_all_group_configs.return_value = [fake]
+        mock_group_config_repo.update_or_create_group_config.return_value = fake
+
+        result = await config_service.fix_config_integrity()
+        assert result == 1
+        mock_group_config_repo.update_or_create_group_config.assert_awaited_once()
+
+        # 验证写回的 TOML 包含旧的自定义值和新版本号
+        call_args = mock_group_config_repo.update_or_create_group_config.call_args
+        written_toml = call_args[0][1]
+        doc = tomlkit.parse(written_toml)
+        assert doc["collecting"]["pickup_interval"] == 200 # type: ignore
+        assert doc["configure"]["cfg_version"] == current_version # type: ignore
+
+    async def test_multiple_groups_partial_migration(
+        self, config_service: ConfigService, mock_group_config_repo: AsyncMock
+    ) -> None:
+        """多个群组中只有版本不一致的才被迁移。"""
+        from nonebot_plugin_zikequote3.config import ConfigSchema
+
+        current_version = ConfigSchema().configure.cfg_version
+        up_to_date = GroupConfigs(
+            group_id="g1",
+            toml_config=f"[configure]\ncfg_version = {current_version}\n",
+        )
+        outdated = GroupConfigs(
+            group_id="g2",
+            toml_config="[configure]\ncfg_version = 0\n",
+        )
+        mock_group_config_repo.get_all_group_configs.return_value = [
+            up_to_date, outdated
+        ]
+        mock_group_config_repo.update_or_create_group_config.return_value = outdated
+
+        result = await config_service.fix_config_integrity()
+        assert result == 1
+        mock_group_config_repo.update_or_create_group_config.assert_awaited_once()
+
+    async def test_invalid_toml_skipped(
+        self, config_service: ConfigService, mock_group_config_repo: AsyncMock
+    ) -> None:
+        """无法解析的 TOML 配置应被跳过，不影响其他群组。"""
+        broken = GroupConfigs(group_id="g1", toml_config="[broken =")
+        mock_group_config_repo.get_all_group_configs.return_value = [broken]
+
+        result = await config_service.fix_config_integrity()
+        assert result == 0
+        mock_group_config_repo.update_or_create_group_config.assert_not_awaited()
