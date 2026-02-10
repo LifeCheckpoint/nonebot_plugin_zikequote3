@@ -14,12 +14,11 @@ from typing import Sequence
 from ...database.models.quotes import Quote
 from ...database.image_store import ImageStore
 from ...services import QuoteReadService, UserService
+from ...services.review_service import AUTHOR_AI
 from ...templates.schema.listing import TemplateQuoteBoxData
 
 logger = logging.getLogger(__name__)
 
-# 与旧版 review_service 中的 AI 作者标识保持一致
-AUTHOR_AI = "AI"
 
 
 def _to_data_uri(data: bytes, mime: str = "image/png") -> str:

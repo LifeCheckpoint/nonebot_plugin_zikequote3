@@ -22,6 +22,7 @@ from ..command_definition import matcher_random_quote_card
 from ...di import Inject, inject
 from ...services import QuoteReadService, QuoteWriteService, UserService
 from ...services.html_render_service import HtmlRenderServiceBase
+from ...services.review_service import AUTHOR_AI
 from ...database.image_store import ImageStore
 from ._error_handlers import command_error_handler, suppress_error
 from ...templates.schema.card import TemplateCommentData, TemplateQuoteCardData
@@ -29,8 +30,6 @@ from ...templates import card as card_template
 
 logger = logging.getLogger(__name__)
 
-# 与旧版 review_service 中的 AI 作者标识保持一致
-_AUTHOR_AI = "AI"
 
 
 def _to_data_uri(data: bytes, mime: str = "image/png") -> str:
@@ -127,11 +126,12 @@ async def handle_random_quote_card(
         if pair is not None:
             _, reviews = pair
             for r in reviews:
-                comment_author = await user_svc.get_display_name(
-                    r.author_id, group_id,
-                )
-                if comment_author == _AUTHOR_AI:
+                if r.author_id == AUTHOR_AI:
                     comment_author = "AI"
+                else:
+                    comment_author = await user_svc.get_display_name(
+                        r.author_id, group_id,
+                    )
                 comments.append(TemplateCommentData(
                     comment_id=r.review_id,
                     author_name=comment_author,
