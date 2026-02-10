@@ -15,6 +15,7 @@ import logging
 
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment as MsgSeg
 from nonebot.adapters import Message
+from nonebot.exception import FinishedException
 from nonebot.params import CommandArg
 
 from ..command_definition import (
@@ -79,6 +80,8 @@ async def handle_get_current_config(
                 html, width=800, height=600,
             )
             await matcher_get_current_config.finish(MsgSeg.image(img))
+        except FinishedException:
+            raise
         except Exception as e:
             logger.warning("配置预览图片渲染失败，降级为纯文本: %s", e)
             await matcher_get_current_config.finish(
