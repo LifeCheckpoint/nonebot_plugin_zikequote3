@@ -19,7 +19,7 @@ from nonebot.params import CommandArg
 from ..command_definition import matcher_remove_quote
 from ...di import get_container
 from ...services import QuoteWriteService
-from ...utils.error_report import event_exception_failmsg_a, event_exception
+from ._error_handlers import command_error_handler, suppress_error
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ async def handle_remove_quote(
 
         # 方式1：通过回复消息获取语录 ID
         if reply is not None:
-            with event_exception(operation="ignore"):
+            with suppress_error("通过回复消息获取语录ID"):
                 quote_id = await quote_write_svc.get_quote_id_by_msg_id(
                     str(reply.message_id)
                 )
@@ -62,7 +62,7 @@ async def handle_remove_quote(
                 "请回复一条语录消息或提供语录 ID 来删除哦~"
             )
 
-        async with event_exception_failmsg_a(matcher_remove_quote, "删除语录"):
+        async with command_error_handler(matcher_remove_quote, "删除语录"):
             await quote_write_svc.delete_quote(quote_id)
 
         await matcher_remove_quote.finish("语录删除成功~(≧▽≦)")

@@ -27,7 +27,7 @@ from ..command_definition import (
 )
 from ...di import get_container
 from ...services import ConfigService
-from ...utils.error_report import event_exception_failmsg_a
+from ._error_handlers import command_error_handler
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ async def handle_get_current_config(event: GroupMessageEvent) -> None:
     async with container() as request_scope:
         config_svc = await request_scope.get(ConfigService)
 
-        async with event_exception_failmsg_a(
+        async with command_error_handler(
             matcher_get_current_config, "生成配置预览"
         ):
             toml_str = await config_svc.get_group_toml(group_id)
@@ -81,7 +81,7 @@ async def handle_modify_config(
     async with container() as request_scope:
         config_svc = await request_scope.get(ConfigService)
 
-        async with event_exception_failmsg_a(matcher_modify_config, "修改配置"):
+        async with command_error_handler(matcher_modify_config, "修改配置"):
             # 参数检查
             if len(args) < 2:
                 raise ValueError("参数过少，至少需要两个参数👻~")

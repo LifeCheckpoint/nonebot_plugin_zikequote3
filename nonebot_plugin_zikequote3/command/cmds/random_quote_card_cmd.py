@@ -23,7 +23,7 @@ from ..command_definition import matcher_random_quote_card
 from ...di import get_container
 from ...services import QuoteReadService, QuoteWriteService, UserService
 from ...database.image_store import ImageStore
-from ...utils.error_report import event_exception_failmsg_a, event_exception
+from ._error_handlers import command_error_handler, suppress_error
 from ...templates.schema.card import TemplateCommentData, TemplateQuoteCardData
 from ...templates import card as card_template
 from ...html_capture import html_img_render
@@ -59,7 +59,7 @@ async def handle_random_quote_card(
 
         q_result = None
 
-        async with event_exception_failmsg_a(matcher_random_quote_card, "获取语录卡"):
+        async with command_error_handler(matcher_random_quote_card, "获取语录卡"):
             q_result = await quote_read_svc.get_random_quote(
                 group_id,
                 keyword=key if key else None,
@@ -134,12 +134,12 @@ async def handle_random_quote_card(
 
         # 更新语录出现次数
         if q_result is not None:
-            with event_exception(operation="ignore"):
+            with suppress_error("更新语录出现次数"):
                 await quote_read_svc.increment_show_time(q_result.quote_id)
 
         # 添加消息映射
         if send_msg is not None and q_result is not None:
-            with event_exception(operation="ignore"):
+            with suppress_error("添加消息映射"):
                 await quote_write_svc.create_msg_quote_mapping(
                     str(send_msg["message_id"]), q_result.quote_id,
                 )

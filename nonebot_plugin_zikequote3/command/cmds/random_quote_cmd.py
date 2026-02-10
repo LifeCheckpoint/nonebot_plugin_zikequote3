@@ -22,7 +22,7 @@ from ..command_definition import matcher_random_quote
 from ...di import get_container
 from ...services import QuoteReadService, QuoteWriteService, UserService
 from ...database.image_store import ImageStore
-from ...utils.error_report import event_exception_failmsg_a, event_exception
+from ._error_handlers import command_error_handler, suppress_error
 from ...msgtexts.quote_read import send_quote
 
 logger = logging.getLogger(__name__)
@@ -46,7 +46,7 @@ async def handle_random_quote(
         user_svc = await request_scope.get(UserService)
         image_store = await request_scope.get(ImageStore)
 
-        async with event_exception_failmsg_a(matcher_random_quote, "获取随机语录"):
+        async with command_error_handler(matcher_random_quote, "获取随机语录"):
             q_result = await quote_read_svc.get_random_quote(
                 group_id,
                 keyword=key if key else None,
@@ -75,7 +75,7 @@ async def handle_random_quote(
             # 获取语录作者当前昵称
             author_card = await user_svc.get_display_name(q_result.author_id, group_id)
 
-            with event_exception(operation="ignore"):
+            with suppress_error("发送语录消息"):
                 if q_result.content is not None:
                     text_msg = MsgSeg.text(send_quote(author_card, q_result.content))
                 else:
@@ -102,12 +102,12 @@ async def handle_random_quote(
                     raise ValueError("语录内容和图片均为空")
 
         # 更新语录出现次数
-        with event_exception(operation="ignore"):
+        with suppress_error("更新语录出现次数"):
             await quote_read_svc.increment_show_time(q_result.quote_id)
 
         # 添加消息映射
         if send_msg is not None:
-            with event_exception(operation="ignore"):
+            with suppress_error("添加消息映射"):
                 await quote_write_svc.create_msg_quote_mapping(
                     str(send_msg["message_id"]), q_result.quote_id,
                 )

@@ -19,7 +19,7 @@ from nonebot.params import CommandArg
 from ..command_definition import matcher_remove_quote_comment
 from ...di import get_container
 from ...services import ReviewService
-from ...utils.error_report import event_exception_failmsg_a
+from ._error_handlers import command_error_handler
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ async def handle_remove_quote_comment(
     async with container() as request_scope:
         review_svc = await request_scope.get(ReviewService)
 
-        async with event_exception_failmsg_a(
+        async with command_error_handler(
             matcher_remove_quote_comment, "删除评论"
         ):
             await review_svc.delete_review(review_id)

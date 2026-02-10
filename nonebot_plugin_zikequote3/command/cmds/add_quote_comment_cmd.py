@@ -22,7 +22,7 @@ from ..command_definition import (
 )
 from ...di import get_container
 from ...services import QuoteWriteService, ReviewService, GroupService
-from ...utils.error_report import event_exception_failmsg_a, event_exception
+from ._error_handlers import command_error_handler, suppress_error
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ async def handle_add_quote_comment(
         review_svc = await request_scope.get(ReviewService)
         group_svc = await request_scope.get(GroupService)
 
-        async with event_exception_failmsg_a(matcher_add_quote_comment, "添加评论"):
+        async with command_error_handler(matcher_add_quote_comment, "添加评论"):
             # 获取语录 ID
             quote_id = await quote_write_svc.get_quote_id_by_msg_id(str(reply.message_id))
             if quote_id is None:
@@ -63,7 +63,7 @@ async def handle_add_quote_comment(
             await matcher_add_quote_comment.send("评论添加成功~(≧▽≦)")
 
         # 检查用户-群映射存在性
-        with event_exception(operation="ignore"):
+        with suppress_error("检查用户-群映射"):
             await group_svc.ensure_member(group_id, str(event.sender.user_id))
 
 
@@ -86,7 +86,7 @@ if matcher_add_quote_comment_no_prefix is not None:
             quote_write_svc = await request_scope.get(QuoteWriteService)
             review_svc = await request_scope.get(ReviewService)
 
-            async with event_exception_failmsg_a(
+            async with command_error_handler(
                 matcher_add_quote_comment_no_prefix, "添加评论"
             ):
                 # 获取语录 ID

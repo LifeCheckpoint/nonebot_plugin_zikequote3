@@ -18,7 +18,7 @@ from nonebot.typing import T_State
 from ..command_definition import matcher_update_quote_force
 from ...di import get_container
 from ...services import QuoteCollectionService
-from ...utils.error_report import event_exception_failmsg_a
+from ._error_handlers import command_error_handler
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ async def handle_update_quote_force(
                 "当前已有更新任务在进行中，请稍后再试~"
             )
 
-        async with event_exception_failmsg_a(
+        async with command_error_handler(
             matcher_update_quote_force, "语录强制更新"
         ):
             # 执行收集流程（包含锁、队列取出、筛选、保存）

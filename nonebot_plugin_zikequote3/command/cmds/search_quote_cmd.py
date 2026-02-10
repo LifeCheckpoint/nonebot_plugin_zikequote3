@@ -23,7 +23,7 @@ from ..command_definition import matcher_search_quote
 from ...di import get_container
 from ...services import StatisticsService, QuoteReadService, UserService
 from ...database.image_store import ImageStore
-from ...utils.error_report import event_exception_failmsg_a
+from ._error_handlers import command_error_handler
 from ...templates.schema.listing import TemplateQuoteListData, render_list
 from ...html_capture import html_img_render
 from ._display_helpers import transform_quotes_to_template_boxes
@@ -58,7 +58,7 @@ async def handle_search_quote(
         user_svc = await request_scope.get(UserService)
         image_store = await request_scope.get(ImageStore)
 
-        async with event_exception_failmsg_a(matcher_search_quote, "解析参数"):
+        async with command_error_handler(matcher_search_quote, "解析参数"):
             if max_result.available:
                 if max_result.result is not None and max_result.result < 1:
                     await matcher_search_quote.finish(
@@ -83,7 +83,7 @@ async def handle_search_quote(
             )
             logger.debug("解析结果参数: %s", params)
 
-        async with event_exception_failmsg_a(matcher_search_quote, "获取语录列表"):
+        async with command_error_handler(matcher_search_quote, "获取语录列表"):
             # 使用 StatisticsService 搜索语录
             quotes, total_found = await stats_svc.search_quotes(
                 keyword=params.pattern,

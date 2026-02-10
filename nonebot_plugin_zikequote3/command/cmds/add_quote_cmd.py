@@ -18,7 +18,7 @@ from ..command_definition import matcher_add_quote
 from ...di import get_container
 from ...services import QuoteWriteService, UserService, GroupService
 from ...database.image_store import ImageStore
-from ...utils.error_report import event_exception_failmsg_a, event_exception
+from ._error_handlers import command_error_handler, suppress_error
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ async def handle_add_quote(
         # 检查图片数据存在性
         image_uuid = None
         if reply.message.count("image") >= 1:
-            async with event_exception_failmsg_a(matcher_add_quote, "获取将要添加的图片数据"):
+            async with command_error_handler(matcher_add_quote, "获取将要添加的图片数据"):
                 picseg_data = reply.message.get("image")[0].data
                 img_url_or_file = picseg_data.get("url") or picseg_data.get("file", "")
                 img_data = await _fetch_image_from_url_or_file(img_url_or_file)
@@ -81,7 +81,7 @@ async def handle_add_quote(
         )
 
         qid: str = ""
-        async with event_exception_failmsg_a(matcher_add_quote, "添加语录"):
+        async with command_error_handler(matcher_add_quote, "添加语录"):
             qid = await quote_write_svc.add_quote(
                 group_id=group_id,
                 author_id=str(reply.sender.user_id),
@@ -92,11 +92,11 @@ async def handle_add_quote(
         await matcher_add_quote.send("语录添加成功~(≧▽≦)")
 
         # 检查用户-群映射存在性
-        with event_exception(operation="ignore"):
+        with suppress_error("检查用户-群映射"):
             await group_svc.ensure_member(group_id, str(reply.sender.user_id))
 
         # 添加消息映射
-        with event_exception(operation="ignore"):
+        with suppress_error("添加消息映射"):
             await quote_write_svc.create_msg_quote_mapping(
                 str(reply.message_id), qid,
             )

@@ -20,7 +20,7 @@ from nonebot_plugin_alconna import Match, Query
 from ..command_definition import matcher_group_migration
 from ...di import get_container
 from ...services import MigrationService, GroupService
-from ...utils.error_report import event_exception_failmsg_a
+from ._error_handlers import command_error_handler
 from ...utils.token_generate import TokenManager
 
 logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ async def handle_group_migration(
         token_mgr = await request_scope.get(TokenManager)
 
         # 群聊存在性确认
-        async with event_exception_failmsg_a(
+        async with command_error_handler(
             matcher_group_migration, "群聊存在性确认"
         ):
             if not source.available or not target.available:
@@ -77,7 +77,7 @@ async def handle_group_migration(
         before_members = 0
         after_members = 0
 
-        async with event_exception_failmsg_a(
+        async with command_error_handler(
             matcher_group_migration, "群聊语录信息统计"
         ):
             result = await migration_svc.prepare_migration(

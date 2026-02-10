@@ -26,7 +26,7 @@ from ...services import (
     StatisticsService,
     UserService,
 )
-from ...utils.error_report import event_exception_failmsg_a
+from ._error_handlers import command_error_handler
 from ...utils.base64_encoder import to_data_uri
 from ...templates.schema.rank import (
     TemplateBasicRankingItemData,
@@ -75,7 +75,7 @@ async def handle_get_ranking(
         group_svc = await request_scope.get(GroupService)
         quote_read_svc = await request_scope.get(QuoteReadService)
 
-        async with event_exception_failmsg_a(matcher_get_ranking, "获取语录排行"):
+        async with command_error_handler(matcher_get_ranking, "获取语录排行"):
             # 获取统计数据
             stat = await stats_svc.get_group_statistics(group_id)
             total_count = stat["total_quotes"]

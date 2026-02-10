@@ -23,7 +23,7 @@ from ...services import (
     GroupService,
     UserService,
 )
-from ...utils.error_report import event_exception_a, event_exception
+from ._error_handlers import silent_error_handler, suppress_error
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ async def handle_collecting_listener(
 
         # 入队与阈值检查
         is_threshold = False
-        async with event_exception_a("收录与阈值检查", operation="finish"):
+        async with silent_error_handler("收录与阈值检查"):
             await collection_svc.enqueue_message(
                 group_id=group_id,
                 msg_id=str(event.message_id),
@@ -74,7 +74,7 @@ async def handle_collecting_listener(
 
         # 概率更新用户信息
         if random.random() < update_prob:
-            async with event_exception_a("更新个人信息", operation="finish"):
+            async with silent_error_handler("更新个人信息"):
                 try:
                     member_info = await bot.get_group_member_info(
                         group_id=int(group_id), user_id=int(user_id),
@@ -89,7 +89,7 @@ async def handle_collecting_listener(
                     logger.debug("更新个人信息失败", exc_info=True)
 
         # 检查用户-群映射存在性
-        with event_exception(operation="ignore"):
+        with suppress_error("检查用户-群映射"):
             await group_svc.ensure_member(group_id, user_id)
 
         # 未达到阈值，结束流程
@@ -104,7 +104,7 @@ async def handle_collecting_listener(
             return
 
         # 执行收集流程
-        async with event_exception_a("LLM 筛选", operation="finish"):
+        async with silent_error_handler("LLM 筛选"):
             quote_ids = await collection_svc.collect_and_save(group_id)
             logger.info("筛选到 %d 条语录", len(quote_ids))
 
@@ -115,5 +115,5 @@ async def handle_collecting_listener(
         # 需要后续扩展 collect_and_save 的返回值以支持 AI 评论。
 
         # 清空队列
-        with event_exception("清空队列", operation="finish"):
+        with suppress_error("清空队列"):
             await collection_svc.clear_queue(group_id)

@@ -19,7 +19,7 @@ from nonebot_plugin_alconna.uniseg.segment import At
 from ..command_definition import matcher_get_user_info
 from ...di import get_container
 from ...services import StatisticsService, UserService
-from ...utils.error_report import event_exception_failmsg_a
+from ._error_handlers import command_error_handler
 from ...utils.base64_encoder import to_data_uri
 from ...templates.schema.user_info import TemplateUserInfoData, render_user_info
 from ...html_capture import html_img_render
@@ -42,7 +42,7 @@ async def handle_get_user_info(
         user_svc = await request_scope.get(UserService)
         stats_svc = await request_scope.get(StatisticsService)
 
-        async with event_exception_failmsg_a(matcher_get_user_info, "解析参数"):
+        async with command_error_handler(matcher_get_user_info, "解析参数"):
             user_qq: str | None = None
 
             # 优先解析 At 段
@@ -76,7 +76,7 @@ async def handle_get_user_info(
             if not user_qq:
                 user_qq = str(event.user_id)
 
-        async with event_exception_failmsg_a(matcher_get_user_info, "获取用户信息"):
+        async with command_error_handler(matcher_get_user_info, "获取用户信息"):
             # 检查用户是否存在
             if not user_qq or not await user_svc.user_exists(user_qq):
                 raise ValueError("没有找到有效的用户哦.·´¯`(>▂<)´¯`·. ")
