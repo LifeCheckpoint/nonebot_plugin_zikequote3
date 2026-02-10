@@ -78,7 +78,25 @@ _svc_mod.StatisticsService = StatisticsService  # type: ignore[attr-defined]
 _svc_mod.UserService = UserService  # type: ignore[attr-defined]
 
 # ---------------------------------------------------------------------------
-# 3) Stub command 子包 —— 避免导入 command_definition.py 的模块级代码
+# 3) Stub paths 模块 —— 避免 paths.py 触发 nonebot_plugin_localstore 初始化
+# ---------------------------------------------------------------------------
+if "nonebot_plugin_zikequote3.paths" not in sys.modules:
+    _stub_paths = types.ModuleType("nonebot_plugin_zikequote3.paths")
+
+    class _StubPluginPath:
+        """Stub PluginPath，提供测试所需的路径属性。"""
+        plugin_root = _plugin_root
+        module_resources_root = _plugin_root / "resources"
+        module_templates_root = _plugin_root / "templates"
+        module_templates_htmls_root = _plugin_root / "templates" / "src" / "htmls"
+        module_templates_css_root = _plugin_root / "templates" / "src" / "assets" / "css"
+        module_templates_js_root = _plugin_root / "templates" / "src" / "assets" / "js"
+
+    _stub_paths.PluginPath = _StubPluginPath  # type: ignore[attr-defined]
+    sys.modules["nonebot_plugin_zikequote3.paths"] = _stub_paths
+
+# ---------------------------------------------------------------------------
+# 4) Stub command 子包 —— 避免导入 command_definition.py 的模块级代码
 # ---------------------------------------------------------------------------
 _command_root = _plugin_root / "command"
 if "nonebot_plugin_zikequote3.command" not in sys.modules:
