@@ -4,7 +4,7 @@
 from typing import List, Optional
 from pydantic import BaseModel
 from .. import render_template
-from ...imports import PluginPath
+from ...paths import PluginPath
 import random, base64
 
 

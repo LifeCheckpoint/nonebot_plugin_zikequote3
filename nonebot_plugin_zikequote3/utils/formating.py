@@ -1,4 +1,6 @@
-from ..imports import *
+import random
+import colorsys
+from typing import List
 
 def generate_color_palette(num_colors: int) -> List[str]:
     """

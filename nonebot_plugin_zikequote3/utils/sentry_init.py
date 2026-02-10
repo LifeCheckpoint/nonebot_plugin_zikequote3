@@ -1,10 +1,17 @@
-def init_sentry():
-    from ..imports import Path, default_cfg, PluginPath, logger
+from pathlib import Path
+from typing import Optional
+
+from nonebot import logger
+
+from ..paths import PluginPath
+
+
+def init_sentry(sentry_dsn_path: Optional[str] = None):
     import sentry_sdk
 
-    dsn_path_to_parse = Path(default_cfg.sentry.dsn_path) if default_cfg.sentry.dsn_path else None
+    dsn_path_to_parse = Path(sentry_dsn_path) if sentry_dsn_path else None
     if dsn_path_to_parse and not dsn_path_to_parse.is_absolute():
-        dsn_path = PluginPath.plugin_root / default_cfg.sentry.dsn_path
+        dsn_path = PluginPath.plugin_root / dsn_path_to_parse
     elif dsn_path_to_parse is not None:
         dsn_path = dsn_path_to_parse
     else:

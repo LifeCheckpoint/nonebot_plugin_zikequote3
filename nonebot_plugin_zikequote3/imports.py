@@ -84,7 +84,7 @@ def notify_reload_config():
 
 # 配置 sentry
 from .utils.sentry_init import init_sentry
-init_sentry()
+init_sentry(sentry_dsn_path=default_cfg.sentry.dsn_path)
 
 
 # 加载消息导入
