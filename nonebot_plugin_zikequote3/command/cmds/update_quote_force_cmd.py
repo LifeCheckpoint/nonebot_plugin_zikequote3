@@ -17,7 +17,8 @@ from nonebot.typing import T_State
 
 from ..command_definition import matcher_update_quote_force
 from ...di import get_container
-from ...services import QuoteCollectionService
+from ...services import QuoteCollectionService, ReviewService
+from ...services.review_service import AUTHOR_AI
 from ._error_handlers import command_error_handler
 
 logger = logging.getLogger(__name__)
@@ -34,6 +35,7 @@ async def handle_update_quote_force(
     container = get_container()
     async with container() as request_scope:
         collection_svc = await request_scope.get(QuoteCollectionService)
+        review_svc = await request_scope.get(ReviewService)
 
         # 检查是否已有收集任务在进行中
         if collection_svc.is_collecting(group_id):
@@ -45,18 +47,21 @@ async def handle_update_quote_force(
             matcher_update_quote_force, "语录强制更新"
         ):
             # 执行收集流程（包含锁、队列取出、筛选、保存）
-            quote_ids = await collection_svc.collect_and_save(group_id)
+            collected = await collection_svc.collect_and_save(group_id)
 
-            # TODO: QuoteCollectionService.collect_and_save 目前只返回
-            # quote_ids，不返回 SelectedQuote 列表（含 comment），因此
-            # 无法为每条语录添加 AI 评论。旧版本会调用
-            # s_add_review(AUTHOR_AI, quote_id, quote.comment)。
-            # 需要后续扩展 collect_and_save 的返回值。
+            # 为每条语录添加 AI 评论
+            for item in collected:
+                if item.comment:
+                    await review_svc.add_review(
+                        quote_id=item.quote_id,
+                        author_id=AUTHOR_AI,
+                        content=item.comment,
+                    )
 
             # 清空队列
             await collection_svc.clear_queue(group_id)
 
-        num_quotes = len(quote_ids)
+        num_quotes = len(collected)
         await matcher_update_quote_force.finish(
             f"本次语录更新完成，共新增 {num_quotes} 条语录~"
         )

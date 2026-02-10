@@ -21,8 +21,10 @@ from ...services import (
     ConfigService,
     QuoteCollectionService,
     GroupService,
+    ReviewService,
     UserService,
 )
+from ...services.review_service import AUTHOR_AI
 from ._error_handlers import silent_error_handler, suppress_error
 
 logger = logging.getLogger(__name__)
@@ -47,6 +49,7 @@ async def handle_collecting_listener(
         config_svc = await request_scope.get(ConfigService)
         collection_svc = await request_scope.get(QuoteCollectionService)
         group_svc = await request_scope.get(GroupService)
+        review_svc = await request_scope.get(ReviewService)
         user_svc = await request_scope.get(UserService)
 
         # 通过 ConfigService 加载收集配置
@@ -105,14 +108,18 @@ async def handle_collecting_listener(
 
         # 执行收集流程
         async with silent_error_handler("LLM 筛选"):
-            quote_ids = await collection_svc.collect_and_save(group_id)
-            logger.info("筛选到 %d 条语录", len(quote_ids))
+            collected = await collection_svc.collect_and_save(group_id)
+            logger.info("筛选到 %d 条语录", len(collected))
 
-        # TODO: 旧版本会为每条语录添加 AI 评论
-        # （s_add_review(AUTHOR_AI, quote_id, comment)），
-        # 但 collect_and_save 目前只返回 quote_ids，
-        # 不返回 SelectedQuote（含 comment）。
-        # 需要后续扩展 collect_and_save 的返回值以支持 AI 评论。
+        # 为每条语录添加 AI 评论
+        for item in collected:
+            if item.comment:
+                async with silent_error_handler("添加 AI 评论"):
+                    await review_svc.add_review(
+                        quote_id=item.quote_id,
+                        author_id=AUTHOR_AI,
+                        content=item.comment,
+                    )
 
         # 清空队列
         with suppress_error("清空队列"):

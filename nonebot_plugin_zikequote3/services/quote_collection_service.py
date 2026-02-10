@@ -15,6 +15,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import random
+from dataclasses import dataclass
 from typing import Any, Callable, Coroutine, Optional, Protocol, Sequence
 
 from ..database.models.msgs_queue import MsgQueue
@@ -48,6 +49,19 @@ class SelectedQuote:
         self.content = content
         self.comment = comment
         self.quote_id = quote_id
+
+
+# ------------------------------------------------------------------ #
+#  收集结果数据类
+# ------------------------------------------------------------------ #
+
+
+@dataclass
+class CollectedQuote:
+    """收集流程产出的单条语录，包含 quote_id 和可选的 AI 评论。"""
+
+    quote_id: str
+    comment: Optional[str] = None
 
 
 # ------------------------------------------------------------------ #
@@ -253,7 +267,7 @@ class QuoteCollectionService:
         *,
         limit: Optional[int] = None,
         allow_duplicate: bool = True,
-    ) -> list[str]:
+    ) -> list[CollectedQuote]:
         """
         执行收集流程：从队列取出消息 → 筛选 → 保存为语录。
 
@@ -263,7 +277,7 @@ class QuoteCollectionService:
             allow_duplicate: 是否允许重复语录。
 
         Returns:
-            新创建的语录 ID 列表。
+            收集结果列表，每项包含 quote_id 和可选的 AI 评论。
 
         Raises:
             CollectionLockError: 群组正在收集中。
@@ -285,7 +299,7 @@ class QuoteCollectionService:
         *,
         limit: Optional[int] = None,
         allow_duplicate: bool = True,
-    ) -> list[str]:
+    ) -> list[CollectedQuote]:
         """收集流程内部实现。"""
         # 1. 取出队列消息
         messages = await self._msg_queue_repo.get_msgs_by_group(
@@ -301,7 +315,7 @@ class QuoteCollectionService:
             return []
 
         # 3. 保存
-        quote_ids: list[str] = []
+        collected: list[CollectedQuote] = []
         for item in selected:
             # 查找原始消息获取作者信息
             source_msg = await self._msg_queue_repo.get_msg_by_id(item.msg_id)
@@ -336,7 +350,11 @@ class QuoteCollectionService:
                     author_id=author_id,
                     content=content,
                 )
-                quote_ids.append(quote_id)
+                comment = item.comment if item.comment else None
+                collected.append(CollectedQuote(
+                    quote_id=quote_id,
+                    comment=comment,
+                ))
             except Exception:
                 logger.warning(
                     "保存语录失败: msg_id=%s", item.msg_id, exc_info=True
@@ -344,9 +362,9 @@ class QuoteCollectionService:
 
         logger.info(
             "收集完成: group=%s, saved=%d/%d",
-            group_id, len(quote_ids), len(selected),
+            group_id, len(collected), len(selected),
         )
-        return quote_ids
+        return collected
 
     async def _select_quotes(
         self,
