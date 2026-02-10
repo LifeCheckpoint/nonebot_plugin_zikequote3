@@ -2,7 +2,7 @@
 AsyncEngine 工厂函数。
 
 负责创建 SQLAlchemy 2.0 AsyncEngine 并注册 SQLite PRAGMA 事件监听器。
-PRAGMA 配置参考现有 connection_manager.py，确保兼容：
+PRAGMA 配置沿用旧同步架构的最佳实践：
 - journal_mode=WAL
 - foreign_keys=ON
 - busy_timeout=5000

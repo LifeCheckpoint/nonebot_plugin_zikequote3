@@ -21,7 +21,7 @@ class GroupNicknameModel(Base):
 
     __tablename__ = "group_nicknames"
 
-    # schema.sql 中 group_nicknames 没有显式主键，
+    # 原始表定义中 group_nicknames 没有显式主键，
     # 但 ORM 要求主键，因此添加自增 id 作为代理主键。
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     qq_id: Mapped[str] = mapped_column(

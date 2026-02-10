@@ -15,7 +15,7 @@ from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # 预注册父包 stub，避免导入 database.sa 时触发
-# nonebot_plugin_zikequote3/__init__.py → imports.py → nonebot 初始化链
+# nonebot_plugin_zikequote3/__init__.py → nonebot 初始化链
 # ---------------------------------------------------------------------------
 _plugin_root = Path(__file__).resolve().parent.parent.parent / "nonebot_plugin_zikequote3"
 
