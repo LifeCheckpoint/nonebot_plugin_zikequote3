@@ -1,13 +1,28 @@
-from ..imports import *
+import logging
+from typing import Optional, Tuple
 
-def get_hitokoto() -> Tuple[Optional[str], Optional[str]]:
+import requests
+
+logger = logging.getLogger(__name__)
+
+# 默认一言 API 地址，与 config.ShowcaseConfig.hitokoto_url 保持一致
+_DEFAULT_HITOKOTO_URL = "https://v1.hitokoto.cn"
+
+
+def get_hitokoto(
+    hitokoto_url: str = _DEFAULT_HITOKOTO_URL,
+) -> Tuple[Optional[str], Optional[str]]:
     """
     从指定链接获取名人名言，返回名言和名言作者。
 
-    错误返回 (None, None)
+    Args:
+        hitokoto_url: 一言 API 地址，默认使用 ``https://v1.hitokoto.cn``。
+
+    Returns:
+        ``(名言内容, 名言作者)``，错误返回 ``(None, None)``。
     """
     try:
-        response = requests.get(default_cfg.showcase.hitokoto_url, timeout=3)
+        response = requests.get(hitokoto_url, timeout=3)
         response.raise_for_status()
         data = response.json()
         hitokoto_content = data.get("hitokoto", None)
