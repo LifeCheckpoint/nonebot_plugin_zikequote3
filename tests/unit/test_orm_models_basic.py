@@ -65,18 +65,20 @@ class TestDDL:
         assert pk_cols == {"group_id", "qq_id"}
 
     def test_user_nicknames_table_columns(self, async_engine):
-        """user_nicknames 表应包含 id (PK), qq_id, current_using, name 列。"""
+        """user_nicknames 表应包含 qq_id, name (联合 PK), current_using 列。"""
         table = Base.metadata.tables["user_nicknames"]
         col_names = {c.name for c in table.columns}
-        assert col_names == {"id", "qq_id", "current_using", "name"}
-        assert table.c.id.primary_key
+        assert col_names == {"qq_id", "current_using", "name"}
+        pk_cols = {c.name for c in table.primary_key.columns}
+        assert pk_cols == {"qq_id", "name"}
 
     def test_group_nicknames_table_columns(self, async_engine):
-        """group_nicknames 表应包含 id (PK), qq_id, group_id, current_using, name 列。"""
+        """group_nicknames 表应包含 qq_id, group_id, name (联合 PK), current_using 列。"""
         table = Base.metadata.tables["group_nicknames"]
         col_names = {c.name for c in table.columns}
-        assert col_names == {"id", "qq_id", "group_id", "current_using", "name"}
-        assert table.c.id.primary_key
+        assert col_names == {"qq_id", "group_id", "current_using", "name"}
+        pk_cols = {c.name for c in table.primary_key.columns}
+        assert pk_cols == {"qq_id", "group_id", "name"}
 
 
 # ============================================================================
@@ -305,7 +307,7 @@ class TestUserNicknameModel:
         async_session.add(nick)
         await async_session.flush()
 
-        result = await async_session.get(UserNicknameModel, nick.id)
+        result = await async_session.get(UserNicknameModel, ("30001", "昵称A"))
         assert result is not None
         assert result.name == "昵称A"
         assert result.current_using is True
@@ -321,12 +323,11 @@ class TestUserNicknameModel:
         await async_session.flush()
 
         nick.current_using = False
-        nick.name = "新昵称"
         await async_session.flush()
 
-        refreshed = await async_session.get(UserNicknameModel, nick.id)
+        refreshed = await async_session.get(UserNicknameModel, ("30002", "旧昵称"))
         assert refreshed is not None
-        assert refreshed.name == "新昵称"
+        assert refreshed.name == "旧昵称"
         assert refreshed.current_using is False
 
     @pytest.mark.anyio
@@ -338,12 +339,11 @@ class TestUserNicknameModel:
         nick = UserNicknameModel(qq_id="30003", current_using=False, name="待删除")
         async_session.add(nick)
         await async_session.flush()
-        nick_id = nick.id
 
         await async_session.delete(nick)
         await async_session.flush()
 
-        assert await async_session.get(UserNicknameModel, nick_id) is None
+        assert await async_session.get(UserNicknameModel, ("30003", "待删除")) is None
 
     @pytest.mark.anyio
     async def test_to_dto(self, async_session):
@@ -375,7 +375,7 @@ class TestUserNicknameModel:
 
         async_session.add(nick)
         await async_session.flush()
-        assert await async_session.get(UserNicknameModel, nick.id) is not None
+        assert await async_session.get(UserNicknameModel, ("30005", "新建昵称")) is not None
 
     @pytest.mark.anyio
     async def test_relationship_to_user(self, async_session):
@@ -414,7 +414,7 @@ class TestGroupNicknameModel:
         async_session.add(nick)
         await async_session.flush()
 
-        result = await async_session.get(GroupNicknameModel, nick.id)
+        result = await async_session.get(GroupNicknameModel, ("40001", "70001", "群名片A"))
         assert result is not None
         assert result.name == "群名片A"
         assert result.current_using is True
@@ -429,12 +429,11 @@ class TestGroupNicknameModel:
         await async_session.flush()
 
         nick.current_using = False
-        nick.name = "新群名片"
         await async_session.flush()
 
-        refreshed = await async_session.get(GroupNicknameModel, nick.id)
+        refreshed = await async_session.get(GroupNicknameModel, ("40002", "70002", "旧群名片"))
         assert refreshed is not None
-        assert refreshed.name == "新群名片"
+        assert refreshed.name == "旧群名片"
         assert refreshed.current_using is False
 
     @pytest.mark.anyio
@@ -445,12 +444,11 @@ class TestGroupNicknameModel:
         )
         async_session.add(nick)
         await async_session.flush()
-        nick_id = nick.id
 
         await async_session.delete(nick)
         await async_session.flush()
 
-        assert await async_session.get(GroupNicknameModel, nick_id) is None
+        assert await async_session.get(GroupNicknameModel, ("40003", "70003", "待删除")) is None
 
     @pytest.mark.anyio
     async def test_to_dto(self, async_session):
@@ -479,7 +477,7 @@ class TestGroupNicknameModel:
 
         async_session.add(nick)
         await async_session.flush()
-        assert await async_session.get(GroupNicknameModel, nick.id) is not None
+        assert await async_session.get(GroupNicknameModel, ("40005", "70005", "新建群名片")) is not None
 
     @pytest.mark.anyio
     async def test_relationship_to_group(self, async_session):

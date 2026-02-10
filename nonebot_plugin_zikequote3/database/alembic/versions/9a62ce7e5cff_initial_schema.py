@@ -54,14 +54,13 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('group_id', 'qq_id')
     )
     op.create_table('group_nicknames',
-    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('qq_id', sa.String(), nullable=False),
     sa.Column('group_id', sa.String(), nullable=False),
-    sa.Column('current_using', sa.Boolean(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
+    sa.Column('current_using', sa.Boolean(), nullable=False),
     sa.ForeignKeyConstraint(['group_id'], ['groups.group_id'], ),
     sa.ForeignKeyConstraint(['qq_id'], ['users.qq_id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('qq_id', 'group_id', 'name')
     )
     op.create_table('msgs_queue',
     sa.Column('msg_id', sa.String(), nullable=False),
@@ -93,12 +92,11 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('quote_id')
     )
     op.create_table('user_nicknames',
-    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('qq_id', sa.String(), nullable=False),
-    sa.Column('current_using', sa.Boolean(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
+    sa.Column('current_using', sa.Boolean(), nullable=False),
     sa.ForeignKeyConstraint(['qq_id'], ['users.qq_id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('qq_id', 'name')
     )
     op.create_table('msgid_quoteid_map',
     sa.Column('msg_id', sa.String(), nullable=False),

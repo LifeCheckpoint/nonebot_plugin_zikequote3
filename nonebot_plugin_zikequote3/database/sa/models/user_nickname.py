@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, ForeignKey, Integer, String
+from sqlalchemy import Boolean, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nonebot_plugin_zikequote3.database.sa.base import Base
@@ -19,25 +19,23 @@ class UserNicknameModel(Base):
     """
     用户昵称 ORM 模型，对应 ``user_nicknames`` 表。
 
-    :param id: 自增代理主键
-    :type id: int
-    :param qq_id: QQ 号，外键关联 ``users.qq_id``
+    使用 ``(qq_id, name)`` 联合主键，匹配旧表结构。
+
+    :param qq_id: QQ 号，外键关联 ``users.qq_id``，联合主键之一
     :type qq_id: str
+    :param name: 昵称，联合主键之一
+    :type name: str
     :param current_using: 是否正在使用
     :type current_using: bool
-    :param name: 昵称
-    :type name: str
     """
 
     __tablename__ = "user_nicknames"
 
-    # 原始表定义中无显式主键，ORM 要求主键，故添加自增 id 作为代理主键
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     qq_id: Mapped[str] = mapped_column(
-        String, ForeignKey("users.qq_id"), nullable=False
+        String, ForeignKey("users.qq_id"), primary_key=True
     )
+    name: Mapped[str] = mapped_column(String, primary_key=True)
     current_using: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    name: Mapped[str] = mapped_column(String, nullable=False)
 
     # ---- relationships ----
     user: Mapped[UserModel] = relationship(back_populates="nicknames")
