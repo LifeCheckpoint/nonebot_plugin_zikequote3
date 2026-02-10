@@ -2,6 +2,7 @@
 语录列表命令处理器。
 
 通过 @inject 装饰器自动从 dishka 容器获取服务依赖。
+使用 :class:`QueryResolver` 统一解析用户查询参数。
 """
 
 from __future__ import annotations
@@ -18,6 +19,12 @@ from nonebot_plugin_alconna.uniseg.segment import At
 
 from ..command_definition import matcher_get_quote_list
 from ..parse_helper.datatype_parse import parse_page_range
+from ..parse_helper.query_resolver import (
+    QueryResolver,
+    STRATEGY_USER_LOOKUP,
+    extract_at_qq,
+    extract_text,
+)
 from ...di import Inject, inject
 from ...services import ConfigService, QuoteReadService, StatisticsService, UserService
 from ...services.html_render_service import HtmlRenderServiceBase
@@ -47,7 +54,8 @@ async def handle_get_quote_list(
     """
     处理语录列表命令。
 
-    根据用户指定的 At、QQ 号或昵称查询个人语录列表，支持分页，渲染为图片发送。
+    使用 :data:`STRATEGY_USER_LOOKUP` 策略通过 :class:`QueryResolver`
+    统一解析 At、QQ 号、昵称等用户查询参数，支持分页，渲染为图片发送。
 
     :param event: 群消息事件
     :type event: GroupMessageEvent
@@ -75,39 +83,28 @@ async def handle_get_quote_list(
     group_id = str(event.group_id)
 
     async with command_error_handler(matcher_get_quote_list, "解析参数"):
-        user_qq: str | None = None
+        # 使用 QueryResolver 统一解析用户查询
+        resolver = QueryResolver(user_svc)
+        result = await resolver.resolve(
+            strategy=STRATEGY_USER_LOOKUP,
+            group_id=group_id,
+            sender_id=str(event.user_id),
+            at_target=extract_at_qq(at_user),
+            raw_text=extract_text(qq, nickname),
+        )
 
-        # 优先解析 At 段
-        if at_user.available:
-            if at_user.result and at_user.result.origin:
-                user_qq = at_user.result.origin.data.get("qq")
-
-        # 其次解析 QQ 号
-        if not user_qq and qq.available:
-            if qq.result and qq.result.isdigit():
-                user_qq = qq.result
-
-        # 其次解析手动输入昵称
-        if not user_qq and nickname.available:
-            if nickname.result:
-                probable_users = await user_svc.search_users_by_name(
-                    nickname.result, group_id, exact=False,
+        # 处理多用户歧义和无匹配情况
+        if not result.single_user:
+            if len(result.user_candidates) > 1:
+                await matcher_get_quote_list.finish(
+                    "找到多个用户，请考虑使用 @ 或 QQ 号进行查询哦~"
                 )
-                if len(probable_users) > 1:
-                    await matcher_get_quote_list.finish(
-                        "找到多个用户，请考虑使用 @ 或 QQ 号进行查询哦~"
-                    )
-                elif len(probable_users) < 1:
-                    await matcher_get_quote_list.finish(
-                        "没有找到符合条件的用户哦~"
-                    )
-                else:
-                    user_qq = probable_users[0]
+            else:
+                await matcher_get_quote_list.finish(
+                    "没有找到符合条件的用户哦~"
+                )
 
-        # 最后使用发送者
-        if not user_qq:
-            user_qq = str(event.user_id)
-
+        user_qq = result.single_user
         logger.debug("解析结果用户: %s", user_qq)
 
         # 解析范围参数

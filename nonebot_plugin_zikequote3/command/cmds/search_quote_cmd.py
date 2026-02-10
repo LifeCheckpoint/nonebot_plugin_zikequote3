@@ -2,6 +2,7 @@
 语录搜索命令处理器。
 
 通过 @inject 装饰器自动从 dishka 容器获取服务依赖。
+使用 :class:`QueryResolver` 统一解析 @提及 和 ``-qq`` 选项的用户筛选参数。
 """
 
 from __future__ import annotations
@@ -16,9 +17,11 @@ from nonebot.adapters.onebot.v11 import (
 )
 from nonebot_plugin_alconna import Match, Query
 from nonebot_plugin_alconna.uniseg import UniMessage
+from nonebot_plugin_alconna.uniseg.segment import At
 from pydantic import BaseModel
 
 from ..command_definition import matcher_search_quote
+from ..parse_helper.query_resolver import extract_at_qq
 from ...di import Inject, inject
 from ...services import ConfigService, StatisticsService, QuoteReadService, UserService
 from ...services.html_render_service import HtmlRenderServiceBase
@@ -57,6 +60,7 @@ class _ArgsValidater(BaseModel):
 @inject
 async def handle_search_quote(
     event: GroupMessageEvent,
+    at_user: Match[At],
     qq: Match[int],
     max_result: Match[int],
     keyword: Match[UniMessage],
@@ -72,11 +76,15 @@ async def handle_search_quote(
     """
     处理语录搜索命令。
 
-    支持关键词搜索、正则搜索、按 QQ 号筛选、排除图片等多种搜索模式，渲染为列表图片发送。
+    支持关键词搜索、正则搜索、按 @提及 或 QQ 号筛选作者、排除图片等多种搜索模式，
+    使用 :func:`extract_at_qq` 从 @提及 中提取 QQ 号，与 ``-qq`` 选项统一处理，
+    渲染为列表图片发送。
 
     :param event: 群消息事件
     :type event: GroupMessageEvent
-    :param qq: Alconna 匹配的 QQ 号筛选参数
+    :param at_user: Alconna 匹配的 At 段参数，用于筛选语录作者
+    :type at_user: Match[At]
+    :param qq: Alconna 匹配的 QQ 号筛选参数（``-qq`` 选项）
     :type qq: Match[int]
     :param max_result: Alconna 匹配的最大返回结果数量参数
     :type max_result: Match[int]
@@ -108,8 +116,16 @@ async def handle_search_quote(
                     "最大返回结果数量至少为 1 哦~"
                 )
 
+        # 统一 @提及 和 -qq 选项：@提及 优先于 -qq
+        at_qq = extract_at_qq(at_user)
+        resolved_qq: int | None = None
+        if at_qq is not None:
+            resolved_qq = int(at_qq)
+        elif qq.available and qq.result is not None:
+            resolved_qq = qq.result
+
         params = _ArgsValidater(
-            qq=qq.result if qq.available else None,
+            qq=resolved_qq,
             search_with_image=(
                 (not no_image.result) if no_image.available else True
             ),

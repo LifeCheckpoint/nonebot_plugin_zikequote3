@@ -2,6 +2,7 @@
 用户信息卡片命令处理器。
 
 通过 @inject 装饰器自动从 dishka 容器获取服务依赖。
+使用 :class:`QueryResolver` 统一解析用户查询参数。
 """
 
 from __future__ import annotations
@@ -16,6 +17,12 @@ from nonebot_plugin_alconna import Match
 from nonebot_plugin_alconna.uniseg.segment import At
 
 from ..command_definition import matcher_get_user_info
+from ..parse_helper.query_resolver import (
+    QueryResolver,
+    STRATEGY_USER_LOOKUP,
+    extract_at_qq,
+    extract_text,
+)
 from ...di import Inject, inject
 from ...services import StatisticsService, UserService
 from ...services.html_render_service import HtmlRenderServiceBase
@@ -40,7 +47,9 @@ async def handle_get_user_info(
     """
     处理获取用户信息卡片命令。
 
-    根据 At、QQ 号或昵称定位用户，获取其语录统计、排名、历史昵称等信息并渲染为卡片图片。
+    使用 :data:`STRATEGY_USER_LOOKUP` 策略通过 :class:`QueryResolver`
+    统一解析 At、QQ 号、昵称等用户查询参数，获取其语录统计、排名、
+    历史昵称等信息并渲染为卡片图片。
 
     :param event: 群消息事件
     :type event: GroupMessageEvent
@@ -60,38 +69,28 @@ async def handle_get_user_info(
     group_id = str(event.group_id)
 
     async with command_error_handler(matcher_get_user_info, "解析参数"):
-        user_qq: str | None = None
+        # 使用 QueryResolver 统一解析用户查询
+        resolver = QueryResolver(user_svc)
+        result = await resolver.resolve(
+            strategy=STRATEGY_USER_LOOKUP,
+            group_id=group_id,
+            sender_id=str(event.user_id),
+            at_target=extract_at_qq(at_user),
+            raw_text=extract_text(qq, nickname),
+        )
 
-        # 优先解析 At 段
-        if at_user.available:
-            if at_user.result and at_user.result.origin:
-                user_qq = at_user.result.origin.data.get("qq")
-
-        # 其次解析 QQ 号
-        if not user_qq and qq.available:
-            if qq.result and qq.result.isdigit():
-                user_qq = qq.result
-
-        # 其次解析手动输入昵称
-        if not user_qq and nickname.available:
-            if nickname.result:
-                probable_users = await user_svc.search_users_by_name(
-                    nickname.result, group_id, exact=False,
+        # 处理多用户歧义和无匹配情况
+        if not result.single_user:
+            if len(result.user_candidates) > 1:
+                await matcher_get_user_info.finish(
+                    "找到多个用户，请考虑使用 @ 或 QQ 号进行查询哦~"
                 )
-                if len(probable_users) > 1:
-                    await matcher_get_user_info.finish(
-                        "找到多个用户，请考虑使用 @ 或 QQ 号进行查询哦~"
-                    )
-                elif len(probable_users) < 1:
-                    await matcher_get_user_info.finish(
-                        "没有找到符合条件的用户哦~"
-                    )
-                else:
-                    user_qq = probable_users[0]
+            else:
+                await matcher_get_user_info.finish(
+                    "没有找到符合条件的用户哦~"
+                )
 
-        # 最后使用发送者
-        if not user_qq:
-            user_qq = str(event.user_id)
+        user_qq = result.single_user
 
     async with command_error_handler(matcher_get_user_info, "获取用户信息"):
         # 检查用户是否存在

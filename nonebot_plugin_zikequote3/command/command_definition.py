@@ -218,6 +218,7 @@ cmdname_search_quote = (
 )
 alc_search_quote = Alconna(
     cmdname_search_quote[0],
+    Arg("at_user?", At, None, notice="At 段用户，用于筛选语录作者"),
     Option("-qq", Arg("qq", int, None, notice="用于筛选的QQ号")),
     Option("-m|--max-result", Arg("max_result", int, None, notice="最大返回结果数量，至少为1")),
     Option("-ni|--no-image", dest="no_image", action=store_true, default=False, help_text="是否排除包含图片的语录"),
