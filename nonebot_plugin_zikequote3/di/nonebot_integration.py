@@ -28,9 +28,10 @@ def setup_dishka(container: AsyncContainer, driver: "Driver") -> None:
     在 Driver shutdown 时自动关闭容器，释放 APP 作用域资源
     （如 AsyncEngine 的连接池）。
 
-    参数:
-        container: 已组装好的 dishka AsyncContainer。
-        driver: NoneBot Driver 实例。
+    :param container: 已组装好的 dishka AsyncContainer
+    :type container: AsyncContainer
+    :param driver: NoneBot Driver 实例
+    :type driver: Driver
     """
     global _container
     _container = container
@@ -48,8 +49,9 @@ def get_container() -> AsyncContainer:
 
     必须在 ``setup_dishka()`` 调用之后使用（即 NoneBot startup 之后）。
 
-    Raises:
-        RuntimeError: 容器尚未初始化。
+    :returns: 已绑定的 AsyncContainer 实例
+    :rtype: AsyncContainer
+    :raises RuntimeError: 容器尚未初始化时抛出
     """
     if _container is None:
         raise RuntimeError(

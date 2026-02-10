@@ -36,9 +36,10 @@ class InfraProvider(Provider):
     """
     基础设施依赖提供者。
 
-    构造参数:
-        image_store_path: 图片存储根目录路径。
-        render_device_factor: HTML 截图设备缩放因子（默认 2.0）。
+    :param image_store_path: 图片存储根目录路径
+    :type image_store_path: Union[str, Path]
+    :param render_device_factor: HTML 截图设备缩放因子，默认 2.0
+    :type render_device_factor: float
     """
 
     def __init__(
@@ -52,24 +53,37 @@ class InfraProvider(Provider):
 
     @provide(scope=Scope.APP)
     def provide_image_store(self) -> ImageStore:
-        """创建 APP 级别的 ImageStore 单例。"""
+        """
+        创建 APP 级别的 ImageStore 单例。
+
+        :returns: 图片存储实例
+        :rtype: ImageStore
+        """
         return ImageStore(self._image_store_path)
 
     @provide(scope=Scope.APP)
     def provide_token_manager(self) -> TokenManager:
-        """创建 APP 级别的 TokenManager 单例。
+        """
+        创建 APP 级别的 TokenManager 单例。
 
         TokenManager 是有状态的内存 token 存储（生成 → 验证 → 过期），
         必须在整个应用生命周期内共享同一实例。
+
+        :returns: Token 管理器实例
+        :rtype: TokenManager
         """
         return TokenManager()
 
     @provide(scope=Scope.APP)
     def provide_html_render_service(self) -> HtmlRenderServiceBase:
-        """创建 APP 级别的 HtmlRenderServiceBase 单例。
+        """
+        创建 APP 级别的 HtmlRenderServiceBase 单例。
 
         当前使用 PlaywrightHtmlRenderService 实现，
         未来切换截图库只需替换此处的具体实现类。
+
+        :returns: HTML 渲染服务实例
+        :rtype: HtmlRenderServiceBase
         """
         return PlaywrightHtmlRenderService(
             default_device_scale_factor=self._render_device_factor,

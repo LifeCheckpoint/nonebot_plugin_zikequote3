@@ -1,3 +1,9 @@
+"""
+一言（Hitokoto）API 工具。
+
+提供从一言 API 获取随机名言的功能。
+"""
+
 import logging
 from typing import Optional, Tuple
 
@@ -15,11 +21,10 @@ def get_hitokoto(
     """
     从指定链接获取名人名言，返回名言和名言作者。
 
-    Args:
-        hitokoto_url: 一言 API 地址，默认使用 ``https://v1.hitokoto.cn``。
-
-    Returns:
-        ``(名言内容, 名言作者)``，错误返回 ``(None, None)``。
+    :param hitokoto_url: 一言 API 地址，默认使用 ``https://v1.hitokoto.cn``
+    :type hitokoto_url: str
+    :returns: ``(名言内容, 名言作者)`` 元组，请求失败时返回 ``(None, None)``
+    :rtype: Tuple[Optional[str], Optional[str]]
     """
     try:
         response = requests.get(hitokoto_url, timeout=3)

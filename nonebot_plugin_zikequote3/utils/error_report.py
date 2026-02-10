@@ -1,3 +1,9 @@
+"""
+异常捕获与上报工具。
+
+提供同步/异步上下文管理器，用于统一捕获异常、记录日志并上报 Sentry。
+"""
+
 from asyncio import CancelledError
 from contextlib import contextmanager, asynccontextmanager
 from nonebot import logger
@@ -10,13 +16,14 @@ import sentry_sdk
 @contextmanager
 def service_exception(error_message: str = "", raise_again: bool = True):
     """
-    用于捕获服务层同步上下文中的异常的上下文管理器
+    用于捕获服务层同步上下文中的异常的上下文管理器。
 
-    记录日志、上报 Sentry，重新抛出
+    记录日志、上报 Sentry，根据参数决定是否重新抛出。
 
-    Args:
-        error_message (str): 错误信息前缀
-        raise_again (bool): 是否重新抛出异常
+    :param error_message: 错误信息前缀
+    :type error_message: str
+    :param raise_again: 是否重新抛出异常
+    :type raise_again: bool
     """
     try:
         yield
@@ -38,13 +45,15 @@ def service_exception(error_message: str = "", raise_again: bool = True):
 @contextmanager
 def event_exception(error_message: str = "", operation: Literal["raise", "ignore", "finish"] = "ignore"):
     """
-    用于捕获事件处理同步上下文中的异常的上下文管理器
+    用于捕获事件处理同步上下文中的异常的上下文管理器。
 
-    记录日志、上报 Sentry，根据参数决定是否重新抛出
+    记录日志、上报 Sentry，根据参数决定后续行为。
 
-    Args:
-        error_message (str): 错误信息前缀
-        operation (str): 异常发生时的操作，"raise" 重新抛出异常，"ignore" 忽略异常，"finish" 抛出 FinishedException 结束事件
+    :param error_message: 错误信息前缀
+    :type error_message: str
+    :param operation: 异常发生时的操作；``"raise"`` 重新抛出，
+        ``"ignore"`` 忽略，``"finish"`` 抛出 FinishedException 结束事件
+    :type operation: Literal["raise", "ignore", "finish"]
     """
     try:
         yield
@@ -72,13 +81,14 @@ def event_exception(error_message: str = "", operation: Literal["raise", "ignore
 @asynccontextmanager
 async def service_exception_a(error_message: str = "", raise_again: bool = True):
     """
-    用于捕获服务层异步上下文中的异常的上下文管理器
+    用于捕获服务层异步上下文中的异常的上下文管理器。
 
-    记录日志、上报 Sentry，根据参数决定是否重新抛出
+    记录日志、上报 Sentry，根据参数决定是否重新抛出。
 
-    Args:
-        error_message (str): 错误信息前缀
-        raise_again (bool): 是否重新抛出异常
+    :param error_message: 错误信息前缀
+    :type error_message: str
+    :param raise_again: 是否重新抛出异常
+    :type raise_again: bool
     """
     try:
         yield
@@ -100,13 +110,15 @@ async def service_exception_a(error_message: str = "", raise_again: bool = True)
 @asynccontextmanager
 async def event_exception_a(error_message: str = "", operation: Literal["raise", "ignore", "finish"] = "ignore"):
     """
-    用于捕获事件处理异步上下文中的异常的上下文管理器
+    用于捕获事件处理异步上下文中的异常的上下文管理器。
 
-    记录日志、上报 Sentry，根据参数决定是否重新抛出
+    记录日志、上报 Sentry，根据参数决定后续行为。
 
-    Args:
-        error_message (str): 错误信息前缀
-        operation (str): 异常发生时的操作，"raise" 重新抛出异常，"ignore" 忽略异常，"finish" 抛出 FinishedException 结束事件
+    :param error_message: 错误信息前缀
+    :type error_message: str
+    :param operation: 异常发生时的操作；``"raise"`` 重新抛出，
+        ``"ignore"`` 忽略，``"finish"`` 抛出 FinishedException 结束事件
+    :type operation: Literal["raise", "ignore", "finish"]
     """
     try:
         yield
@@ -134,11 +146,14 @@ async def event_exception_a(error_message: str = "", operation: Literal["raise",
 @asynccontextmanager
 async def event_exception_failmsg_a(matcher: type[Matcher], action: str, entity_name: str | None = None):
     """
-    用于捕获异常并通过 matcher 反馈通用失败消息的上下文管理器
+    用于捕获异常并通过 matcher 反馈通用失败消息的异步上下文管理器。
 
-    Args:
-        matcher (Matcher): NoneBot 匹配器对象
-        message (str): 反馈消息内容
+    :param matcher: NoneBot 匹配器类
+    :type matcher: type[Matcher]
+    :param action: 操作描述，用于生成失败消息
+    :type action: str
+    :param entity_name: 实体名称，可选
+    :type entity_name: str | None
     """
     from ..msgtexts import general as mt_g
     try:

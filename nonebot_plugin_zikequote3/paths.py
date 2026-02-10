@@ -1,10 +1,21 @@
+"""
+插件路径常量定义。
+
+集中管理插件内部各模块目录路径和数据存储路径。
+"""
+
 from pathlib import Path
 import nonebot_plugin_localstore as store
 
+
 class PluginPath:
     """
-    插件模块路径
+    插件路径常量集合。
+
+    包含插件源码各模块的目录路径以及运行时数据存储路径。
+    所有路径均为 :class:`pathlib.Path` 实例。
     """
+
     plugin_root = Path(__file__).parent
     module_command_root = plugin_root / "command"
     module_database_root = plugin_root / "database"

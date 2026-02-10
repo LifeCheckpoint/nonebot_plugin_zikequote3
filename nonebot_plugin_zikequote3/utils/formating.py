@@ -1,12 +1,24 @@
+"""
+格式化工具。
+
+提供颜色调色板生成等格式化辅助功能。
+"""
+
 import random
 import colorsys
 from typing import List
 
+
 def generate_color_palette(num_colors: int) -> List[str]:
     """
-    生成系列十六进制颜色调色板
+    生成同色系的十六进制颜色调色板。
 
-    `num_colors`: 生成颜色数量
+    基于随机基准色相，在 ±15° 范围内波动生成一组视觉协调的颜色。
+
+    :param num_colors: 需要生成的颜色数量
+    :type num_colors: int
+    :returns: 十六进制颜色字符串列表，如 ``["#3A7BC8", "#2E6DB5"]``
+    :rtype: List[str]
     """
     # 随机选择一个基准色相（0-360度）
     base_hue = random.uniform(0, 360)

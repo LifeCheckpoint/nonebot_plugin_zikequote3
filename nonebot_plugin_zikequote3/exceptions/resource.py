@@ -1,36 +1,39 @@
+"""
+资源类异常定义。
+
+提供资源未找到相关的异常类，如语录、用户、图片未找到等。
+"""
+
 from .base import ServiceException
+
 
 class ResourceNotFoundError(ServiceException):
     """
-    资源未找到异常
+    资源未找到异常基类。
 
-    当请求的资源不存在时引发此异常。
+    当请求的资源不存在时抛出。
     """
-    pass
 
 
 class QuoteNotFoundError(ResourceNotFoundError):
     """
-    语录未找到异常
+    语录未找到异常。
 
-    当请求的语录不存在时引发此异常。
+    当请求的语录不存在时抛出。
     """
-    pass
 
 
 class UserNotFoundError(ResourceNotFoundError):
     """
-    用户未找到异常
+    用户未找到异常。
 
-    当请求的用户不存在时引发此异常。
+    当请求的用户不存在时抛出。
     """
-    pass
 
 
 class ImageNotFoundError(ResourceNotFoundError, FileNotFoundError):
     """
-    图片未找到异常
+    图片未找到异常。
 
-    当请求的图片不存在时引发此异常。
+    当请求的图片不存在时抛出。同时继承 ``FileNotFoundError`` 以兼容文件系统异常捕获。
     """
-    pass

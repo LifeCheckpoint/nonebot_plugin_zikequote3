@@ -1,3 +1,9 @@
+"""
+Sentry 初始化工具。
+
+提供从文件读取 DSN 并初始化 Sentry SDK 的功能。
+"""
+
 from pathlib import Path
 from typing import Optional
 
@@ -6,7 +12,16 @@ from nonebot import logger
 from ..paths import PluginPath
 
 
-def init_sentry(sentry_dsn_path: Optional[str] = None):
+def init_sentry(sentry_dsn_path: Optional[str] = None) -> None:
+    """
+    从指定路径读取 Sentry DSN 并初始化 Sentry SDK。
+
+    支持相对路径（相对于插件根目录）和绝对路径。
+    路径为空、文件不存在或内容为空时跳过初始化并记录日志。
+
+    :param sentry_dsn_path: Sentry DSN 文件路径，为 ``None`` 时跳过初始化
+    :type sentry_dsn_path: Optional[str]
+    """
     import sentry_sdk
 
     dsn_path_to_parse = Path(sentry_dsn_path) if sentry_dsn_path else None

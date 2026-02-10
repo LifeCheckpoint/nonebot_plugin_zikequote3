@@ -30,7 +30,12 @@ T = TypeVar("T")
 
 
 class _InjectMarker:
-    """DI 注入标记，用于在函数签名中标识需要从 dishka 容器获取的参数。"""
+    """
+    DI 注入标记，用于在函数签名中标识需要从 dishka 容器获取的参数。
+
+    :param service_type: 需要注入的服务类型
+    :type service_type: type
+    """
 
     __slots__ = ("service_type",)
 
@@ -46,9 +51,12 @@ def Inject(service_type: type[T]) -> T:  # noqa: N802
     声明一个需要从 dishka DI 容器注入的参数。
 
     返回 ``_InjectMarker`` 实例，但类型标注为 ``T``，
-    使 IDE 能正确推断参数类型。
+    使 IDE 能正确推断参数类型。必须与 :func:`inject` 装饰器配合使用。
 
-    必须与 :func:`inject` 装饰器配合使用。
+    :param service_type: 需要注入的服务类型
+    :type service_type: type[T]
+    :returns: 注入标记实例（运行时为 ``_InjectMarker``，类型标注为 ``T``）
+    :rtype: T
     """
     return _InjectMarker(service_type)  # type: ignore[return-value]
 
@@ -71,6 +79,11 @@ def inject(fn: Callable[..., Coroutine]) -> Callable[..., Coroutine]:  # type: i
 
     4. 修改 ``wrapper.__signature__``，移除 ``Inject`` 参数，
        使 NoneBot2 不会尝试解析它们。
+
+    :param fn: 需要注入依赖的异步函数
+    :type fn: Callable[..., Coroutine]
+    :returns: 包装后的异步函数，自动注入标记的依赖
+    :rtype: Callable[..., Coroutine]
     """
     original_sig = inspect.signature(fn)
 

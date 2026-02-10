@@ -59,6 +59,20 @@ class ServiceProvider(Provider):
         group_nickname_repo: GroupNicknameRepository,
         group_member_repo: GroupMemberRepository,
     ) -> UserService:
+        """
+        提供用户服务实例。
+
+        :param user_repo: 用户仓库
+        :type user_repo: UserRepository
+        :param user_nickname_repo: 用户昵称仓库
+        :type user_nickname_repo: UserNicknameRepository
+        :param group_nickname_repo: 群昵称仓库
+        :type group_nickname_repo: GroupNicknameRepository
+        :param group_member_repo: 群成员仓库
+        :type group_member_repo: GroupMemberRepository
+        :returns: 用户服务实例
+        :rtype: UserService
+        """
         return UserService(
             user_repo=user_repo,
             user_nickname_repo=user_nickname_repo,
@@ -73,6 +87,18 @@ class ServiceProvider(Provider):
         group_member_repo: GroupMemberRepository,
         group_nickname_repo: GroupNicknameRepository,
     ) -> GroupService:
+        """
+        提供群组服务实例。
+
+        :param group_repo: 群组仓库
+        :type group_repo: GroupRepository
+        :param group_member_repo: 群成员仓库
+        :type group_member_repo: GroupMemberRepository
+        :param group_nickname_repo: 群昵称仓库
+        :type group_nickname_repo: GroupNicknameRepository
+        :returns: 群组服务实例
+        :rtype: GroupService
+        """
         return GroupService(
             group_repo=group_repo,
             group_member_repo=group_member_repo,
@@ -85,6 +111,16 @@ class ServiceProvider(Provider):
         review_repo: ReviewRepository,
         quote_repo: QuoteRepository,
     ) -> ReviewService:
+        """
+        提供审核服务实例。
+
+        :param review_repo: 审核仓库
+        :type review_repo: ReviewRepository
+        :param quote_repo: 语录仓库
+        :type quote_repo: QuoteRepository
+        :returns: 审核服务实例
+        :rtype: ReviewService
+        """
         return ReviewService(
             review_repo=review_repo,
             quote_repo=quote_repo,
@@ -96,6 +132,16 @@ class ServiceProvider(Provider):
         quote_repo: QuoteRepository,
         group_member_repo: GroupMemberRepository,
     ) -> StatisticsService:
+        """
+        提供统计服务实例。
+
+        :param quote_repo: 语录仓库
+        :type quote_repo: QuoteRepository
+        :param group_member_repo: 群成员仓库
+        :type group_member_repo: GroupMemberRepository
+        :returns: 统计服务实例
+        :rtype: StatisticsService
+        """
         return StatisticsService(
             quote_repo=quote_repo,
             group_member_repo=group_member_repo,
@@ -106,6 +152,14 @@ class ServiceProvider(Provider):
         self,
         group_config_repo: GroupConfigRepository,
     ) -> ConfigService:
+        """
+        提供配置服务实例。
+
+        :param group_config_repo: 群配置仓库
+        :type group_config_repo: GroupConfigRepository
+        :returns: 配置服务实例
+        :rtype: ConfigService
+        """
         return ConfigService(
             group_config_repo=group_config_repo,
         )
@@ -117,6 +171,18 @@ class ServiceProvider(Provider):
         group_member_repo: GroupMemberRepository,
         group_nickname_repo: GroupNicknameRepository,
     ) -> MigrationService:
+        """
+        提供迁移服务实例。
+
+        :param quote_repo: 语录仓库
+        :type quote_repo: QuoteRepository
+        :param group_member_repo: 群成员仓库
+        :type group_member_repo: GroupMemberRepository
+        :param group_nickname_repo: 群昵称仓库
+        :type group_nickname_repo: GroupNicknameRepository
+        :returns: 迁移服务实例
+        :rtype: MigrationService
+        """
         return MigrationService(
             quote_repo=quote_repo,
             group_member_repo=group_member_repo,
@@ -133,6 +199,20 @@ class ServiceProvider(Provider):
         mapping_repo: MappingRepository,
         user_service: UserService,
     ) -> QuoteWriteService:
+        """
+        提供语录写入服务实例。
+
+        :param quote_repo: 语录仓库
+        :type quote_repo: QuoteRepository
+        :param image_repo: 图片仓库
+        :type image_repo: ImageRepository
+        :param mapping_repo: 消息-语录映射仓库
+        :type mapping_repo: MappingRepository
+        :param user_service: 用户服务
+        :type user_service: UserService
+        :returns: 语录写入服务实例
+        :rtype: QuoteWriteService
+        """
         return QuoteWriteService(
             quote_repo=quote_repo,
             image_repo=image_repo,
@@ -148,6 +228,20 @@ class ServiceProvider(Provider):
         image_repo: ImageRepository,
         user_service: UserService,
     ) -> QuoteReadService:
+        """
+        提供语录读取服务实例。
+
+        :param quote_repo: 语录仓库
+        :type quote_repo: QuoteRepository
+        :param review_repo: 审核仓库
+        :type review_repo: ReviewRepository
+        :param image_repo: 图片仓库
+        :type image_repo: ImageRepository
+        :param user_service: 用户服务
+        :type user_service: UserService
+        :returns: 语录读取服务实例
+        :rtype: QuoteReadService
+        """
         return QuoteReadService(
             quote_repo=quote_repo,
             review_repo=review_repo,
@@ -163,6 +257,20 @@ class ServiceProvider(Provider):
         user_service: UserService,
         group_service: GroupService,
     ) -> QuoteCollectionService:
+        """
+        提供语录收集服务实例。
+
+        :param msg_queue_repo: 消息队列仓库
+        :type msg_queue_repo: MsgQueueRepository
+        :param quote_write_service: 语录写入服务
+        :type quote_write_service: QuoteWriteService
+        :param user_service: 用户服务
+        :type user_service: UserService
+        :param group_service: 群组服务
+        :type group_service: GroupService
+        :returns: 语录收集服务实例
+        :rtype: QuoteCollectionService
+        """
         return QuoteCollectionService(
             msg_queue_repo=msg_queue_repo,
             quote_write_service=quote_write_service,
