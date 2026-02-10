@@ -87,6 +87,7 @@ if "nonebot_plugin_zikequote3.paths" not in sys.modules:
         """Stub PluginPath，提供测试所需的路径属性。"""
         plugin_root = _plugin_root
         module_resources_root = _plugin_root / "resources"
+        module_msgtexts_root = _plugin_root / "msgtexts"
         module_templates_root = _plugin_root / "templates"
         module_templates_htmls_root = _plugin_root / "templates" / "src" / "htmls"
         module_templates_css_root = _plugin_root / "templates" / "src" / "assets" / "css"
