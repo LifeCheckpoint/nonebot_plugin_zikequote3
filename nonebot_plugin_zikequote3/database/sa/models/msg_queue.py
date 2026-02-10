@@ -44,10 +44,16 @@ class MsgQueueModel(Base):
 
     @classmethod
     def from_create_dto(cls, dto) -> MsgQueueModel:
-        """从 Pydantic ``MsgQueueCreate`` DTO 创建 ORM 实例。"""
-        return cls(
-            msg_id=dto.msg_id,
-            group_id=dto.group_id,
-            qq_id=dto.qq_id,
-            content=dto.content,
-        )
+        """从 Pydantic ``MsgQueueCreate`` DTO 创建 ORM 实例。
+
+        当 ``dto.time_stamp`` 为 ``None`` 时，依赖数据库列默认值 (``func.now()``)。
+        """
+        kwargs: dict = {
+            "msg_id": dto.msg_id,
+            "group_id": dto.group_id,
+            "qq_id": dto.qq_id,
+            "content": dto.content,
+        }
+        if getattr(dto, "time_stamp", None) is not None:
+            kwargs["time_stamp"] = dto.time_stamp
+        return cls(**kwargs)
