@@ -1,13 +1,19 @@
+"""权限节点定义模块，定义插件的服务节点树用于精细化权限控制。"""
+
 from nonebot_plugin_access_control_api.service.interface import IPluginService, ISubService
 
-class PermissionServiceNodes:
-    def __init__(self, n_perm_s: IPluginService):
-        """
-        定义插件的服务节点，用于精细化的权限控制
 
-        Args:
-            n_perm_s (IPluginService): 通过 `create_plugin_service` 创建的插件服务实例
-        """
+class PermissionServiceNodes:
+    """
+    插件权限服务节点定义。
+
+    通过构造函数接收插件服务实例，构建完整的权限节点树。
+
+    :param n_perm_s: 通过 ``create_plugin_service`` 创建的插件服务实例
+    :type n_perm_s: IPluginService
+    """
+
+    def __init__(self, n_perm_s: IPluginService):
         self.n_perm_s = n_perm_s
         self.n_becollected: ISubService = n_perm_s.create_subservice("be_collected")
         self.n_becollected_llm: ISubService = self.n_becollected.create_subservice("llm")

@@ -28,10 +28,16 @@ class StatisticsService:
     统计与搜索领域服务，通过构造函数注入 Repository 依赖。
 
     职责：
+
     1. 群组语录排行榜
     2. 个人语录列表
     3. 语录搜索
     4. 群组统计信息
+
+    :param quote_repo: 语录仓储实例
+    :type quote_repo: QuoteRepository
+    :param group_member_repo: 群成员仓储实例
+    :type group_member_repo: GroupMemberRepository
     """
 
     def __init__(
@@ -57,15 +63,13 @@ class StatisticsService:
         返回按语录数降序排列的作者列表，每项包含
         ``author_id`` 和 ``quote_count``。
 
-        Args:
-            group_id: 群组 ID。
-            limit: 返回条数上限，默认 10。
-
-        Returns:
-            排行榜列表，每项为 ``{"author_id": str, "quote_count": int}``。
-
-        Raises:
-            ResourceNotFoundError: 群组无语录数据。
+        :param group_id: 群组 ID
+        :type group_id: str
+        :param limit: 返回条数上限，默认 10
+        :type limit: int
+        :returns: 排行榜列表，每项为 ``{"author_id": str, "quote_count": int}``
+        :rtype: list[dict[str, Any]]
+        :raises ResourceNotFoundError: 群组无语录数据
         """
         ranking = await self._quote_repo.get_author_ranking(group_id, limit=limit)
         if not ranking:
@@ -80,9 +84,11 @@ class StatisticsService:
         """
         获取群组语录统计信息。
 
-        Returns:
-            包含 ``total_quotes``, ``unique_authors``,
-            ``total_shows``, ``avg_shows`` 的字典。
+        :param group_id: 群组 ID
+        :type group_id: str
+        :returns: 包含 ``total_quotes``, ``unique_authors``,
+            ``total_shows``, ``avg_shows`` 的字典
+        :rtype: Dict[str, Any]
         """
         return await self._quote_repo.get_quote_statistics_by_group(group_id)
 
@@ -102,22 +108,23 @@ class StatisticsService:
         """
         获取个人语录列表（分页）。
 
-        Args:
-            qq_id: 用户 QQ 号。
-            group_id: 群组 ID。
-            from_index: 起始索引（1-based，包含），``None`` 表示自动。
-            to_index: 结束索引（1-based，包含），``None`` 表示自动。
-            max_count: 单次最大返回条数。
-
-        Returns:
-            ``(quotes, total_count, real_from, real_to)``
-            - quotes: 语录列表
-            - total_count: 该用户在该群的语录总数
-            - real_from: 实际起始索引（0-based）
-            - real_to: 实际结束索引（0-based）
-
-        Raises:
-            ResourceNotFoundError: 用户在该群无语录。
+        :param qq_id: 用户 QQ 号
+        :type qq_id: str
+        :param group_id: 群组 ID
+        :type group_id: str
+        :param from_index: 起始索引（1-based，包含），``None`` 表示自动
+        :type from_index: Optional[int]
+        :param to_index: 结束索引（1-based，包含），``None`` 表示自动
+        :type to_index: Optional[int]
+        :param max_count: 单次最大返回条数
+        :type max_count: int
+        :returns: ``(quotes, total_count, real_from, real_to)`` —
+            quotes: 语录列表,
+            total_count: 该用户在该群的语录总数,
+            real_from: 实际起始索引（0-based）,
+            real_to: 实际结束索引（0-based）
+        :rtype: Tuple[Sequence[Quote], int, int, int]
+        :raises ResourceNotFoundError: 用户在该群无语录
         """
         all_quotes = await self._quote_repo.get_quotes_by_group_and_author(
             group_id, qq_id
@@ -167,18 +174,22 @@ class StatisticsService:
         """
         搜索语录。
 
-        Args:
-            keyword: 搜索关键词或正则表达式。
-            group_id: 群组 ID。
-            author_id: 可选，按作者过滤。
-            include_image_only: 是否包含纯图片语录，默认 ``True``。
-            max_results: 最大返回条数，``None`` 表示不限。
-            use_regex: 是否使用正则表达式匹配。
-
-        Returns:
-            ``(quotes, total_found)``
-            - quotes: 匹配的语录列表（可能被 max_results 截断）
-            - total_found: 匹配总数（截断前）
+        :param keyword: 搜索关键词或正则表达式
+        :type keyword: str
+        :param group_id: 群组 ID
+        :type group_id: str
+        :param author_id: 可选，按作者过滤
+        :type author_id: Optional[str]
+        :param include_image_only: 是否包含纯图片语录，默认 ``True``
+        :type include_image_only: bool
+        :param max_results: 最大返回条数，``None`` 表示不限
+        :type max_results: Optional[int]
+        :param use_regex: 是否使用正则表达式匹配
+        :type use_regex: bool
+        :returns: ``(quotes, total_found)`` —
+            quotes: 匹配的语录列表（可能被 max_results 截断）,
+            total_found: 匹配总数（截断前）
+        :rtype: Tuple[Sequence[Quote], int]
         """
         # 获取群组全部语录
         all_quotes = await self._quote_repo.get_quotes_by_group(group_id)
@@ -219,7 +230,16 @@ class StatisticsService:
     async def count_author_quotes_in_group(
         self, group_id: str, author_id: str
     ) -> int:
-        """统计指定作者在群组中的语录数量。"""
+        """
+        统计指定作者在群组中的语录数量。
+
+        :param group_id: 群组 ID
+        :type group_id: str
+        :param author_id: 作者 QQ 号
+        :type author_id: str
+        :returns: 语录数量
+        :rtype: int
+        """
         return await self._quote_repo.count_quotes_by_group_and_author(
             group_id, author_id
         )
@@ -230,9 +250,11 @@ class StatisticsService:
         """
         获取群组所有成员的语录计数。
 
-        Returns:
-            列表，每项为 ``{"qq_id": str, "quote_count": int}``，
-            按语录数降序排列，排除计数为 0 的成员。
+        :param group_id: 群组 ID
+        :type group_id: str
+        :returns: 列表，每项为 ``{"qq_id": str, "quote_count": int}``，
+            按语录数降序排列，排除计数为 0 的成员
+        :rtype: list[dict[str, Any]]
         """
         members = await self._group_member_repo.get_members_by_group(group_id)
         result: list[dict[str, Any]] = []

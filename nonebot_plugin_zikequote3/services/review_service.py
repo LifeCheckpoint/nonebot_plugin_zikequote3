@@ -32,10 +32,16 @@ class ReviewService:
     评论领域服务，通过构造函数注入 Repository 依赖。
 
     职责：
+
     1. 添加评论（校验语录存在性）
     2. 查询评论列表
     3. 删除评论
     4. 统计评论数
+
+    :param review_repo: 评论仓储实例
+    :type review_repo: ReviewRepository
+    :param quote_repo: 语录仓储实例
+    :type quote_repo: QuoteRepository
     """
 
     def __init__(
@@ -59,16 +65,15 @@ class ReviewService:
         """
         为语录添加评论。
 
-        Args:
-            quote_id: 语录 ID。
-            author_id: 评论者 QQ 号（``"-1"`` 表示 AI 生成）。
-            content: 评论内容。
-
-        Returns:
-            新创建的评论 ID。
-
-        Raises:
-            QuoteNotFoundError: 语录不存在。
+        :param quote_id: 语录 ID
+        :type quote_id: str
+        :param author_id: 评论者 QQ 号（``"-1"`` 表示 AI 生成）
+        :type author_id: str
+        :param content: 评论内容
+        :type content: str
+        :returns: 新创建的评论 ID
+        :rtype: str
+        :raises QuoteNotFoundError: 语录不存在
         """
         # 验证语录存在
         quote = await self._quote_repo.get_quote_by_id(quote_id)
@@ -96,11 +101,10 @@ class ReviewService:
         """
         获取语录的所有评论（按时间升序）。
 
-        Args:
-            quote_id: 语录 ID。
-
-        Returns:
-            评论列表。
+        :param quote_id: 语录 ID
+        :type quote_id: str
+        :returns: 评论列表
+        :rtype: Sequence[Review]
         """
         return await self._review_repo.get_reviews_by_quote(quote_id)
 
@@ -108,8 +112,10 @@ class ReviewService:
         """
         按评论 ID 查询。
 
-        Returns:
-            评论对象，不存在返回 ``None``。
+        :param review_id: 评论 ID
+        :type review_id: str
+        :returns: 评论对象，不存在返回 ``None``
+        :rtype: Optional[Review]
         """
         return await self._review_repo.get_review_by_id(review_id)
 
@@ -121,11 +127,9 @@ class ReviewService:
         """
         删除评论。
 
-        Args:
-            review_id: 评论 ID。
-
-        Raises:
-            ResourceNotFoundError: 评论不存在。
+        :param review_id: 评论 ID
+        :type review_id: str
+        :raises ResourceNotFoundError: 评论不存在
         """
         existing = await self._review_repo.get_review_by_id(review_id)
         if existing is None:
@@ -145,10 +149,9 @@ class ReviewService:
         """
         统计语录的评论数。
 
-        Args:
-            quote_id: 语录 ID。
-
-        Returns:
-            评论数量。
+        :param quote_id: 语录 ID
+        :type quote_id: str
+        :returns: 评论数量
+        :rtype: int
         """
         return await self._review_repo.count_reviews_by_quote(quote_id)

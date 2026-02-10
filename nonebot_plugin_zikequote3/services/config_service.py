@@ -30,10 +30,14 @@ class ConfigService:
     群组配置领域服务，通过构造函数注入 Repository 依赖。
 
     职责：
+
     1. 获取群组配置
     2. 设置 / 更新群组配置
     3. 验证配置格式
     4. 解析配置参数
+
+    :param group_config_repo: 群组配置仓储实例
+    :type group_config_repo: GroupConfigRepository
     """
 
     def __init__(
@@ -50,11 +54,10 @@ class ConfigService:
         """
         获取群组配置。
 
-        Args:
-            group_id: 群组 ID。
-
-        Returns:
-            群组配置对象，不存在返回 ``None``。
+        :param group_id: 群组 ID
+        :type group_id: str
+        :returns: 群组配置对象，不存在返回 ``None``
+        :rtype: Optional[GroupConfigs]
         """
         return await self._group_config_repo.get_group_config_by_id(group_id)
 
@@ -62,11 +65,10 @@ class ConfigService:
         """
         获取群组的 TOML 配置内容。
 
-        Args:
-            group_id: 群组 ID。
-
-        Returns:
-            TOML 字符串，不存在返回 ``None``。
+        :param group_id: 群组 ID
+        :type group_id: str
+        :returns: TOML 字符串，不存在返回 ``None``
+        :rtype: Optional[str]
         """
         return await self._group_config_repo.get_toml_config_by_group_id(group_id)
 
@@ -82,15 +84,13 @@ class ConfigService:
         """
         设置群组配置（创建或更新）。
 
-        Args:
-            group_id: 群组 ID。
-            config_toml: TOML 格式的配置字符串。
-
-        Returns:
-            更新后的群组配置对象。
-
-        Raises:
-            ValidationException: TOML 格式无效。
+        :param group_id: 群组 ID
+        :type group_id: str
+        :param config_toml: TOML 格式的配置字符串
+        :type config_toml: str
+        :returns: 更新后的群组配置对象
+        :rtype: GroupConfigs
+        :raises ValidationException: TOML 格式无效
         """
         if not self.validate_toml(config_toml):
             raise ValidationException("TOML 配置格式无效")
@@ -105,8 +105,9 @@ class ConfigService:
         """
         删除群组配置。
 
-        Raises:
-            ResourceNotFoundError: 配置不存在。
+        :param group_id: 群组 ID
+        :type group_id: str
+        :raises ResourceNotFoundError: 配置不存在
         """
         exists = await self._group_config_repo.group_config_exists(group_id)
         if not exists:
@@ -126,13 +127,13 @@ class ConfigService:
 
         如果群组尚无自定义配置，则基于 ``ConfigSchema`` 默认值创建。
 
-        Args:
-            group_id: 群组 ID。
-            schema_str: 形如 ``"collecting.pickup_interval"`` 的路径。
-            new_value: 新值（已经过 Python 类型解析）。
-
-        Raises:
-            ValidationException: 路径格式错误、section/key 不存在或属于不可修改项。
+        :param group_id: 群组 ID
+        :type group_id: str
+        :param schema_str: 形如 ``"collecting.pickup_interval"`` 的路径
+        :type schema_str: str
+        :param new_value: 新值（已经过 Python 类型解析）
+        :type new_value: Any
+        :raises ValidationException: 路径格式错误、section/key 不存在或属于不可修改项
         """
         # 校验路径格式
         parts = schema_str.split(".")
@@ -189,11 +190,10 @@ class ConfigService:
 
         如果群组无自定义配置，返回全局默认值。
 
-        Args:
-            group_id: 群组 ID。
-
-        Returns:
-            解析后的 ``ConfigSchema`` 实例。
+        :param group_id: 群组 ID
+        :type group_id: str
+        :returns: 解析后的 ``ConfigSchema`` 实例
+        :rtype: ConfigSchema
         """
         toml_str = await self._group_config_repo.get_toml_config_by_group_id(
             group_id
@@ -215,16 +215,15 @@ class ConfigService:
         """
         获取群组配置中指定 ``section.key`` 的值。
 
-        Args:
-            group_id: 群组 ID。
-            section: 配置节名称，如 ``"collecting"``。
-            key: 配置项名称，如 ``"pickup_interval"``。
-
-        Returns:
-            配置值。
-
-        Raises:
-            ValidationException: section 或 key 不存在。
+        :param group_id: 群组 ID
+        :type group_id: str
+        :param section: 配置节名称，如 ``"collecting"``
+        :type section: str
+        :param key: 配置项名称，如 ``"pickup_interval"``
+        :type key: str
+        :returns: 配置值
+        :rtype: Any
+        :raises ValidationException: section 或 key 不存在
         """
         cfg = await self.get_parsed_config(group_id)
         if not hasattr(cfg, section):
@@ -245,11 +244,10 @@ class ConfigService:
         """
         验证 TOML 配置格式是否合法。
 
-        Args:
-            config_str: TOML 格式字符串。
-
-        Returns:
-            ``True`` 表示格式合法。
+        :param config_str: TOML 格式字符串
+        :type config_str: str
+        :returns: ``True`` 表示格式合法
+        :rtype: bool
         """
         try:
             tomlkit.parse(config_str)
@@ -264,14 +262,11 @@ class ConfigService:
 
         原 ``validation_service.s_validate_parse_param`` 逻辑。
 
-        Args:
-            args: 长度为 2 的列表，``[schema_path, value_literal]``。
-
-        Returns:
-            ``(schema_path, parsed_value)``
-
-        Raises:
-            ValidationException: 参数格式不正确。
+        :param args: 长度为 2 的列表，``[schema_path, value_literal]``
+        :type args: list[str]
+        :returns: ``(schema_path, parsed_value)``
+        :rtype: tuple[str, object]
+        :raises ValidationException: 参数格式不正确
         """
         if len(args) < 2:
             raise ValidationException("配置参数需要至少 2 个值: schema_path 和 value")
@@ -290,14 +285,8 @@ class ConfigService:
         """
         检查所有群组配置的版本，将旧版本配置迁移到当前默认模板。
 
-        逻辑：
-        1. 获取所有群组配置
-        2. 对每个群组，比较 ``cfg_version`` 与默认配置
-        3. 如果版本不一致，以默认配置为模板，保留群组已有的同名字段值，
-           但强制使用新版本号，然后写回数据库
-
-        Returns:
-            被修复（迁移）的群组数量。
+        :returns: 被修复（迁移）的群组数量
+        :rtype: int
         """
         default_cfg = ConfigSchema()
         default_doc = tomlkit.parse(

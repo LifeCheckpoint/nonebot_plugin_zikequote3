@@ -31,12 +31,28 @@ logger = logging.getLogger(__name__)
 
 
 def _generate_quote_id() -> str:
-    """生成 11 位随机数字语录 ID。"""
+    """
+    生成 11 位随机数字语录 ID。
+
+    :returns: 11 位随机数字字符串
+    :rtype: str
+    """
     return str(random.randint(10**10, 10**11 - 1))
 
 
 class QuoteWriteService:
-    """语录写入领域服务，通过构造函数注入 Repository 依赖。"""
+    """
+    语录写入领域服务，通过构造函数注入 Repository 依赖。
+
+    :param quote_repo: 语录仓储实例
+    :type quote_repo: QuoteRepository
+    :param image_repo: 图片仓储实例
+    :type image_repo: ImageRepository
+    :param mapping_repo: 映射仓储实例
+    :type mapping_repo: MappingRepository
+    :param user_service: 用户服务实例
+    :type user_service: UserService
+    """
 
     def __init__(
         self,
@@ -64,18 +80,18 @@ class QuoteWriteService:
         """
         添加一条语录。
 
-        Args:
-            group_id: 群号。
-            author_id: 作者 QQ 号。
-            content: 语录文本内容（与 image_content_uuid 至少提供一个）。
-            image_content_uuid: 关联图片的 UUID。
-
-        Returns:
-            新创建的语录 ID。
-
-        Raises:
-            ValidationException: 内容和图片均为空。
-            ImageNotFoundError: 指定的图片 UUID 不存在。
+        :param group_id: 群号
+        :type group_id: str
+        :param author_id: 作者 QQ 号
+        :type author_id: str
+        :param content: 语录文本内容（与 image_content_uuid 至少提供一个）
+        :type content: Optional[str]
+        :param image_content_uuid: 关联图片的 UUID
+        :type image_content_uuid: Optional[str]
+        :returns: 新创建的语录 ID
+        :rtype: str
+        :raises ValidationException: 内容和图片均为空
+        :raises ImageNotFoundError: 指定的图片 UUID 不存在
         """
         if not content and not image_content_uuid:
             raise ValidationException("语录内容和图片不能同时为空")
@@ -121,8 +137,24 @@ class QuoteWriteService:
 
         先在 image_repo 中创建图片记录，再创建语录。
 
-        Returns:
-            新创建的语录 ID。
+        :param group_id: 群号
+        :type group_id: str
+        :param author_id: 作者 QQ 号
+        :type author_id: str
+        :param content: 语录文本内容
+        :type content: Optional[str]
+        :param image_uuid: 图片 UUID
+        :type image_uuid: str
+        :param original_filename: 原始文件名
+        :type original_filename: str
+        :param stored_filename: 存储文件名
+        :type stored_filename: str
+        :param file_path: 文件存储路径
+        :type file_path: str
+        :param checksum_sha256: 文件 SHA-256 校验和
+        :type checksum_sha256: str
+        :returns: 新创建的语录 ID
+        :rtype: str
         """
         await self._image_repo.create_image(
             uuid=image_uuid,
@@ -151,9 +183,14 @@ class QuoteWriteService:
         """
         更新语录内容或图片。
 
-        Raises:
-            QuoteNotFoundError: 语录不存在。
-            ImageNotFoundError: 指定的图片 UUID 不存在。
+        :param quote_id: 语录 ID
+        :type quote_id: str
+        :param content: 新的文本内容
+        :type content: Optional[str]
+        :param image_content_uuid: 新的图片 UUID
+        :type image_content_uuid: Optional[str]
+        :raises QuoteNotFoundError: 语录不存在
+        :raises ImageNotFoundError: 指定的图片 UUID 不存在
         """
         existing = await self._quote_repo.get_quote_by_id(quote_id)
         if existing is None:
@@ -184,8 +221,9 @@ class QuoteWriteService:
         """
         删除语录。
 
-        Raises:
-            QuoteNotFoundError: 语录不存在。
+        :param quote_id: 语录 ID
+        :type quote_id: str
+        :raises QuoteNotFoundError: 语录不存在
         """
         existing = await self._quote_repo.get_quote_by_id(quote_id)
         if existing is None:
@@ -208,8 +246,11 @@ class QuoteWriteService:
         """
         创建消息 ID 到语录 ID 的映射。
 
-        Raises:
-            DatabaseOperationError: 映射创建失败。
+        :param msg_id: 消息 ID
+        :type msg_id: str
+        :param quote_id: 语录 ID
+        :type quote_id: str
+        :raises DatabaseOperationError: 映射创建失败
         """
         await self._mapping_repo.create_mapping(msg_id, quote_id)
         logger.debug("映射已创建: msg_id=%s -> quote_id=%s", msg_id, quote_id)
@@ -218,8 +259,10 @@ class QuoteWriteService:
         """
         通过消息 ID 获取语录 ID。
 
-        Returns:
-            语录 ID，未找到则返回 ``None``。
+        :param msg_id: 消息 ID
+        :type msg_id: str
+        :returns: 语录 ID，未找到则返回 ``None``
+        :rtype: Optional[str]
         """
         return await self._mapping_repo.get_quote_id_by_msg_id(msg_id)
 
@@ -231,12 +274,12 @@ class QuoteWriteService:
         """
         检查指定作者和内容的语录是否已存在（用于去重）。
 
-        Args:
-            author_id: 作者 QQ 号。
-            content: 语录文本内容。
-
-        Returns:
-            ``True`` 表示已存在相同语录。
+        :param author_id: 作者 QQ 号
+        :type author_id: str
+        :param content: 语录文本内容
+        :type content: str
+        :returns: ``True`` 表示已存在相同语录
+        :rtype: bool
         """
         return await self._quote_repo.check_quote_exists_by_author_content(
             author_id, content

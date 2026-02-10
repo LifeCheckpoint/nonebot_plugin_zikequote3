@@ -29,9 +29,17 @@ class MigrationService:
     群组数据迁移领域服务，通过构造函数注入 Repository 依赖。
 
     职责：
+
     1. 迁移前比较与统计
     2. 语录迁移执行
     3. 用户信息迁移执行
+
+    :param quote_repo: 语录仓储实例
+    :type quote_repo: QuoteRepository
+    :param group_member_repo: 群成员仓储实例
+    :type group_member_repo: GroupMemberRepository
+    :param group_nickname_repo: 群名片仓储实例
+    :type group_nickname_repo: GroupNicknameRepository
     """
 
     def __init__(
@@ -61,23 +69,22 @@ class MigrationService:
         """
         统计迁移所需的全部信息，返回比较结果。
 
-        Args:
-            source: 源群号。
-            target: 目标群号。
-            overwrite: 是否完全覆盖目标群语录。
-            deduplicate: 是否对语录去重。
-            exclude_non_member: 是否排除非目标群成员的语录。
-            keep_source: 是否保留源群语录。
-
-        Returns:
-            包含以下键的字典：
-            - ``source_quotes``: 源群语录列表
-            - ``source_count``: 源群语录数
-            - ``target_count``: 目标群原语录数
-            - ``final_quotes``: 处理后的最终语录列表
-            - ``final_count``: 最终语录数
-            - ``before_members``: 迁移前目标群成员数
-            - ``after_members``: 迁移后目标群成员数
+        :param source: 源群号
+        :type source: str
+        :param target: 目标群号
+        :type target: str
+        :param overwrite: 是否完全覆盖目标群语录
+        :type overwrite: bool
+        :param deduplicate: 是否对语录去重
+        :type deduplicate: bool
+        :param exclude_non_member: 是否排除非目标群成员的语录
+        :type exclude_non_member: bool
+        :param keep_source: 是否保留源群语录
+        :type keep_source: bool
+        :returns: 包含 ``source_quotes``, ``source_count``, ``target_count``,
+            ``final_quotes``, ``final_count``, ``before_members``,
+            ``after_members`` 的字典
+        :rtype: Dict[str, Any]
         """
         source_quotes = list(
             await self._quote_repo.get_quotes_by_group(source)
@@ -152,16 +159,20 @@ class MigrationService:
         """
         执行群组数据迁移。
 
-        Args:
-            final_quotes: 经 :meth:`prepare_migration` 处理后的最终语录列表。
-            source: 源群号。
-            target: 目标群号。
-            overwrite: 是否覆写模式。
-            keep_source: 是否保留源群语录。
-            clear_member_info: 是否清除源群用户信息。
-
-        Returns:
-            迁移结果摘要字典。
+        :param final_quotes: 经 :meth:`prepare_migration` 处理后的最终语录列表
+        :type final_quotes: List[Quote]
+        :param source: 源群号
+        :type source: str
+        :param target: 目标群号
+        :type target: str
+        :param overwrite: 是否覆写模式
+        :type overwrite: bool
+        :param keep_source: 是否保留源群语录
+        :type keep_source: bool
+        :param clear_member_info: 是否清除源群用户信息
+        :type clear_member_info: bool
+        :returns: 迁移结果摘要字典
+        :rtype: Dict[str, Any]
         """
         # 1. 语录迁移
         migrated_count = await self._migrate_quotes(
@@ -196,7 +207,22 @@ class MigrationService:
         overwrite: bool,
         keep_source: bool,
     ) -> int:
-        """执行语录迁移，返回迁移的语录数。"""
+        """
+        执行语录迁移，返回迁移的语录数。
+
+        :param final_quotes: 最终语录列表
+        :type final_quotes: List[Quote]
+        :param source: 源群号
+        :type source: str
+        :param target: 目标群号
+        :type target: str
+        :param overwrite: 是否覆写模式
+        :type overwrite: bool
+        :param keep_source: 是否保留源群语录
+        :type keep_source: bool
+        :returns: 迁移的语录数
+        :rtype: int
+        """
         # 清空目标群语录（无论覆写还是合并模式都需要，因为写入的是完整集合）
         logger.info("正在清空目标群 %s 的语录...", target)
         await self._quote_repo.delete_quotes_by_group(target)
@@ -235,7 +261,18 @@ class MigrationService:
         *,
         clear_member_info: bool,
     ) -> int:
-        """执行用户信息迁移，返回迁移的成员数。"""
+        """
+        执行用户信息迁移，返回迁移的成员数。
+
+        :param source: 源群号
+        :type source: str
+        :param target: 目标群号
+        :type target: str
+        :param clear_member_info: 是否清除源群用户信息
+        :type clear_member_info: bool
+        :returns: 迁移的成员数
+        :rtype: int
+        """
         migrated = 0
 
         # 迁移群成员关系
@@ -279,7 +316,14 @@ class MigrationService:
 
     @staticmethod
     def _deduplicate_quotes(quotes: List[Quote]) -> List[Quote]:
-        """基于作者、内容及图片去重，累加重复项的展示次数。"""
+        """
+        基于作者、内容及图片去重，累加重复项的展示次数。
+
+        :param quotes: 待去重的语录列表
+        :type quotes: List[Quote]
+        :returns: 去重后的语录列表
+        :rtype: List[Quote]
+        """
         merged: dict[tuple, Quote] = {}
         for q in quotes:
             fingerprint = (q.author_id, q.content, q.image_content_uuid)
@@ -296,7 +340,18 @@ class MigrationService:
         force_new_ids_for_source: bool = False,
         source_ids: Optional[set[str]] = None,
     ) -> List[Quote]:
-        """处理重复 ID，为冲突项分配新 ID。"""
+        """
+        处理重复 ID，为冲突项分配新 ID。
+
+        :param quotes: 语录列表
+        :type quotes: List[Quote]
+        :param force_new_ids_for_source: 是否强制为源群语录分配新 ID
+        :type force_new_ids_for_source: bool
+        :param source_ids: 源群语录 ID 集合
+        :type source_ids: Optional[set[str]]
+        :returns: 处理后的语录列表
+        :rtype: List[Quote]
+        """
         if not quotes:
             return quotes
 

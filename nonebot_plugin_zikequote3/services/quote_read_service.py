@@ -33,7 +33,18 @@ logger = logging.getLogger(__name__)
 
 
 class QuoteReadService:
-    """语录读取领域服务，通过构造函数注入 Repository 依赖。"""
+    """
+    语录读取领域服务，通过构造函数注入 Repository 依赖。
+
+    :param quote_repo: 语录仓储实例
+    :type quote_repo: QuoteRepository
+    :param review_repo: 评论仓储实例
+    :type review_repo: ReviewRepository
+    :param image_repo: 图片仓储实例
+    :type image_repo: ImageRepository
+    :param user_service: 用户服务实例
+    :type user_service: UserService
+    """
 
     def __init__(
         self,
@@ -52,15 +63,25 @@ class QuoteReadService:
     # ------------------------------------------------------------------ #
 
     async def get_quote(self, quote_id: str) -> Optional[Quote]:
-        """按 ID 获取语录，不存在返回 ``None``。"""
+        """
+        按 ID 获取语录，不存在返回 ``None``。
+
+        :param quote_id: 语录 ID
+        :type quote_id: str
+        :returns: 语录对象，不存在返回 ``None``
+        :rtype: Optional[Quote]
+        """
         return await self._quote_repo.get_quote_by_id(quote_id)
 
     async def get_quote_or_raise(self, quote_id: str) -> Quote:
         """
         按 ID 获取语录，不存在则抛出异常。
 
-        Raises:
-            QuoteNotFoundError: 语录不存在。
+        :param quote_id: 语录 ID
+        :type quote_id: str
+        :returns: 语录对象
+        :rtype: Quote
+        :raises QuoteNotFoundError: 语录不存在
         """
         quote = await self._quote_repo.get_quote_by_id(quote_id)
         if quote is None:
@@ -78,7 +99,18 @@ class QuoteReadService:
         limit: Optional[int] = None,
         offset: int = 0,
     ) -> Sequence[Quote]:
-        """按群获取语录列表。"""
+        """
+        按群获取语录列表。
+
+        :param group_id: 群组 ID
+        :type group_id: str
+        :param limit: 最大返回条数，``None`` 表示不限
+        :type limit: Optional[int]
+        :param offset: 偏移量
+        :type offset: int
+        :returns: 语录列表
+        :rtype: Sequence[Quote]
+        """
         return await self._quote_repo.get_quotes_by_group(
             group_id, limit=limit, offset=offset,
         )
@@ -90,7 +122,18 @@ class QuoteReadService:
         limit: Optional[int] = None,
         offset: int = 0,
     ) -> Sequence[Quote]:
-        """按作者获取语录列表。"""
+        """
+        按作者获取语录列表。
+
+        :param author_id: 作者 QQ 号
+        :type author_id: str
+        :param limit: 最大返回条数，``None`` 表示不限
+        :type limit: Optional[int]
+        :param offset: 偏移量
+        :type offset: int
+        :returns: 语录列表
+        :rtype: Sequence[Quote]
+        """
         return await self._quote_repo.get_quotes_by_author(
             author_id, limit=limit, offset=offset,
         )
@@ -103,7 +146,20 @@ class QuoteReadService:
         limit: Optional[int] = None,
         offset: int = 0,
     ) -> Sequence[Quote]:
-        """按群 + 作者获取语录列表。"""
+        """
+        按群 + 作者获取语录列表。
+
+        :param group_id: 群组 ID
+        :type group_id: str
+        :param author_id: 作者 QQ 号
+        :type author_id: str
+        :param limit: 最大返回条数，``None`` 表示不限
+        :type limit: Optional[int]
+        :param offset: 偏移量
+        :type offset: int
+        :returns: 语录列表
+        :rtype: Sequence[Quote]
+        """
         return await self._quote_repo.get_quotes_by_group_and_author(
             group_id, author_id, limit=limit, offset=offset,
         )
@@ -120,7 +176,20 @@ class QuoteReadService:
         limit: Optional[int] = None,
         offset: int = 0,
     ) -> Sequence[Quote]:
-        """按关键词搜索语录（LIKE 匹配）。"""
+        """
+        按关键词搜索语录（LIKE 匹配）。
+
+        :param keyword: 搜索关键词
+        :type keyword: str
+        :param group_id: 群组 ID，``None`` 表示不限群组
+        :type group_id: Optional[str]
+        :param limit: 最大返回条数
+        :type limit: Optional[int]
+        :param offset: 偏移量
+        :type offset: int
+        :returns: 匹配的语录列表
+        :rtype: Sequence[Quote]
+        """
         return await self._quote_repo.search_quotes_by_content(
             keyword, group_id, limit=limit, offset=offset,
         )
@@ -132,7 +201,18 @@ class QuoteReadService:
         *,
         limit: Optional[int] = None,
     ) -> Sequence[Quote]:
-        """按群 + 作者搜索语录。"""
+        """
+        按群 + 作者搜索语录。
+
+        :param group_id: 群组 ID
+        :type group_id: str
+        :param author_id: 作者 QQ 号
+        :type author_id: str
+        :param limit: 最大返回条数
+        :type limit: Optional[int]
+        :returns: 语录列表
+        :rtype: Sequence[Quote]
+        """
         return await self._quote_repo.get_quotes_by_group_and_author(
             group_id, author_id, limit=limit,
         )
@@ -147,8 +227,10 @@ class QuoteReadService:
         """
         获取语录及其所有评论。
 
-        Returns:
-            ``(quote, reviews)`` 元组，语录不存在时返回 ``None``。
+        :param quote_id: 语录 ID
+        :type quote_id: str
+        :returns: ``(quote, reviews)`` 元组，语录不存在时返回 ``None``
+        :rtype: Optional[Tuple[Quote, Sequence[Review]]]
         """
         quote = await self._quote_repo.get_quote_by_id(quote_id)
         if quote is None:
@@ -164,8 +246,9 @@ class QuoteReadService:
         """
         增加语录展示次数 +1。
 
-        Raises:
-            QuoteNotFoundError: 语录不存在。
+        :param quote_id: 语录 ID
+        :type quote_id: str
+        :raises QuoteNotFoundError: 语录不存在
         """
         updated = await self._quote_repo.increment_show_time(quote_id)
         if not updated:
@@ -183,10 +266,19 @@ class QuoteReadService:
         keyword: Optional[str] = None,
     ) -> Optional[Quote]:
         """
-        获取群内随机语录（数据库级 ``ORDER BY RANDOM()``）。
+        获取群内随机语录。
 
         可选按作者或关键词过滤。如果同时指定 author_id 和 keyword，
         先按作者过滤，再在结果中按关键词筛选。
+
+        :param group_id: 群号
+        :type group_id: str
+        :param author_id: 可选作者过滤
+        :type author_id: Optional[str]
+        :param keyword: 可选关键词过滤
+        :type keyword: Optional[str]
+        :returns: 随机语录，池为空时返回 ``None``
+        :rtype: Optional[Quote]
         """
         if author_id is not None:
             pool = list(
@@ -221,17 +313,22 @@ class QuoteReadService:
         """
         使用加权随机算法获取语录。
 
-        Args:
-            group_id: 群号。
-            author_id: 可选作者过滤。
-            keyword: 可选关键词过滤。
-            algorithm: 算法名称，``"ifw"`` 或 ``"logifw"``。
-            lambda_: 正则化幂变换系数。
-            a_: 冷启动平滑参数。
-            log_a_: 对数平滑参数（仅 logifw）。
-
-        Returns:
-            选中的语录，池为空时返回 ``None``。
+        :param group_id: 群号
+        :type group_id: str
+        :param author_id: 可选作者过滤
+        :type author_id: Optional[str]
+        :param keyword: 可选关键词过滤
+        :type keyword: Optional[str]
+        :param algorithm: 算法名称，``"ifw"`` 或 ``"logifw"``
+        :type algorithm: str
+        :param lambda_: 正则化幂变换系数
+        :type lambda_: float
+        :param a_: 冷启动平滑参数
+        :type a_: float
+        :param log_a_: 对数平滑参数（仅 logifw）
+        :type log_a_: float
+        :returns: 选中的语录，池为空时返回 ``None``
+        :rtype: Optional[Quote]
         """
         # 构建候选池
         if author_id is not None:
@@ -285,7 +382,16 @@ class QuoteReadService:
         """
         逆频率加权（Inverse Frequency Weighting）。
 
-        ``w_i0 = (1 / (c_i - min(c) + a))^λ``，然后归一化。
+        公式：``w_i0 = (1 / (c_i - min(c) + a))^λ``，然后归一化。
+
+        :param quotes: 候选语录列表
+        :type quotes: list[Quote]
+        :param lambda_: 正则化幂变换系数
+        :type lambda_: float
+        :param a_: 冷启动平滑参数
+        :type a_: float
+        :returns: 语录 ID 到归一化权重的映射
+        :rtype: dict[str, float]
         """
         min_c = min(q.total_show_time for q in quotes)
         wi0 = {
@@ -306,7 +412,18 @@ class QuoteReadService:
         """
         对数逆频率加权（Log Inverse Frequency Weighting）。
 
-        ``w_i0 = (1 / (log(c_i - min(c) + log_a) + a))^λ``，然后归一化。
+        公式：``w_i0 = (1 / (log(c_i - min(c) + log_a) + a))^λ``，然后归一化。
+
+        :param quotes: 候选语录列表
+        :type quotes: list[Quote]
+        :param lambda_: 正则化幂变换系数
+        :type lambda_: float
+        :param a_: 冷启动平滑参数
+        :type a_: float
+        :param log_a_: 对数平滑参数
+        :type log_a_: float
+        :returns: 语录 ID 到归一化权重的映射
+        :rtype: dict[str, float]
         """
         min_c = min(q.total_show_time for q in quotes)
         wi0 = {
@@ -326,8 +443,10 @@ class QuoteReadService:
         """
         获取图片元数据。
 
-        Returns:
-            图片 DTO，不存在返回 ``None``。
+        :param image_uuid: 图片 UUID
+        :type image_uuid: str
+        :returns: 图片 DTO，不存在返回 ``None``
+        :rtype: Optional[Image]
         """
         return await self._image_repo.get_by_uuid(image_uuid)
 
@@ -335,8 +454,11 @@ class QuoteReadService:
         """
         获取图片元数据，不存在则抛出异常。
 
-        Raises:
-            ImageNotFoundError: 图片不存在。
+        :param image_uuid: 图片 UUID
+        :type image_uuid: str
+        :returns: 图片 DTO
+        :rtype: Image
+        :raises ImageNotFoundError: 图片不存在
         """
         image = await self._image_repo.get_by_uuid(image_uuid)
         if image is None:
@@ -353,8 +475,13 @@ class QuoteReadService:
         """
         获取语录作者的显示名称。
 
-        Raises:
-            QuoteNotFoundError: 语录不存在。
+        :param quote_id: 语录 ID
+        :type quote_id: str
+        :param group_id: 群组 ID
+        :type group_id: str
+        :returns: 作者显示名称
+        :rtype: str
+        :raises QuoteNotFoundError: 语录不存在
         """
         quote = await self.get_quote_or_raise(quote_id)
         return await self._user_service.get_display_name(

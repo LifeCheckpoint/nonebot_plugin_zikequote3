@@ -26,17 +26,21 @@ class HtmlRenderServiceBase(ABC):
         device_scale_factor: float | None = None,
         wait: int = 200,
     ) -> bytes:
-        """将 HTML 字符串渲染为图片 bytes。
+        """
+        将 HTML 字符串渲染为图片 bytes。
 
-        Args:
-            html: 完整的 HTML 内容字符串。
-            width: 视口宽度（像素）。
-            height: 视口高度（像素）。
-            device_scale_factor: 设备缩放因子，为 ``None`` 时使用服务默认值。
-            wait: 页面加载后额外等待时间（毫秒）。
-
-        Returns:
-            PNG 格式的截图字节数据。
+        :param html: 完整的 HTML 内容字符串
+        :type html: str
+        :param width: 视口宽度（像素）
+        :type width: int
+        :param height: 视口高度（像素）
+        :type height: int
+        :param device_scale_factor: 设备缩放因子，为 ``None`` 时使用服务默认值
+        :type device_scale_factor: float | None
+        :param wait: 页面加载后额外等待时间（毫秒）
+        :type wait: int
+        :returns: PNG 格式的截图字节数据
+        :rtype: bytes
         """
         ...
 
