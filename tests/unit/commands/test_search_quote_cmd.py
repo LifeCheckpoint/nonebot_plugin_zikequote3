@@ -103,6 +103,7 @@ class TestHandleSearchQuote:
         with pytest.raises(FinishedException):
             await handle_search_quote(
                 event=mock_group_event,
+                at_user=_make_match(),
                 qq=_make_match(),
                 max_result=_make_match(),
                 keyword=_make_keyword_match("测试关键词"),
@@ -149,6 +150,7 @@ class TestHandleSearchQuote:
         with pytest.raises(FinishedException):
             await handle_search_quote(
                 event=mock_group_event,
+                at_user=_make_match(),
                 qq=_make_match(),
                 max_result=_make_match(available=True, result=0),
                 keyword=_make_keyword_match("测试"),
@@ -200,6 +202,7 @@ class TestHandleSearchQuote:
         with pytest.raises(FinishedException):
             await handle_search_quote(
                 event=mock_group_event,
+                at_user=_make_match(),
                 qq=_make_match(),
                 max_result=_make_match(),
                 keyword=_make_keyword_match("测试"),
