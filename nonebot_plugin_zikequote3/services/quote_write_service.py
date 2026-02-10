@@ -222,3 +222,22 @@ class QuoteWriteService:
             语录 ID，未找到则返回 ``None``。
         """
         return await self._mapping_repo.get_quote_id_by_msg_id(msg_id)
+
+    # ------------------------------------------------------------------ #
+    #  去重检查
+    # ------------------------------------------------------------------ #
+
+    async def check_quote_exists(self, author_id: str, content: str) -> bool:
+        """
+        检查指定作者和内容的语录是否已存在（用于去重）。
+
+        Args:
+            author_id: 作者 QQ 号。
+            content: 语录文本内容。
+
+        Returns:
+            ``True`` 表示已存在相同语录。
+        """
+        return await self._quote_repo.check_quote_exists_by_author_content(
+            author_id, content
+        )

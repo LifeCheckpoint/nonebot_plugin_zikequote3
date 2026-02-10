@@ -328,13 +328,7 @@ class QuoteCollectionService:
 
             # 去重检查
             if not allow_duplicate:
-                from ..database.repositories.quote_repository import (
-                    QuoteRepository,
-                )
-
-                # 通过 quote_write_service 内部的 repo 检查
-                # 这里直接跳过重复的
-                exists = await self._quote_write_service._quote_repo.check_quote_exists_by_author_content(
+                exists = await self._quote_write_service.check_quote_exists(
                     author_id, content
                 )
                 if exists:

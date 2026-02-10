@@ -300,6 +300,44 @@ class TestMsgQuoteMapping:
 
 
 # ================================================================== #
+#  去重检查
+# ================================================================== #
+
+
+class TestCheckQuoteExists:
+    """测试 check_quote_exists 方法。"""
+
+    @pytest.mark.asyncio
+    async def test_returns_true_when_exists(
+        self,
+        quote_write_service: QuoteWriteService,
+        mock_quote_repo: AsyncMock,
+    ) -> None:
+        """当语录已存在时返回 True。"""
+        mock_quote_repo.check_quote_exists_by_author_content.return_value = True
+
+        result = await quote_write_service.check_quote_exists("12345", "测试内容")
+
+        assert result is True
+        mock_quote_repo.check_quote_exists_by_author_content.assert_awaited_once_with(
+            "12345", "测试内容"
+        )
+
+    @pytest.mark.asyncio
+    async def test_returns_false_when_not_exists(
+        self,
+        quote_write_service: QuoteWriteService,
+        mock_quote_repo: AsyncMock,
+    ) -> None:
+        """当语录不存在时返回 False。"""
+        mock_quote_repo.check_quote_exists_by_author_content.return_value = False
+
+        result = await quote_write_service.check_quote_exists("12345", "新内容")
+
+        assert result is False
+
+
+# ================================================================== #
 #  辅助函数
 # ================================================================== #
 
