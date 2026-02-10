@@ -26,6 +26,7 @@ max_quotes_in_list = 50 # 语录列表展示最大条数
 comment_show_method = "noai" # 语录评论展示方式: no | noai | all
 hitokoto_url = "https://v1.hitokoto.cn" # 获取名人名言 Hitokoto API
 render_device_factor = 2.0 # 图片渲染设备像素比
+quote_content_max_length = 500 # 语录列表中单条语录内容的最大显示字符数，超过则截断并显示 "..."，0 表示不限制
 
 [comment]
 enable_comment_without_prefix = true # 允许不使用“/评”直接进行评论回复
@@ -48,4 +49,4 @@ nonreloadable_items = [
     "sentry.dsn_path",
     "configure.nonreloadable_items",
 ]
-cfg_version = 4 # 当前配置版本
+cfg_version = 5 # 当前配置版本

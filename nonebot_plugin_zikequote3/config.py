@@ -56,6 +56,8 @@ class ShowcaseConfig(BaseModel):
     comment_show_method: Literal["no", "noai", "all"] = "noai"
     hitokoto_url: str = "https://v1.hitokoto.cn"
     render_device_factor: float = 2.0
+    quote_content_max_length: int = 500
+    """语录列表中单条语录内容的最大显示字符数，超过则截断并显示 ``"..."``，``0`` 表示不限制。"""
 
 
 class CommentConfig(BaseModel):
@@ -89,7 +91,7 @@ class ConfigureConfig(BaseModel):
             "configure.nonreloadable_items",
         ]
     )
-    cfg_version: int = 4
+    cfg_version: int = 5
 
 class ConfigSchema(BaseModel):
     """

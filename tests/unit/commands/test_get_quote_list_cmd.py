@@ -14,6 +14,7 @@ import pytest
 from nonebot.exception import FinishedException
 
 from nonebot_plugin_zikequote3.database.image_store import ImageStore
+from nonebot_plugin_zikequote3.services.config_service import ConfigService
 from nonebot_plugin_zikequote3.services.html_render_service import HtmlRenderServiceBase
 from nonebot_plugin_zikequote3.services.quote_read_service import QuoteReadService
 from nonebot_plugin_zikequote3.services.statistics_service import StatisticsService
@@ -80,6 +81,10 @@ class TestHandleGetQuoteList:
         mock_image_store = MagicMock(spec=ImageStore)
         mock_render_svc = AsyncMock(spec=HtmlRenderServiceBase)
         mock_render_svc.render = AsyncMock(return_value=b"\x89PNG_FAKE")
+        mock_config_svc = AsyncMock(spec=ConfigService)
+        mock_cfg = MagicMock()
+        mock_cfg.showcase.quote_content_max_length = 500
+        mock_config_svc.get_parsed_config = AsyncMock(return_value=mock_cfg)
 
         patch_container({
             StatisticsService: mock_stats_svc,
@@ -87,6 +92,7 @@ class TestHandleGetQuoteList:
             QuoteReadService: mock_read_svc,
             ImageStore: mock_image_store,
             HtmlRenderServiceBase: mock_render_svc,
+            ConfigService: mock_config_svc,
         })
 
         # Act & Assert — 运行时 patch 模板渲染和辅助函数
@@ -129,6 +135,10 @@ class TestHandleGetQuoteList:
         mock_read_svc = AsyncMock(spec=QuoteReadService)
         mock_image_store = MagicMock(spec=ImageStore)
         mock_render_svc = AsyncMock(spec=HtmlRenderServiceBase)
+        mock_config_svc = AsyncMock(spec=ConfigService)
+        mock_cfg = MagicMock()
+        mock_cfg.showcase.quote_content_max_length = 500
+        mock_config_svc.get_parsed_config = AsyncMock(return_value=mock_cfg)
 
         patch_container({
             StatisticsService: mock_stats_svc,
@@ -136,6 +146,7 @@ class TestHandleGetQuoteList:
             QuoteReadService: mock_read_svc,
             ImageStore: mock_image_store,
             HtmlRenderServiceBase: mock_render_svc,
+            ConfigService: mock_config_svc,
         })
 
         # Act & Assert
@@ -172,6 +183,10 @@ class TestHandleGetQuoteList:
         mock_read_svc = AsyncMock(spec=QuoteReadService)
         mock_image_store = MagicMock(spec=ImageStore)
         mock_render_svc = AsyncMock(spec=HtmlRenderServiceBase)
+        mock_config_svc = AsyncMock(spec=ConfigService)
+        mock_cfg = MagicMock()
+        mock_cfg.showcase.quote_content_max_length = 500
+        mock_config_svc.get_parsed_config = AsyncMock(return_value=mock_cfg)
 
         patch_container({
             StatisticsService: mock_stats_svc,
@@ -179,6 +194,7 @@ class TestHandleGetQuoteList:
             QuoteReadService: mock_read_svc,
             ImageStore: mock_image_store,
             HtmlRenderServiceBase: mock_render_svc,
+            ConfigService: mock_config_svc,
         })
 
         nickname_match = _make_match(available=True, result="测试")
@@ -215,6 +231,10 @@ class TestHandleGetQuoteList:
         mock_read_svc = AsyncMock(spec=QuoteReadService)
         mock_image_store = MagicMock(spec=ImageStore)
         mock_render_svc = AsyncMock(spec=HtmlRenderServiceBase)
+        mock_config_svc = AsyncMock(spec=ConfigService)
+        mock_cfg = MagicMock()
+        mock_cfg.showcase.quote_content_max_length = 500
+        mock_config_svc.get_parsed_config = AsyncMock(return_value=mock_cfg)
 
         patch_container({
             StatisticsService: mock_stats_svc,
@@ -222,6 +242,7 @@ class TestHandleGetQuoteList:
             QuoteReadService: mock_read_svc,
             ImageStore: mock_image_store,
             HtmlRenderServiceBase: mock_render_svc,
+            ConfigService: mock_config_svc,
         })
 
         nickname_match = _make_match(available=True, result="不存在的人")

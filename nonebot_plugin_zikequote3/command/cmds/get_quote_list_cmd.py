@@ -19,7 +19,7 @@ from nonebot_plugin_alconna.uniseg.segment import At
 from ..command_definition import matcher_get_quote_list
 from ..parse_helper.datatype_parse import parse_page_range
 from ...di import Inject, inject
-from ...services import QuoteReadService, StatisticsService, UserService
+from ...services import ConfigService, QuoteReadService, StatisticsService, UserService
 from ...services.html_render_service import HtmlRenderServiceBase
 from ...database.image_store import ImageStore
 from ._error_handlers import command_error_handler
@@ -42,6 +42,7 @@ async def handle_get_quote_list(
     quote_read_svc: QuoteReadService = Inject(QuoteReadService),
     image_store: ImageStore = Inject(ImageStore),
     html_render_svc: HtmlRenderServiceBase = Inject(HtmlRenderServiceBase),
+    config_svc: ConfigService = Inject(ConfigService),
 ) -> None:
     """
     处理语录列表命令。
@@ -68,6 +69,8 @@ async def handle_get_quote_list(
     :type image_store: ImageStore
     :param html_render_svc: HTML 渲染服务（DI 注入）
     :type html_render_svc: HtmlRenderServiceBase
+    :param config_svc: 配置服务（DI 注入）
+    :type config_svc: ConfigService
     """
     group_id = str(event.group_id)
 
@@ -130,12 +133,17 @@ async def handle_get_quote_list(
         # 获取用户显示名称
         current_card = await user_svc.get_display_name(user_qq, group_id)
 
+        # 获取群组配置中的语录内容最大显示长度
+        cfg = await config_svc.get_parsed_config(group_id)
+        max_content_length = cfg.showcase.quote_content_max_length
+
         # 转换为模板数据
         quote_boxes = await transform_quotes_to_template_boxes(
             quotes, group_id,
             quote_read_svc=quote_read_svc,
             user_svc=user_svc,
             image_store=image_store,
+            max_content_length=max_content_length,
         )
 
         # 拼接说明文字

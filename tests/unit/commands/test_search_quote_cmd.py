@@ -14,6 +14,7 @@ import pytest
 from nonebot.exception import FinishedException
 
 from nonebot_plugin_zikequote3.database.image_store import ImageStore
+from nonebot_plugin_zikequote3.services.config_service import ConfigService
 from nonebot_plugin_zikequote3.services.html_render_service import HtmlRenderServiceBase
 from nonebot_plugin_zikequote3.services.quote_read_service import QuoteReadService
 from nonebot_plugin_zikequote3.services.statistics_service import StatisticsService
@@ -84,6 +85,10 @@ class TestHandleSearchQuote:
         mock_image_store = MagicMock(spec=ImageStore)
         mock_render_svc = AsyncMock(spec=HtmlRenderServiceBase)
         mock_render_svc.render = AsyncMock(return_value=b"\x89PNG_FAKE")
+        mock_config_svc = AsyncMock(spec=ConfigService)
+        mock_cfg = MagicMock()
+        mock_cfg.showcase.quote_content_max_length = 500
+        mock_config_svc.get_parsed_config = AsyncMock(return_value=mock_cfg)
 
         patch_container({
             StatisticsService: mock_stats_svc,
@@ -91,6 +96,7 @@ class TestHandleSearchQuote:
             UserService: mock_user_svc,
             ImageStore: mock_image_store,
             HtmlRenderServiceBase: mock_render_svc,
+            ConfigService: mock_config_svc,
         })
 
         # Act & Assert
@@ -125,6 +131,10 @@ class TestHandleSearchQuote:
         mock_user_svc = AsyncMock(spec=UserService)
         mock_image_store = MagicMock(spec=ImageStore)
         mock_render_svc = AsyncMock(spec=HtmlRenderServiceBase)
+        mock_config_svc = AsyncMock(spec=ConfigService)
+        mock_cfg = MagicMock()
+        mock_cfg.showcase.quote_content_max_length = 500
+        mock_config_svc.get_parsed_config = AsyncMock(return_value=mock_cfg)
 
         patch_container({
             StatisticsService: mock_stats_svc,
@@ -132,6 +142,7 @@ class TestHandleSearchQuote:
             UserService: mock_user_svc,
             ImageStore: mock_image_store,
             HtmlRenderServiceBase: mock_render_svc,
+            ConfigService: mock_config_svc,
         })
 
         # Act & Assert
@@ -171,12 +182,18 @@ class TestHandleSearchQuote:
             side_effect=RuntimeError("playwright crashed"),
         )
 
+        mock_config_svc = AsyncMock(spec=ConfigService)
+        mock_cfg = MagicMock()
+        mock_cfg.showcase.quote_content_max_length = 500
+        mock_config_svc.get_parsed_config = AsyncMock(return_value=mock_cfg)
+
         patch_container({
             StatisticsService: mock_stats_svc,
             QuoteReadService: mock_read_svc,
             UserService: mock_user_svc,
             ImageStore: mock_image_store,
             HtmlRenderServiceBase: mock_render_svc,
+            ConfigService: mock_config_svc,
         })
 
         # Act & Assert

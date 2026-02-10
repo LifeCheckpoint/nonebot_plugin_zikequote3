@@ -20,7 +20,7 @@ from pydantic import BaseModel
 
 from ..command_definition import matcher_search_quote
 from ...di import Inject, inject
-from ...services import StatisticsService, QuoteReadService, UserService
+from ...services import ConfigService, StatisticsService, QuoteReadService, UserService
 from ...services.html_render_service import HtmlRenderServiceBase
 from ...database.image_store import ImageStore
 from ._error_handlers import command_error_handler
@@ -67,6 +67,7 @@ async def handle_search_quote(
     user_svc: UserService = Inject(UserService),
     image_store: ImageStore = Inject(ImageStore),
     html_render_svc: HtmlRenderServiceBase = Inject(HtmlRenderServiceBase),
+    config_svc: ConfigService = Inject(ConfigService),
 ) -> None:
     """
     处理语录搜索命令。
@@ -95,6 +96,8 @@ async def handle_search_quote(
     :type image_store: ImageStore
     :param html_render_svc: HTML 渲染服务（DI 注入）
     :type html_render_svc: HtmlRenderServiceBase
+    :param config_svc: 配置服务（DI 注入）
+    :type config_svc: ConfigService
     """
     group_id = str(event.group_id)
 
@@ -136,6 +139,10 @@ async def handle_search_quote(
             use_regex=params.use_regex,
         )
 
+        # 获取群组配置中的语录内容最大显示长度
+        cfg = await config_svc.get_parsed_config(group_id)
+        max_content_length = cfg.showcase.quote_content_max_length
+
         # 转换为模板数据
         quote_boxes = await transform_quotes_to_template_boxes(
             quotes, group_id,
@@ -143,6 +150,7 @@ async def handle_search_quote(
             user_svc=user_svc,
             image_store=image_store,
             show_author=True,
+            max_content_length=max_content_length,
         )
 
         # 拼接说明文字

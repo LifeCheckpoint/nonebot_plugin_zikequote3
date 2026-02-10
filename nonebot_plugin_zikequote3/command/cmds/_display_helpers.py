@@ -46,6 +46,7 @@ async def transform_quotes_to_template_boxes(
     show_image: bool = True,
     show_author: bool = False,
     show_comment: bool = True,
+    max_content_length: int = 0,
 ) -> list[TemplateQuoteBoxData]:
     """
     将语录数据列表转换为模板渲染所需的 TemplateQuoteBoxData 列表。
@@ -68,6 +69,8 @@ async def transform_quotes_to_template_boxes(
     :type show_author: bool
     :param show_comment: 是否显示评论，默认为 ``True``
     :type show_comment: bool
+    :param max_content_length: 单条语录内容的最大显示字符数，超过则截断并显示 ``"..."``，``0`` 表示不限制
+    :type max_content_length: int
     :returns: 模板数据列表
     :rtype: list[TemplateQuoteBoxData]
     """
@@ -105,9 +108,14 @@ async def transform_quotes_to_template_boxes(
                     "语录列表获取语录 %s 图片失败", qd.quote_id, exc_info=True,
                 )
 
+        # 截断超长语录内容
+        text = qd.content
+        if max_content_length > 0 and text and len(text) > max_content_length:
+            text = text[:max_content_length] + "..."
+
         boxes.append(TemplateQuoteBoxData(
             quote_id=qd.quote_id if show_id else None,
-            quote_text=qd.content,
+            quote_text=text,
             quote_image=image_uri,
             quote_author=author_name,
             quote_comment=review_text,
