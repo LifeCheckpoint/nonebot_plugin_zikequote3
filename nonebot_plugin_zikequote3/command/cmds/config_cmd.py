@@ -5,7 +5,7 @@
 通过 dishka 容器获取服务依赖。
 
 注意：
-- 查看配置预览依赖 HTML 截图（html_img_render），保留对旧模块的引用。
+- 查看配置预览通过 HtmlRenderServiceBase 渲染 code_frame 模板为图片。
 - 修改配置使用 ConfigService.parse_config_param 替代旧的 validation_service。
 - 批量修改和重置配置在旧版本中也是 TODO 状态，新版本保持一致。
 """
@@ -27,6 +27,8 @@ from ..command_definition import (
 )
 from ...di import get_container
 from ...services import ConfigService
+from ...services.html_render_service import HtmlRenderServiceBase
+from ...templates.schema.code_frame import TemplateCodeFrameData, render_code_frame
 from ._error_handlers import command_error_handler
 
 logger = logging.getLogger(__name__)
@@ -38,15 +40,13 @@ logger = logging.getLogger(__name__)
 
 @matcher_get_current_config.handle()
 async def handle_get_current_config(event: GroupMessageEvent) -> None:
-    """生成当前配置预览。"""
-    # TODO: 旧版本使用 s_get_setting_html + html_img_render 生成配置预览图片。
-    # 该功能依赖未重构的 HTML 截图模块（html_img_render）和旧的
-    # setting_service.s_get_setting_html。新版本暂时使用文本方式展示配置。
+    """生成当前配置预览，优先渲染为图片，失败时降级为纯文本。"""
     group_id = str(event.group_id)
 
     container = get_container()
     async with container() as request_scope:
         config_svc = await request_scope.get(ConfigService)
+        html_render_svc = await request_scope.get(HtmlRenderServiceBase)
 
         async with command_error_handler(
             matcher_get_current_config, "生成配置预览"
@@ -56,7 +56,21 @@ async def handle_get_current_config(event: GroupMessageEvent) -> None:
                 await matcher_get_current_config.finish(
                     "当前群组尚未配置自定义设置，使用默认配置~"
                 )
-            else:
+
+            # 尝试渲染为图片
+            try:
+                html = render_code_frame(TemplateCodeFrameData(
+                    title=f"群组 {group_id} 配置",
+                    subtitle="当前群组自定义配置预览",
+                    language="language-toml",
+                    code=toml_str,
+                ))
+                img = await html_render_svc.render(
+                    html, width=800, height=600,
+                )
+                await matcher_get_current_config.finish(MsgSeg.image(img))
+            except Exception as e:
+                logger.warning("配置预览图片渲染失败，降级为纯文本: %s", e)
                 await matcher_get_current_config.finish(
                     f"当前群组配置：\n{toml_str}"
                 )
