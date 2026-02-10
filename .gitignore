@@ -1,5 +1,8 @@
 .VSCodeCounter/
 
+# test
+.coverage
+
 # py
 __pycache__/
 .venv/
