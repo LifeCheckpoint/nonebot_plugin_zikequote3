@@ -1,7 +1,7 @@
 """
-隐私政策命令处理器（dishka DI 版本）。
+隐私政策命令处理器。
 
-替代旧的 get_privacy_cmd.py，消除星号导入和延迟导入。
+通过 @inject 装饰器自动从 dishka 容器获取服务依赖。
 此命令不依赖数据库服务，仅读取静态 Markdown 文件并渲染为图片。
 """
 
@@ -12,7 +12,7 @@ import logging
 from nonebot.adapters.onebot.v11 import MessageSegment as MsgSeg
 
 from ..command_definition import matcher_get_privacy
-from ...di import get_container
+from ...di import Inject, inject
 from ...services.html_render_service import HtmlRenderServiceBase
 from ...paths import PluginPath
 from ...templates import md as md_template
@@ -21,7 +21,10 @@ logger = logging.getLogger(__name__)
 
 
 @matcher_get_privacy.handle()
-async def handle_get_privacy() -> None:
+@inject
+async def handle_get_privacy(
+    html_render_svc: HtmlRenderServiceBase = Inject(HtmlRenderServiceBase),
+) -> None:
     """获取隐私政策。"""
     privacy_markdown = PluginPath.module_resources_root / "privacy.md"
 
@@ -31,14 +34,10 @@ async def handle_get_privacy() -> None:
         )
 
     try:
-        container = get_container()
-        async with container() as request_scope:
-            html_render_svc = await request_scope.get(HtmlRenderServiceBase)
-
-            md_content = privacy_markdown.read_text(encoding="utf-8")
-            html = md_template.render_markdown(md_content)
-            img = await html_render_svc.render(html, width=800)
-            await matcher_get_privacy.finish(MsgSeg.image(img))
+        md_content = privacy_markdown.read_text(encoding="utf-8")
+        html = md_template.render_markdown(md_content)
+        img = await html_render_svc.render(html, width=800)
+        await matcher_get_privacy.finish(MsgSeg.image(img))
     except Exception:
         logger.warning("渲染隐私政策图片失败，回退为纯文本", exc_info=True)
         await matcher_get_privacy.finish(

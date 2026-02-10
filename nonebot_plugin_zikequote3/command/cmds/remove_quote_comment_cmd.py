@@ -1,8 +1,7 @@
 """
-删除评论命令处理器（dishka DI 版本）。
+删除评论命令处理器。
 
-替代旧的 remove_quote_comment_cmd.py，消除星号导入和延迟导入，
-通过 dishka 容器获取服务依赖。
+通过 @inject 装饰器自动从 dishka 容器获取服务依赖。
 """
 
 from __future__ import annotations
@@ -17,7 +16,7 @@ from nonebot.adapters import Message
 from nonebot.params import CommandArg
 
 from ..command_definition import matcher_remove_quote_comment
-from ...di import get_container
+from ...di import Inject, inject
 from ...services import ReviewService
 from ._error_handlers import command_error_handler
 
@@ -25,10 +24,12 @@ logger = logging.getLogger(__name__)
 
 
 @matcher_remove_quote_comment.handle()
+@inject
 async def handle_remove_quote_comment(
     event: GroupMessageEvent,
     bot: Bot,
     arg: Message = CommandArg(),
+    review_svc: ReviewService = Inject(ReviewService),
 ) -> None:
     """
     删除评论。
@@ -41,13 +42,9 @@ async def handle_remove_quote_comment(
             "请提供要删除的评论 ID 哦~\n用法：/删评论 评论ID"
         )
 
-    container = get_container()
-    async with container() as request_scope:
-        review_svc = await request_scope.get(ReviewService)
+    async with command_error_handler(
+        matcher_remove_quote_comment, "删除评论"
+    ):
+        await review_svc.delete_review(review_id)
 
-        async with command_error_handler(
-            matcher_remove_quote_comment, "删除评论"
-        ):
-            await review_svc.delete_review(review_id)
-
-        await matcher_remove_quote_comment.finish("评论删除成功~(≧▽≦)")
+    await matcher_remove_quote_comment.finish("评论删除成功~(≧▽≦)")

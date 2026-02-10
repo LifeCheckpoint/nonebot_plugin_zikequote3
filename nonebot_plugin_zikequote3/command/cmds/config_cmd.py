@@ -1,8 +1,7 @@
 """
-配置命令处理器（dishka DI 版本）。
+配置命令处理器。
 
-替代旧的 config_cmd.py，消除星号导入和延迟导入，
-通过 dishka 容器获取服务依赖。
+通过 @inject 装饰器自动从 dishka 容器获取服务依赖。
 
 注意：
 - 查看配置预览通过 HtmlRenderServiceBase 渲染 code_frame 模板为图片。
@@ -25,7 +24,7 @@ from ..command_definition import (
     matcher_reset_config,
     matcher_reload_config,
 )
-from ...di import get_container
+from ...di import Inject, inject
 from ...services import ConfigService
 from ...services.html_render_service import HtmlRenderServiceBase
 from ...templates.schema.code_frame import TemplateCodeFrameData, render_code_frame
@@ -39,41 +38,41 @@ logger = logging.getLogger(__name__)
 # ===================================================================
 
 @matcher_get_current_config.handle()
-async def handle_get_current_config(event: GroupMessageEvent) -> None:
+@inject
+async def handle_get_current_config(
+    event: GroupMessageEvent,
+    config_svc: ConfigService = Inject(ConfigService),
+    html_render_svc: HtmlRenderServiceBase = Inject(HtmlRenderServiceBase),
+) -> None:
     """生成当前配置预览，优先渲染为图片，失败时降级为纯文本。"""
     group_id = str(event.group_id)
 
-    container = get_container()
-    async with container() as request_scope:
-        config_svc = await request_scope.get(ConfigService)
-        html_render_svc = await request_scope.get(HtmlRenderServiceBase)
+    async with command_error_handler(
+        matcher_get_current_config, "生成配置预览"
+    ):
+        toml_str = await config_svc.get_group_toml(group_id)
+        if toml_str is None:
+            await matcher_get_current_config.finish(
+                "当前群组尚未配置自定义设置，使用默认配置~"
+            )
 
-        async with command_error_handler(
-            matcher_get_current_config, "生成配置预览"
-        ):
-            toml_str = await config_svc.get_group_toml(group_id)
-            if toml_str is None:
-                await matcher_get_current_config.finish(
-                    "当前群组尚未配置自定义设置，使用默认配置~"
-                )
-
-            # 尝试渲染为图片
-            try:
-                html = render_code_frame(TemplateCodeFrameData(
-                    title=f"群组 {group_id} 配置",
-                    subtitle="当前群组自定义配置预览",
-                    language="language-toml",
-                    code=toml_str,
-                ))
-                img = await html_render_svc.render(
-                    html, width=800, height=600,
-                )
-                await matcher_get_current_config.finish(MsgSeg.image(img))
-            except Exception as e:
-                logger.warning("配置预览图片渲染失败，降级为纯文本: %s", e)
-                await matcher_get_current_config.finish(
-                    f"当前群组配置：\n{toml_str}"
-                )
+        # 尝试渲染为图片
+        try:
+            html = render_code_frame(TemplateCodeFrameData(
+                title=f"群组 {group_id} 配置",
+                subtitle="当前群组自定义配置预览",
+                language="language-toml",
+                code=toml_str,
+            ))
+            img = await html_render_svc.render(
+                html, width=800, height=600,
+            )
+            await matcher_get_current_config.finish(MsgSeg.image(img))
+        except Exception as e:
+            logger.warning("配置预览图片渲染失败，降级为纯文本: %s", e)
+            await matcher_get_current_config.finish(
+                f"当前群组配置：\n{toml_str}"
+            )
 
 # endregion
 
@@ -83,31 +82,29 @@ async def handle_get_current_config(event: GroupMessageEvent) -> None:
 # ===================================================================
 
 @matcher_modify_config.handle()
+@inject
 async def handle_modify_config(
     event: GroupMessageEvent,
     arg: Message = CommandArg(),
+    config_svc: ConfigService = Inject(ConfigService),
 ) -> None:
     """修改当前配置。"""
     args = arg.extract_plain_text().strip().split(" ", 2)
     group_id = str(event.group_id)
 
-    container = get_container()
-    async with container() as request_scope:
-        config_svc = await request_scope.get(ConfigService)
+    async with command_error_handler(matcher_modify_config, "修改配置"):
+        # 参数检查
+        if len(args) < 2:
+            raise ValueError("参数过少，至少需要两个参数👻~")
 
-        async with command_error_handler(matcher_modify_config, "修改配置"):
-            # 参数检查
-            if len(args) < 2:
-                raise ValueError("参数过少，至少需要两个参数👻~")
+        # 解析参数
+        try:
+            schema_str, new_value = config_svc.parse_config_param(args)
+        except Exception as e:
+            raise ValueError(f"输入的参数，好奇怪喵X_X: {e}")
 
-            # 解析参数
-            try:
-                schema_str, new_value = config_svc.parse_config_param(args)
-            except Exception as e:
-                raise ValueError(f"输入的参数，好奇怪喵X_X: {e}")
-
-            await config_svc.modify_single_value(group_id, schema_str, new_value)
-            await matcher_modify_config.finish("配置修改成功~")
+        await config_svc.modify_single_value(group_id, schema_str, new_value)
+        await matcher_modify_config.finish("配置修改成功~")
 
 # endregion
 
