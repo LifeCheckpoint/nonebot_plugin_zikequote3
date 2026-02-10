@@ -1,3 +1,9 @@
+"""
+命令处理器子包。
+
+汇总导出所有命令处理器模块，使上层 ``command/__init__.py`` 可一次性注册。
+"""
+
 from .add_quote_cmd import *
 from .add_quote_comment_cmd import *
 from .collecting_listener_cmd import *

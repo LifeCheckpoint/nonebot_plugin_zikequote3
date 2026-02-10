@@ -34,7 +34,16 @@ _AUTHOR_AI = "AI"
 
 
 def _to_data_uri(data: bytes, mime: str = "image/png") -> str:
-    """将二进制数据转换为 Data URI 格式。"""
+    """
+    将二进制数据转换为 Data URI 格式。
+
+    :param data: 原始二进制数据
+    :type data: bytes
+    :param mime: MIME 类型，默认为 ``"image/png"``
+    :type mime: str
+    :returns: Base64 编码的 Data URI 字符串
+    :rtype: str
+    """
     return f"data:{mime};base64,{base64.b64encode(data).decode()}"
 
 
@@ -50,7 +59,28 @@ async def handle_random_quote_card(
     image_store: ImageStore = Inject(ImageStore),
     html_render_svc: HtmlRenderServiceBase = Inject(HtmlRenderServiceBase),
 ) -> None:
-    """随机语录卡，渲染为卡片图片发送。"""
+    """
+    处理随机语录卡命令。
+
+    随机获取一条语录，渲染为卡片图片发送，包含评论和图片信息。
+
+    :param event: 群消息事件
+    :type event: GroupMessageEvent
+    :param bot: Bot 实例
+    :type bot: Bot
+    :param arg: 命令参数消息体
+    :type arg: Message
+    :param quote_read_svc: 语录读取服务（DI 注入）
+    :type quote_read_svc: QuoteReadService
+    :param quote_write_svc: 语录写入服务（DI 注入）
+    :type quote_write_svc: QuoteWriteService
+    :param user_svc: 用户服务（DI 注入）
+    :type user_svc: UserService
+    :param image_store: 图片存储（DI 注入）
+    :type image_store: ImageStore
+    :param html_render_svc: HTML 渲染服务（DI 注入）
+    :type html_render_svc: HtmlRenderServiceBase
+    """
     key = arg.extract_plain_text().strip()
     group_id = str(event.group_id)
     send_msg = None

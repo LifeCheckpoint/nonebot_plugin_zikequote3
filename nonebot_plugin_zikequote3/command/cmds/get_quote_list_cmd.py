@@ -43,7 +43,32 @@ async def handle_get_quote_list(
     image_store: ImageStore = Inject(ImageStore),
     html_render_svc: HtmlRenderServiceBase = Inject(HtmlRenderServiceBase),
 ) -> None:
-    """语录列表。"""
+    """
+    处理语录列表命令。
+
+    根据用户指定的 At、QQ 号或昵称查询个人语录列表，支持分页，渲染为图片发送。
+
+    :param event: 群消息事件
+    :type event: GroupMessageEvent
+    :param range: Alconna 匹配的页码范围参数
+    :type range: Match[str]
+    :param at_user: Alconna 匹配的 At 段参数
+    :type at_user: Match[At]
+    :param qq: Alconna 匹配的 QQ 号参数
+    :type qq: Match[str]
+    :param nickname: Alconna 匹配的昵称参数
+    :type nickname: Match[str]
+    :param stats_svc: 统计服务（DI 注入）
+    :type stats_svc: StatisticsService
+    :param user_svc: 用户服务（DI 注入）
+    :type user_svc: UserService
+    :param quote_read_svc: 语录读取服务（DI 注入）
+    :type quote_read_svc: QuoteReadService
+    :param image_store: 图片存储（DI 注入）
+    :type image_store: ImageStore
+    :param html_render_svc: HTML 渲染服务（DI 注入）
+    :type html_render_svc: HtmlRenderServiceBase
+    """
     group_id = str(event.group_id)
 
     async with command_error_handler(matcher_get_quote_list, "解析参数"):

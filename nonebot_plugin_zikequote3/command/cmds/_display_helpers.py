@@ -23,7 +23,16 @@ AUTHOR_AI = "AI"
 
 
 def _to_data_uri(data: bytes, mime: str = "image/png") -> str:
-    """将二进制数据转换为 Data URI 格式。"""
+    """
+    将二进制数据转换为 Data URI 格式。
+
+    :param data: 原始二进制数据
+    :type data: bytes
+    :param mime: MIME 类型，默认为 ``"image/png"``
+    :type mime: str
+    :returns: Base64 编码的 Data URI 字符串
+    :rtype: str
+    """
     return f"data:{mime};base64,{base64.b64encode(data).decode()}"
 
 
@@ -42,19 +51,26 @@ async def transform_quotes_to_template_boxes(
     """
     将语录数据列表转换为模板渲染所需的 TemplateQuoteBoxData 列表。
 
-    Args:
-        quotes: 语录数据列表。
-        group_id: 群组 ID。
-        quote_read_svc: 语录读取服务。
-        user_svc: 用户服务。
-        image_store: 图片存储。
-        show_id: 是否显示语录 ID。
-        show_image: 是否显示图片。
-        show_author: 是否显示作者。
-        show_comment: 是否显示评论。
-
-    Returns:
-        模板数据列表。
+    :param quotes: 语录数据列表
+    :type quotes: Sequence[Quote]
+    :param group_id: 群组 ID
+    :type group_id: str
+    :param quote_read_svc: 语录读取服务
+    :type quote_read_svc: QuoteReadService
+    :param user_svc: 用户服务
+    :type user_svc: UserService
+    :param image_store: 图片存储
+    :type image_store: ImageStore
+    :param show_id: 是否显示语录 ID，默认为 ``True``
+    :type show_id: bool
+    :param show_image: 是否显示图片，默认为 ``True``
+    :type show_image: bool
+    :param show_author: 是否显示作者，默认为 ``False``
+    :type show_author: bool
+    :param show_comment: 是否显示评论，默认为 ``True``
+    :type show_comment: bool
+    :returns: 模板数据列表
+    :rtype: list[TemplateQuoteBoxData]
     """
     boxes: list[TemplateQuoteBoxData] = []
 

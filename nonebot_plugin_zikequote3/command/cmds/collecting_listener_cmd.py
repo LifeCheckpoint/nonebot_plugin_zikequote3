@@ -44,6 +44,21 @@ async def handle_collecting_listener(
     监听群组消息，处理自动语录收集。
 
     此事件不会向用户界面提供任何反馈。
+
+    :param event: 群消息事件
+    :type event: GroupMessageEvent
+    :param bot: Bot 实例
+    :type bot: Bot
+    :param config_svc: 配置服务（DI 注入）
+    :type config_svc: ConfigService
+    :param collection_svc: 语录收集服务（DI 注入）
+    :type collection_svc: QuoteCollectionService
+    :param group_svc: 群组服务（DI 注入）
+    :type group_svc: GroupService
+    :param review_svc: 评论服务（DI 注入）
+    :type review_svc: ReviewService
+    :param user_svc: 用户服务（DI 注入）
+    :type user_svc: UserService
     """
     group_id = str(event.group_id)
     user_id = str(event.user_id)

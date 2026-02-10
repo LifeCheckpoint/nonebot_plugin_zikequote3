@@ -32,11 +32,21 @@ async def handle_remove_quote(
     quote_write_svc: QuoteWriteService = Inject(QuoteWriteService),
 ) -> None:
     """
-    删除语录。
+    处理删除语录命令。
 
     支持两种方式：
+
     1. 回复一条语录消息：``/删语录``
     2. 直接指定语录 ID：``/删语录 <quote_id>``
+
+    :param event: 群消息事件
+    :type event: GroupMessageEvent
+    :param bot: Bot 实例
+    :type bot: Bot
+    :param arg: 命令参数消息体
+    :type arg: Message
+    :param quote_write_svc: 语录写入服务（DI 注入）
+    :type quote_write_svc: QuoteWriteService
     """
     reply = event.reply
     arg_text = arg.extract_plain_text().strip()

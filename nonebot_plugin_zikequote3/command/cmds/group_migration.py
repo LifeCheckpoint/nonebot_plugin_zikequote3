@@ -47,7 +47,37 @@ async def handle_group_migration(
     token_mgr: TokenManager = Inject(TokenManager),
     html_render_svc: HtmlRenderServiceBase = Inject(HtmlRenderServiceBase),
 ) -> None:
-    """群语录迁移功能，批量迁移一个群的语录并进行合并。"""
+    """
+    处理群语录迁移命令。
+
+    批量迁移一个群的语录到另一个群，支持覆写、去重、排除非成员等选项。
+    迁移前生成确认卡片，需用户输入 Token 确认后执行。
+
+    :param event: 群消息事件
+    :type event: GroupMessageEvent
+    :param source: Alconna 匹配的源群号参数
+    :type source: Match[str]
+    :param target: Alconna 匹配的目标群号参数
+    :type target: Match[str]
+    :param overwrite: 是否完全覆盖目标群语录
+    :type overwrite: Query[bool]
+    :param duplicate: 是否基于内容去重
+    :type duplicate: Query[bool]
+    :param exclude_member: 是否排除不在新群的成员语录
+    :type exclude_member: Query[bool]
+    :param clear_member_info: 是否清除源群用户群昵称信息
+    :type clear_member_info: Query[bool]
+    :param keep_source: 是否保留源群语录信息
+    :type keep_source: Query[bool]
+    :param migration_svc: 迁移服务（DI 注入）
+    :type migration_svc: MigrationService
+    :param group_svc: 群组服务（DI 注入）
+    :type group_svc: GroupService
+    :param token_mgr: Token 管理器（DI 注入）
+    :type token_mgr: TokenManager
+    :param html_render_svc: HTML 渲染服务（DI 注入）
+    :type html_render_svc: HtmlRenderServiceBase
+    """
     # 群聊存在性确认
     async with command_error_handler(
         matcher_group_migration, "群聊存在性确认"

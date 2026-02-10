@@ -32,9 +32,18 @@ async def handle_remove_quote_comment(
     review_svc: ReviewService = Inject(ReviewService),
 ) -> None:
     """
-    删除评论。
+    处理删除评论命令。
 
     使用方式：``/删评论 评论ID``
+
+    :param event: 群消息事件
+    :type event: GroupMessageEvent
+    :param bot: Bot 实例
+    :type bot: Bot
+    :param arg: 命令参数消息体
+    :type arg: Message
+    :param review_svc: 评论服务（DI 注入）
+    :type review_svc: ReviewService
     """
     review_id = arg.extract_plain_text().strip()
     if not review_id:

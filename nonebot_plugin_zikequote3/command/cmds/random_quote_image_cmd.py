@@ -35,7 +35,24 @@ async def handle_random_quote_image(
     quote_write_svc: QuoteWriteService = Inject(QuoteWriteService),
     image_store: ImageStore = Inject(ImageStore),
 ) -> None:
-    """随机语录图，仅返回含图片的语录。"""
+    """
+    处理随机语录图命令。
+
+    随机获取一条含图片的语录，仅发送图片内容。
+
+    :param event: 群消息事件
+    :type event: GroupMessageEvent
+    :param bot: Bot 实例
+    :type bot: Bot
+    :param arg: 命令参数消息体
+    :type arg: Message
+    :param quote_read_svc: 语录读取服务（DI 注入）
+    :type quote_read_svc: QuoteReadService
+    :param quote_write_svc: 语录写入服务（DI 注入）
+    :type quote_write_svc: QuoteWriteService
+    :param image_store: 图片存储（DI 注入）
+    :type image_store: ImageStore
+    """
     key = arg.extract_plain_text().strip()
     group_id = str(event.group_id)
 

@@ -23,7 +23,14 @@ logger = logging.getLogger(__name__)
 
 
 async def _fetch_image_from_url_or_file(url_or_file: str) -> bytes:
-    """从 URL 或本地文件路径获取图片数据。"""
+    """
+    从 URL 或本地文件路径获取图片二进制数据。
+
+    :param url_or_file: 图片的 URL 地址或本地文件路径
+    :type url_or_file: str
+    :returns: 图片的二进制数据
+    :rtype: bytes
+    """
     import aiohttp
 
     if url_or_file.startswith(("http://", "https://")):
@@ -46,7 +53,22 @@ async def handle_add_quote(
     group_svc: GroupService = Inject(GroupService),
     image_store: ImageStore = Inject(ImageStore),
 ) -> None:
-    """添加语录。"""
+    """
+    处理添加语录命令。
+
+    从回复消息中提取语录文本和图片，调用服务层写入数据库。
+
+    :param event: 群消息事件
+    :type event: GroupMessageEvent
+    :param bot: Bot 实例
+    :type bot: Bot
+    :param quote_write_svc: 语录写入服务（DI 注入）
+    :type quote_write_svc: QuoteWriteService
+    :param group_svc: 群组服务（DI 注入）
+    :type group_svc: GroupService
+    :param image_store: 图片存储（DI 注入）
+    :type image_store: ImageStore
+    """
     reply = event.reply
     if reply is None:
         await matcher_add_quote.finish("您还没有回复想要加的语录呢(^///^)")

@@ -44,7 +44,18 @@ async def handle_get_current_config(
     config_svc: ConfigService = Inject(ConfigService),
     html_render_svc: HtmlRenderServiceBase = Inject(HtmlRenderServiceBase),
 ) -> None:
-    """生成当前配置预览，优先渲染为图片，失败时降级为纯文本。"""
+    """
+    处理查看当前配置命令。
+
+    生成当前群组配置预览，优先渲染为图片，失败时降级为纯文本。
+
+    :param event: 群消息事件
+    :type event: GroupMessageEvent
+    :param config_svc: 配置服务（DI 注入）
+    :type config_svc: ConfigService
+    :param html_render_svc: HTML 渲染服务（DI 注入）
+    :type html_render_svc: HtmlRenderServiceBase
+    """
     group_id = str(event.group_id)
 
     async with command_error_handler(
@@ -88,7 +99,18 @@ async def handle_modify_config(
     arg: Message = CommandArg(),
     config_svc: ConfigService = Inject(ConfigService),
 ) -> None:
-    """修改当前配置。"""
+    """
+    处理修改配置命令。
+
+    解析用户输入的配置键值对，更新当前群组的单项配置。
+
+    :param event: 群消息事件
+    :type event: GroupMessageEvent
+    :param arg: 命令参数消息体
+    :type arg: Message
+    :param config_svc: 配置服务（DI 注入）
+    :type config_svc: ConfigService
+    """
     args = arg.extract_plain_text().strip().split(" ", 2)
     group_id = str(event.group_id)
 
@@ -118,7 +140,14 @@ async def handle_batch_modify_config(
     event: GroupMessageEvent,
     arg: Message = CommandArg(),
 ) -> None:
-    """批量修改当前配置。"""
+    """
+    处理批量修改配置命令（暂未实现）。
+
+    :param event: 群消息事件
+    :type event: GroupMessageEvent
+    :param arg: 命令参数消息体
+    :type arg: Message
+    """
     # TODO: 旧版本中此功能也是 TODO 状态，保持一致
     args = arg.extract_plain_text().strip()
     await matcher_batch_modify_config.finish("批量修改配置功能暂未实现~")
@@ -132,7 +161,12 @@ async def handle_batch_modify_config(
 
 @matcher_reset_config.handle()
 async def handle_reset_config(event: GroupMessageEvent) -> None:
-    """重置当前群组配置。"""
+    """
+    处理重置当前群组配置命令（暂未实现）。
+
+    :param event: 群消息事件
+    :type event: GroupMessageEvent
+    """
     # TODO: 旧版本中此功能也是 TODO 状态，保持一致
     await matcher_reset_config.finish("重置配置功能暂未实现~")
 
@@ -145,10 +179,14 @@ async def handle_reset_config(event: GroupMessageEvent) -> None:
 
 @matcher_reload_config.handle()
 async def handle_reload_config(event: GroupMessageEvent) -> None:
-    """重载当前群组配置。
+    """
+    处理重载当前群组配置命令。
 
     新架构中配置通过 ConfigService 从数据库按需读取，
     不再依赖旧的全局缓存重载机制。此命令仅作确认用途。
+
+    :param event: 群消息事件
+    :type event: GroupMessageEvent
     """
     await matcher_reload_config.finish(
         "新版本配置已改为实时从数据库读取，无需手动重载~"

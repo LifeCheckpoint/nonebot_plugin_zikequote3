@@ -31,6 +31,21 @@ logger = logging.getLogger(__name__)
 
 
 class _ArgsValidater(BaseModel):
+    """
+    搜索命令参数校验模型。
+
+    :param qq: 用于筛选的 QQ 号，默认为 ``None``
+    :type qq: Optional[int]
+    :param search_with_image: 是否包含含图片的语录，默认为 ``True``
+    :type search_with_image: bool
+    :param max_result: 最大返回结果数量，默认为 ``None``（不限制）
+    :type max_result: Optional[int]
+    :param use_regex: 是否使用正则表达式搜索，默认为 ``False``
+    :type use_regex: bool
+    :param pattern: 搜索关键词或正则模式，默认为空字符串
+    :type pattern: str
+    """
+
     qq: Optional[int] = None
     search_with_image: bool = True
     max_result: Optional[int] = None
@@ -53,7 +68,34 @@ async def handle_search_quote(
     image_store: ImageStore = Inject(ImageStore),
     html_render_svc: HtmlRenderServiceBase = Inject(HtmlRenderServiceBase),
 ) -> None:
-    """语录搜索。"""
+    """
+    处理语录搜索命令。
+
+    支持关键词搜索、正则搜索、按 QQ 号筛选、排除图片等多种搜索模式，渲染为列表图片发送。
+
+    :param event: 群消息事件
+    :type event: GroupMessageEvent
+    :param qq: Alconna 匹配的 QQ 号筛选参数
+    :type qq: Match[int]
+    :param max_result: Alconna 匹配的最大返回结果数量参数
+    :type max_result: Match[int]
+    :param keyword: Alconna 匹配的搜索关键词参数
+    :type keyword: Match[UniMessage]
+    :param no_image: 是否排除含图片的语录
+    :type no_image: Query[bool]
+    :param use_regex: 是否使用正则表达式搜索
+    :type use_regex: Query[bool]
+    :param stats_svc: 统计服务（DI 注入）
+    :type stats_svc: StatisticsService
+    :param quote_read_svc: 语录读取服务（DI 注入）
+    :type quote_read_svc: QuoteReadService
+    :param user_svc: 用户服务（DI 注入）
+    :type user_svc: UserService
+    :param image_store: 图片存储（DI 注入）
+    :type image_store: ImageStore
+    :param html_render_svc: HTML 渲染服务（DI 注入）
+    :type html_render_svc: HtmlRenderServiceBase
+    """
     group_id = str(event.group_id)
 
     async with command_error_handler(matcher_search_quote, "解析参数"):

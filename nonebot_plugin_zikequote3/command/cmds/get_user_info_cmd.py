@@ -37,7 +37,26 @@ async def handle_get_user_info(
     stats_svc: StatisticsService = Inject(StatisticsService),
     html_render_svc: HtmlRenderServiceBase = Inject(HtmlRenderServiceBase),
 ) -> None:
-    """获取用户信息卡片。"""
+    """
+    处理获取用户信息卡片命令。
+
+    根据 At、QQ 号或昵称定位用户，获取其语录统计、排名、历史昵称等信息并渲染为卡片图片。
+
+    :param event: 群消息事件
+    :type event: GroupMessageEvent
+    :param at_user: Alconna 匹配的 At 段参数
+    :type at_user: Match[At]
+    :param qq: Alconna 匹配的 QQ 号参数
+    :type qq: Match[str]
+    :param nickname: Alconna 匹配的昵称参数
+    :type nickname: Match[str]
+    :param user_svc: 用户服务（DI 注入）
+    :type user_svc: UserService
+    :param stats_svc: 统计服务（DI 注入）
+    :type stats_svc: StatisticsService
+    :param html_render_svc: HTML 渲染服务（DI 注入）
+    :type html_render_svc: HtmlRenderServiceBase
+    """
     group_id = str(event.group_id)
 
     async with command_error_handler(matcher_get_user_info, "解析参数"):

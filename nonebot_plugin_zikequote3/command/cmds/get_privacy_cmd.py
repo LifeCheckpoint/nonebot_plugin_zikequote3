@@ -25,7 +25,14 @@ logger = logging.getLogger(__name__)
 async def handle_get_privacy(
     html_render_svc: HtmlRenderServiceBase = Inject(HtmlRenderServiceBase),
 ) -> None:
-    """获取隐私政策。"""
+    """
+    处理获取隐私政策命令。
+
+    读取静态 Markdown 隐私政策文件并渲染为图片发送，渲染失败时降级为纯文本。
+
+    :param html_render_svc: HTML 渲染服务（DI 注入）
+    :type html_render_svc: HtmlRenderServiceBase
+    """
     privacy_markdown = PluginPath.module_resources_root / "privacy.md"
 
     if not privacy_markdown.exists():

@@ -31,7 +31,20 @@ async def handle_update_quote_force(
     collection_svc: QuoteCollectionService = Inject(QuoteCollectionService),
     review_svc: ReviewService = Inject(ReviewService),
 ) -> None:
-    """强制更新语录，与自动收集命令流程类似。"""
+    """
+    处理强制更新语录命令。
+
+    手动触发 LLM 筛选收集流程，与自动收集监听器流程类似。
+
+    :param event: 群消息事件
+    :type event: GroupMessageEvent
+    :param state: NoneBot 状态字典
+    :type state: T_State
+    :param collection_svc: 语录收集服务（DI 注入）
+    :type collection_svc: QuoteCollectionService
+    :param review_svc: 评论服务（DI 注入）
+    :type review_svc: ReviewService
+    """
     group_id = str(event.group_id)
 
     # 检查是否已有收集任务在进行中

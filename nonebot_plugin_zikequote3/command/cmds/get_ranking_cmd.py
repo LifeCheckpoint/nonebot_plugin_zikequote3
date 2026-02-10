@@ -42,7 +42,16 @@ logger = logging.getLogger(__name__)
 def _generate_date_range_mm_dd(
     start_date: datetime.date, end_date: datetime.date,
 ) -> List[str]:
-    """生成 MM-DD 格式的日期范围列表。"""
+    """
+    生成 MM-DD 格式的日期范围列表。
+
+    :param start_date: 起始日期
+    :type start_date: datetime.date
+    :param end_date: 结束日期
+    :type end_date: datetime.date
+    :returns: MM-DD 格式的日期字符串列表
+    :rtype: List[str]
+    """
     date_list: List[str] = []
     current = start_date
     while current <= end_date:
@@ -62,7 +71,26 @@ async def handle_get_ranking(
     quote_read_svc: QuoteReadService = Inject(QuoteReadService),
     html_render_svc: HtmlRenderServiceBase = Inject(HtmlRenderServiceBase),
 ) -> None:
-    """展示群内语录排行图片。"""
+    """
+    处理语录排行榜命令。
+
+    获取群组统计数据、个人排行和近 15 天走势，渲染为排行榜图片发送。
+
+    :param event: 群消息事件
+    :type event: GroupMessageEvent
+    :param arg: 命令参数消息体
+    :type arg: Message
+    :param stats_svc: 统计服务（DI 注入）
+    :type stats_svc: StatisticsService
+    :param user_svc: 用户服务（DI 注入）
+    :type user_svc: UserService
+    :param group_svc: 群组服务（DI 注入）
+    :type group_svc: GroupService
+    :param quote_read_svc: 语录读取服务（DI 注入）
+    :type quote_read_svc: QuoteReadService
+    :param html_render_svc: HTML 渲染服务（DI 注入）
+    :type html_render_svc: HtmlRenderServiceBase
+    """
     group_id = str(event.group_id)
 
     # 解析参数，获取展示数量

@@ -38,7 +38,26 @@ async def handle_random_quote(
     user_svc: UserService = Inject(UserService),
     image_store: ImageStore = Inject(ImageStore),
 ) -> None:
-    """随机语录。"""
+    """
+    处理随机语录命令。
+
+    随机获取一条语录，以纯文本（含可选图片）形式发送。
+
+    :param event: 群消息事件
+    :type event: GroupMessageEvent
+    :param bot: Bot 实例
+    :type bot: Bot
+    :param arg: 命令参数消息体
+    :type arg: Message
+    :param quote_read_svc: 语录读取服务（DI 注入）
+    :type quote_read_svc: QuoteReadService
+    :param quote_write_svc: 语录写入服务（DI 注入）
+    :type quote_write_svc: QuoteWriteService
+    :param user_svc: 用户服务（DI 注入）
+    :type user_svc: UserService
+    :param image_store: 图片存储（DI 注入）
+    :type image_store: ImageStore
+    """
     key = arg.extract_plain_text().strip()
     group_id = str(event.group_id)
     send_msg = None

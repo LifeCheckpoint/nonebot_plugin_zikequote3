@@ -36,7 +36,24 @@ async def handle_add_quote_comment(
     review_svc: ReviewService = Inject(ReviewService),
     group_svc: GroupService = Inject(GroupService),
 ) -> None:
-    """评论语录（带命令前缀）。"""
+    """
+    处理评论语录命令（带命令前缀）。
+
+    回复一条语录消息并附带评论内容，将评论写入数据库。
+
+    :param event: 群消息事件
+    :type event: GroupMessageEvent
+    :param bot: Bot 实例
+    :type bot: Bot
+    :param arg: 命令参数消息体
+    :type arg: Message
+    :param quote_write_svc: 语录写入服务（DI 注入）
+    :type quote_write_svc: QuoteWriteService
+    :param review_svc: 评论服务（DI 注入）
+    :type review_svc: ReviewService
+    :param group_svc: 群组服务（DI 注入）
+    :type group_svc: GroupService
+    """
     reply = event.reply
     content = arg.extract_plain_text().strip()
     if reply is None or content == "":
@@ -75,7 +92,20 @@ if matcher_add_quote_comment_no_prefix is not None:
         quote_write_svc: QuoteWriteService = Inject(QuoteWriteService),
         review_svc: ReviewService = Inject(ReviewService),
     ) -> None:
-        """静默评论语录（无前缀）。"""
+        """
+        处理静默评论语录（无命令前缀模式）。
+
+        当用户直接回复语录消息时，自动识别并添加评论。
+
+        :param event: 群消息事件
+        :type event: GroupMessageEvent
+        :param bot: Bot 实例
+        :type bot: Bot
+        :param quote_write_svc: 语录写入服务（DI 注入）
+        :type quote_write_svc: QuoteWriteService
+        :param review_svc: 评论服务（DI 注入）
+        :type review_svc: ReviewService
+        """
         reply = event.reply
         content = event.get_plaintext().strip()
         if reply is None or content == "":
