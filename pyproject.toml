@@ -57,21 +57,25 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 testpaths = ["tests"]
 addopts = "--cov=nonebot_plugin_zikequote3 --cov-report=term-missing --cov-report=html"
+filterwarnings = [
+  "ignore:Failed to get nonebot adapters.*:RuntimeWarning",
+  "ignore:No adapters found.*:RuntimeWarning",
+]
 
 [tool.coverage.run]
 source = ["nonebot_plugin_zikequote3"]
 omit = [
-    "*/tests/*",
-    "*/__pycache__/*",
+  "*/tests/*",
+  "*/__pycache__/*",
 ]
 
 [tool.coverage.report]
 show_missing = true
 exclude_lines = [
-    "pragma: no cover",
-    "if TYPE_CHECKING:",
-    "if __name__ == .__main__.",
-    "@abstractmethod",
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+  "if __name__ == .__main__.",
+  "@abstractmethod",
 ]
 
 [tool.hatch.build]
@@ -101,5 +105,5 @@ packages = ["nonebot_plugin_zikequote3"]
 
 [dependency-groups]
 dev = [
-    "pytest-cov>=7.0.0",
+  "pytest-cov>=7.0.0",
 ]
