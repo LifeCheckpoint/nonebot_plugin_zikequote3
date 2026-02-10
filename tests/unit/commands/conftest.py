@@ -156,6 +156,13 @@ _stub_cmd_def = types.ModuleType(
 )
 for _name in _ALL_MATCHER_NAMES:
     setattr(_stub_cmd_def, _name, _make_stub_matcher())
+
+# 为 default_cfg 提供 stub（get_ranking_cmd 等模块在导入时引用）
+_stub_default_cfg = MagicMock()
+_stub_default_cfg.showcase.max_rank_user_num = 40
+_stub_default_cfg.comment.enable_comment_without_prefix = False
+_stub_cmd_def.default_cfg = _stub_default_cfg  # type: ignore[attr-defined]
+
 sys.modules[
     "nonebot_plugin_zikequote3.command.command_definition"
 ] = _stub_cmd_def
