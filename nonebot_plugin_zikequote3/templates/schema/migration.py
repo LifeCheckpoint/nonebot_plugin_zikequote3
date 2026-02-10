@@ -1,5 +1,7 @@
 """
-迁移差异项渲染模板
+迁移差异项渲染模板。
+
+提供迁移差异项的数据模型与 HTML 渲染方法。
 """
 
 from typing import List, Optional
@@ -8,48 +10,55 @@ from .. import render_template, read_resource_file
 
 
 class TemplateDiffItemData(BaseModel):
-    """差异项数据类"""
+    """
+    差异项数据类。
 
-    """差异项名称"""
+    :param label: 差异项名称
+    :type label: str
+    :param oldval: 旧值
+    :type oldval: str
+    :param newval: 新值
+    :type newval: str
+    """
+
     label: str
-
-    """旧值"""
     oldval: str
-
-    """新值"""
     newval: str
 
 class TemplateMigrationData(BaseModel):
-    """迁移渲染数据类"""
+    """
+    迁移渲染数据类。
 
-    """可选，标题上方的状态提示小标题"""
+    :param status_title: 可选，标题上方的状态提示小标题
+    :type status_title: Optional[str]
+    :param title: 提示主标题
+    :type title: str
+    :param description: 描述信息
+    :type description: str
+    :param diff_items: 差异项目，包含名称、旧值、新值
+    :type diff_items: List[TemplateDiffItemData]
+    :param left_button: 左按钮（第二按钮）提示信息
+    :type left_button: Optional[str]
+    :param right_button: 右按钮（主按钮）提示信息
+    :type right_button: Optional[str]
+    """
+
     status_title: Optional[str] = None
-
-    """提示主标题"""
     title: str
-
-    """描述信息"""
     description: str
-
-    """差异项目，包含名称、旧值、新值"""
     diff_items: List[TemplateDiffItemData]
-
-    """左按钮（第二按钮）提示信息"""
     left_button: Optional[str] = None
-
-    """右按钮（主按钮）提示信息"""
     right_button: Optional[str] = None
 
 
 def render_migration_diff(data: TemplateMigrationData) -> str:
     """
-    渲染差异项，用于迁移比对等
+    渲染差异项，用于迁移比对等。
 
-    Args:
-        data: 迁移渲染数据
-
-    Returns:
-        渲染后的 HTML 字符串
+    :param data: 迁移渲染数据
+    :type data: TemplateMigrationData
+    :returns: 渲染后的 HTML 字符串
+    :rtype: str
     """
 
     migration_css = read_resource_file("css/migration.css")

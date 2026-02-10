@@ -1,3 +1,8 @@
+"""
+LLM 客户端模块。
+
+提供 LLM 模型实例创建与请求发送的工具函数。
+"""
 from ..config import LLMConfig
 from ..paths import PluginPath
 
@@ -31,12 +36,16 @@ def create_model(
     """
     创建 LLM 模型实例，可调整该函数以支持不同模型客户端。
 
-    Args:
-        llm_config: 群组级别的 LLM 配置（包含 base_url / max_retries / model 等）。
-        api_key_path: API key 文件路径（相对或绝对）。
-            为 ``None`` 时使用 ``llm_config.api_key_path``。
-        plugin_root: 插件根目录，用于解析相对路径。
-            为 ``None`` 时使用 ``PluginPath.plugin_root``。
+    :param llm_config: 群组级别的 LLM 配置（包含 base_url / max_retries / model 等）
+    :type llm_config: LLMConfig
+    :param api_key_path: API key 文件路径（相对或绝对），
+        为 ``None`` 时使用 ``llm_config.api_key_path``
+    :type api_key_path: str | None
+    :param plugin_root: 插件根目录，用于解析相对路径，
+        为 ``None`` 时使用 ``PluginPath.plugin_root``
+    :type plugin_root: Path | None
+    :returns: LLM 模型实例
+    :rtype: Model
     """
     resolved_api_key_path = Path(api_key_path or llm_config.api_key_path)
     resolved_plugin_root = plugin_root or PluginPath.plugin_root
@@ -66,13 +75,15 @@ async def send_llm_request(
     """
     发送单次请求到 LLM 模型并获取响应。
 
-    Args:
-        model: 已创建的 LLM 模型实例。
-        content: 用户提示词文本。
-        temperature: 采样温度，默认 ``0.2``。
-
-    Returns:
-        ``(模型响应文本, 使用量信息)``。
+    :param model: 已创建的 LLM 模型实例
+    :type model: Model
+    :param content: 用户提示词文本
+    :type content: str
+    :param temperature: 采样温度，默认 ``0.2``
+    :type temperature: float
+    :returns: ``(模型响应文本, 使用量信息)``
+    :rtype: Tuple[str, RequestUsage]
+    :raises RuntimeError: 当模型返回为空或格式错误时抛出
     """
     model_response = await model_request(
         model=model,
@@ -102,14 +113,16 @@ async def send_llm_request_json2model(
     """
     发送单次请求到 LLM 模型并获取响应，将返回 JSON 转换为 Pydantic 模型实例。
 
-    Args:
-        model: 已创建的 LLM 模型实例。
-        content: 用户提示词文本。
-        response_model: 期望的 Pydantic 响应模型类型。
-        temperature: 采样温度，默认 ``0.2``。
-
-    Returns:
-        ``(Pydantic 模型实例, 使用量信息)``。
+    :param model: 已创建的 LLM 模型实例
+    :type model: Model
+    :param content: 用户提示词文本
+    :type content: str
+    :param response_model: 期望的 Pydantic 响应模型类型
+    :type response_model: Type[T]
+    :param temperature: 采样温度，默认 ``0.2``
+    :type temperature: float
+    :returns: ``(Pydantic 模型实例, 使用量信息)``
+    :rtype: Tuple[T, RequestUsage]
     """
     from ..utils.json_parser import llm_json_parse_model
     model_response, usage = await send_llm_request(

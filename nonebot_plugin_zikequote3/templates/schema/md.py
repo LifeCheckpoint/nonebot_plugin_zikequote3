@@ -1,19 +1,19 @@
 """
-Markdown 模板
+Markdown 模板。
+
+提供 Markdown 内容的 HTML 渲染方法。
 """
-# TODO: Refactor
 
 from .. import render_template, read_resource_file
 
 def render_markdown(content: str) -> str:
     """
-    渲染 Markdown HTML
-    
-    Args:
-        content: 要渲染的 Markdown 内容
-        
-    Returns:
-        渲染后的 HTML 字符串
+    渲染 Markdown HTML。
+
+    :param content: 要渲染的 Markdown 内容
+    :type content: str
+    :returns: 渲染后的 HTML 字符串
+    :rtype: str
     """
     inline_katex_min_css = read_resource_file("css/vendor/katex.min.css")
     inline_css = read_resource_file("css/md.css")

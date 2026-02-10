@@ -1,3 +1,8 @@
+"""
+语录筛选提示词模板。
+
+提供语录筛选场景下的 LLM 提示词渲染方法。
+"""
 from .. import render_template
 from typing import List, Tuple
 
@@ -11,13 +16,14 @@ def quote_pickup(
     """
     语录筛选提示词模板渲染。
 
-    Args:
-        message_history: 消息记录列表，格式为 ``(user_id, user_name, content)``。
-        at_least_selections: 最少筛选条数，默认 ``0``。
-        at_most_selections: 最多筛选条数，默认 ``3``。
-
-    Returns:
-        渲染后的字符串。
+    :param message_history: 消息记录列表，格式为 ``(user_id, user_name, content)``
+    :type message_history: List[Tuple[str, str, str]]
+    :param at_least_selections: 最少筛选条数，默认 ``0``
+    :type at_least_selections: int
+    :param at_most_selections: 最多筛选条数，默认 ``3``
+    :type at_most_selections: int
+    :returns: 渲染后的字符串
+    :rtype: str
     """
     msg_dictlist = [
         {

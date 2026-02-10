@@ -1,6 +1,7 @@
 """
-HTML模板渲染中转层
-提供类型安全的Jinja2模板渲染方法，处理CSS/JS资源内联
+HTML 模板渲染中转层。
+
+提供类型安全的 Jinja2 模板渲染方法，处理 CSS/JS 资源内联。
 """
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -15,27 +16,26 @@ env = Environment(
 
 def render_template(template_name: str, **kwargs) -> str:
     """
-    通用模板渲染函数
-    
-    Args:
-        template_name: 模板文件名
-        **kwargs: 模板参数
-        
-    Returns:
-        渲染后的HTML字符串
+    通用模板渲染函数。
+
+    :param template_name: 模板文件名
+    :type template_name: str
+    :param kwargs: 模板参数
+    :returns: 渲染后的 HTML 字符串
+    :rtype: str
     """
     template = env.get_template(template_name)
     return template.render(**kwargs)
 
 def read_resource_file(file_path: str) -> str:
     """
-    读取资源文件内容（CSS/JS）
-    
-    Args:
-        file_path: 资源文件路径
-        
-    Returns:
-        文件内容字符串
+    读取资源文件内容（CSS/JS）。
+
+    :param file_path: 资源文件路径
+    :type file_path: str
+    :returns: 文件内容字符串
+    :rtype: str
+    :raises FileNotFoundError: 当资源文件不存在时抛出
     """
     resource_path = Path(__file__).parent / "src" / "assets" / file_path
     try:

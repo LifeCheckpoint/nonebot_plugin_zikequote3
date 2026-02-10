@@ -1,5 +1,7 @@
 """
-语录列表模板渲染方法
+语录列表模板渲染方法。
+
+提供语录列表的数据模型与 HTML 渲染方法。
 """
 from typing import List, Optional
 from pydantic import BaseModel
@@ -8,49 +10,56 @@ from .. import render_template, read_resource_file
 
 
 class TemplateQuoteBoxData(BaseModel):
-    """语录盒子数据类"""
-    
-    """语录ID"""
+    """
+    语录盒子数据类。
+
+    :param quote_id: 语录 ID
+    :type quote_id: Optional[str]
+    :param quote_text: 语录内容
+    :type quote_text: Optional[str]
+    :param quote_image: 语录图片，base64 编码
+    :type quote_image: Optional[str]
+    :param quote_author: 语录作者
+    :type quote_author: Optional[str]
+    :param quote_comment: 语录评论
+    :type quote_comment: Optional[str]
+    """
+
     quote_id: Optional[str] = None
-
-    """语录内容"""
     quote_text: Optional[str] = None
-
-    """语录图片，base64编码"""
     quote_image: Optional[str] = None
-
-    """语录作者"""
     quote_author: Optional[str] = None
-
-    """语录评论"""
     quote_comment: Optional[str] = None
 
 
 class TemplateQuoteListData(BaseModel):
-    """语录列表渲染数据类"""
-    
-    """列表标题"""
+    """
+    语录列表渲染数据类。
+
+    :param title: 列表标题
+    :type title: str
+    :param desc: 语录信息描述
+    :type desc: Optional[str]
+    :param addition: 附加信息
+    :type addition: Optional[str]
+    :param quotes: 语录列表
+    :type quotes: List[TemplateQuoteBoxData]
+    """
+
     title: str
-
-    """语录信息描述"""
     desc: Optional[str] = None
-
-    """附加信息"""
     addition: Optional[str] = None
-
-    """语录列表"""
     quotes: List[TemplateQuoteBoxData] = []
 
 
 def render_list(data: TemplateQuoteListData) -> str:
     """
-    渲染语录列表HTML
+    渲染语录列表 HTML。
 
-    Args:
-        data: 语录列表渲染数据
-
-    Returns:
-        渲染后的HTML字符串
+    :param data: 语录列表渲染数据
+    :type data: TemplateQuoteListData
+    :returns: 渲染后的 HTML 字符串
+    :rtype: str
     """
     inline_css = read_resource_file("css/listing.css")
 

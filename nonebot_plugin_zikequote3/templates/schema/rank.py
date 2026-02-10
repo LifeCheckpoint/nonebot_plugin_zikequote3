@@ -1,5 +1,7 @@
 """
-语录排行榜模板渲染方法
+语录排行榜模板渲染方法。
+
+提供语录排行榜的数据模型与 HTML 渲染方法。
 """
 from typing import List, Optional
 from pydantic import BaseModel
@@ -9,78 +11,93 @@ import random, base64
 
 
 class TemplateBasicRankingItemData(BaseModel):
-    """排行榜项数据类"""
+    """
+    排行榜项数据类。
 
-    """QQ号"""
+    :param qq: QQ 号
+    :type qq: str
+    :param author: 作者名称
+    :type author: str
+    :param count: 语录数量
+    :type count: int
+    :param avatar: 头像 URI
+    :type avatar: Optional[str]
+    """
+
     qq: str
-
-    """作者名称"""
     author: str
-
-    """语录数量"""
     count: int
-    
-    """头像URI"""
     avatar: Optional[str]
 
 class TemplateLineChartData(BaseModel):
-    """折线图数据类，参见 rank 模板"""
+    """
+    折线图数据类，参见 rank 模板。
 
-    """排名前 N 名"""
+    :param topN: 排名前 N 名
+    :type topN: int
+    :param dates: 日期列表
+    :type dates: List[str]
+    :param seriesData: 数据系列列表
+    :type seriesData: List[List[int]]
+    """
+
     topN: int
-
-    """日期列表"""
     dates: List[str]
-
-    """数据系列列表"""
     seriesData: List[List[int]]
 
 class TemplateRankingStatsData(BaseModel):
-    """统计数据类"""
+    """
+    统计数据类。
 
-    """总语录数"""
+    :param total_quotes: 总语录数
+    :type total_quotes: int
+    :param pending_quotes: 待收集语录数
+    :type pending_quotes: int
+    :param contributors: 贡献者数量
+    :type contributors: int
+    :param average_quotes: 人均语录数
+    :type average_quotes: float
+    :param total_shows: 总展示次数
+    :type total_shows: int
+    """
+
     total_quotes: int
-
-    """待收集语录数"""
     pending_quotes: int
-
-    """贡献者数量"""
     contributors: int
-
-    """人均语录数"""
     average_quotes: float
-
-    """总展示次数"""
     total_shows: int
 
 class TemplateRankingData(BaseModel):
-    """语录排行榜渲染数据类"""
+    """
+    语录排行榜渲染数据类。
 
-    """群组名称"""
+    :param group_name: 群组名称
+    :type group_name: str
+    :param date_time: 时间字符串
+    :type date_time: str
+    :param basic_ranking: 基础排行数据
+    :type basic_ranking: List[TemplateBasicRankingItemData]
+    :param line_chart: 折线图数据
+    :type line_chart: TemplateLineChartData
+    :param stats: 统计信息
+    :type stats: TemplateRankingStatsData
+    """
+
     group_name: str
-
-    """时间字符串"""
     date_time: str
-
-    """基础排行数据"""
     basic_ranking: List[TemplateBasicRankingItemData]
-
-    """折线图数据"""
     line_chart: TemplateLineChartData
-
-    """统计信息"""
     stats: TemplateRankingStatsData
 
 
 def render_rank(data: TemplateRankingData) -> str:
     """
-    渲染语录排行榜HTML
-    
-    Args:
-        data: 语录排行榜渲染数据
-        
-    Returns:
-        渲染后的 HTML 字符串
+    渲染语录排行榜 HTML。
+
+    :param data: 语录排行榜渲染数据
+    :type data: TemplateRankingData
+    :returns: 渲染后的 HTML 字符串
+    :rtype: str
     """
 
     def generate_random_color_svg_uri():

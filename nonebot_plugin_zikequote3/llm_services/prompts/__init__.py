@@ -1,11 +1,11 @@
 """
-消息模板渲染中转层
-提供类型安全的Jinja2模板渲染方法
+LLM 提示词模板渲染中转层。
+
+提供类型安全的 Jinja2 模板渲染方法。
 """
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-# 初始化Jinja2环境
 template_path = Path(__file__).parent
 env = Environment(
     loader=FileSystemLoader(template_path),
@@ -17,14 +17,13 @@ env = Environment(
 
 def render_template(template_name: str, **kwargs) -> str:
     """
-    通用模板渲染函数
-    
-    Args:
-        template_name: 模板文件名
-        **kwargs: 模板参数
-        
-    Returns:
-        渲染后的字符串
+    通用模板渲染函数。
+
+    :param template_name: 模板文件名
+    :type template_name: str
+    :param kwargs: 模板参数
+    :returns: 渲染后的字符串
+    :rtype: str
     """
     template = env.get_template(template_name)
     return template.render(**kwargs)

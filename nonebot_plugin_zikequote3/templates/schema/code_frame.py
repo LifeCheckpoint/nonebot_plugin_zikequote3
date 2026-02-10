@@ -1,35 +1,40 @@
 """
-高亮代码显示模板
+高亮代码显示模板。
+
+提供代码高亮显示的数据模型与 HTML 渲染方法。
 """
 from .. import render_template, read_resource_file
 from pydantic import BaseModel
 
 
 class TemplateCodeFrameData(BaseModel):
-    """代码高亮显示渲染数据类"""
+    """
+    代码高亮显示渲染数据类。
 
-    """标题"""
+    :param title: 标题
+    :type title: str
+    :param subtitle: 副标题
+    :type subtitle: str
+    :param language: 代码语言
+    :type language: str
+    :param code: 代码内容
+    :type code: str
+    """
+
     title: str
-
-    """副标题"""
     subtitle: str
-
-    """代码语言"""
     language: str
-
-    """代码内容"""
     code: str
 
 
 def render_code_frame(data: TemplateCodeFrameData) -> str:
     """
-    渲染代码高亮显示
-    
-    Args:
-        data: 代码显示渲染数据
-        
-    Returns:
-        渲染后的 HTML 字符串
+    渲染代码高亮显示。
+
+    :param data: 代码显示渲染数据
+    :type data: TemplateCodeFrameData
+    :returns: 渲染后的 HTML 字符串
+    :rtype: str
     """
     inline_css = read_resource_file("css/codeframe.css")
     
