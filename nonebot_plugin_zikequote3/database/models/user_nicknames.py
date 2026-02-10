@@ -12,5 +12,4 @@ class UserNicknameCreate(UserNicknameBase):
 
 class UserNickname(UserNicknameBase):
     """完整用户昵称模型"""
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

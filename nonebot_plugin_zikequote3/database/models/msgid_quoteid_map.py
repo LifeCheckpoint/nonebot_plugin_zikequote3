@@ -11,5 +11,4 @@ class MsgQuoteIDCreate(MsgQuoteIDBase):
 
 class MsgQuoteID(MsgQuoteIDBase):
     """完整消息 ID 与语录 ID 映射模型"""
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

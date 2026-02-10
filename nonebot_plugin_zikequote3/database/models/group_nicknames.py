@@ -13,5 +13,4 @@ class GroupNicknameCreate(GroupNicknameBase):
 
 class GroupNickname(GroupNicknameBase):
     """完整群名片模型"""
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

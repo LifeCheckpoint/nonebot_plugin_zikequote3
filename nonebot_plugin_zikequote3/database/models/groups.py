@@ -15,5 +15,4 @@ class GroupUpdate(BaseModel):
 
 class Group(GroupBase):
     """完整群组模型"""
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

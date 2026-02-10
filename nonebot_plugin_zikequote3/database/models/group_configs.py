@@ -15,6 +15,4 @@ class GroupConfigsUpdate(BaseModel):
 
 class GroupConfigs(GroupConfigsBase):
     """完整群自定义配置模型"""
-    class Config:
-        from_attributes = True
-        
+    model_config = ConfigDict(from_attributes=True)

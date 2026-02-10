@@ -11,5 +11,4 @@ class GroupMemberCreate(GroupMemberBase):
 
 class GroupMember(GroupMemberBase):
     """完整群成员关系模型"""
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

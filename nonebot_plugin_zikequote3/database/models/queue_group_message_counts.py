@@ -11,6 +11,4 @@ class QueueGroupMessageCountCreate(QueueGroupMessageCountBase):
 
 class QueueGroupMessageCount(QueueGroupMessageCountBase):
     """完整群消息计数模型"""
-    class Config:
-        from_attributes = True
-        
+    model_config = ConfigDict(from_attributes=True)
