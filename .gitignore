@@ -2,6 +2,8 @@
 
 # test
 .coverage
+htmlcov/
+__test_not_used__/
 
 # py
 __pycache__/

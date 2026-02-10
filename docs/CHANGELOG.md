@@ -10,8 +10,17 @@ All notable changes to this project will be documented in this file.
 > - 图片储存检查
 > - 其它依托于 LLM 的大型统计 / 语义化功能
 > - 定期数据备份功能
-> - 依赖注入重构，SQLModel 重构
 > - 后端管理功能
+
+## \[0.5.0alpha1\] - 2026-02-10 \[BREAKING CHANGES\]
+
+### Added
+
+- 增加了大量测试以确保功能实现正确性
+
+### Changed
+
+- 彻底重构架构，采用依赖注入与结构化 SQL 设计，优化代码可维护性
 
 ## \[0.4.0alpha2\] - 2026-01-28
 
