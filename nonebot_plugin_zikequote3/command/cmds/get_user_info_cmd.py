@@ -19,10 +19,10 @@ from nonebot_plugin_alconna.uniseg.segment import At
 from ..command_definition import matcher_get_user_info
 from ...di import get_container
 from ...services import StatisticsService, UserService
+from ...services.html_render_service import HtmlRenderServiceBase
 from ._error_handlers import command_error_handler
 from ...utils.base64_encoder import to_data_uri
 from ...templates.schema.user_info import TemplateUserInfoData, render_user_info
-from ...html_capture import html_img_render
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +41,7 @@ async def handle_get_user_info(
     async with container() as request_scope:
         user_svc = await request_scope.get(UserService)
         stats_svc = await request_scope.get(StatisticsService)
+        html_render_svc = await request_scope.get(HtmlRenderServiceBase)
 
         async with command_error_handler(matcher_get_user_info, "解析参数"):
             user_qq: str | None = None
@@ -147,5 +148,5 @@ async def handle_get_user_info(
                 history_nicks=history_nicks,
                 history_group_cards=history_cards,
             ))
-            img = await html_img_render(html, width=450, height=100)
+            img = await html_render_svc.render(html, width=450, height=100)
             await matcher_get_user_info.finish(MsgSeg.image(img))

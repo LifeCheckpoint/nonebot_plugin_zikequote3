@@ -12,9 +12,10 @@ import logging
 from nonebot.adapters.onebot.v11 import MessageSegment as MsgSeg
 
 from ..command_definition import matcher_get_privacy
+from ...di import get_container
+from ...services.html_render_service import HtmlRenderServiceBase
 from ...paths import PluginPath
 from ...templates import md as md_template
-from ...html_capture import html_img_render
 
 logger = logging.getLogger(__name__)
 
@@ -30,10 +31,14 @@ async def handle_get_privacy() -> None:
         )
 
     try:
-        md_content = privacy_markdown.read_text(encoding="utf-8")
-        html = md_template.render_markdown(md_content)
-        img = await html_img_render(html, width=800)
-        await matcher_get_privacy.finish(MsgSeg.image(img))
+        container = get_container()
+        async with container() as request_scope:
+            html_render_svc = await request_scope.get(HtmlRenderServiceBase)
+
+            md_content = privacy_markdown.read_text(encoding="utf-8")
+            html = md_template.render_markdown(md_content)
+            img = await html_render_svc.render(html, width=800)
+            await matcher_get_privacy.finish(MsgSeg.image(img))
     except Exception:
         logger.warning("渲染隐私政策图片失败，回退为纯文本", exc_info=True)
         await matcher_get_privacy.finish(

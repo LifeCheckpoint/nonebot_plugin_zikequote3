@@ -62,6 +62,11 @@ async def _startup() -> None:
     2. 创建 AsyncEngine 并执行 create_all 建表
     3. 组装 dishka 容器并绑定到 NoneBot Driver
     """
+    from pathlib import Path
+
+    import tomlkit
+
+    from .config import ConfigPath, parse_config_from_toml
     from .paths import PluginPath
     from .di import create_container
     from .di.nonebot_integration import setup_dishka
@@ -70,6 +75,14 @@ async def _startup() -> None:
 
     # 导入全部 ORM 模型，触发 Base.metadata 注册
     from .database.sa import models as _models  # noqa: F401
+
+    # 0) 读取默认配置以获取 render_device_factor
+    from nonebot import get_plugin_config
+
+    cfg_file = get_plugin_config(ConfigPath).config_toml
+    default_cfg = parse_config_from_toml(
+        tomlkit.parse(Path(cfg_file).read_text(encoding="utf-8"))
+    )
 
     # 1) 创建引擎并初始化数据库表
     engine = create_async_engine_factory(PluginPath.data_db_path)
@@ -81,6 +94,7 @@ async def _startup() -> None:
     container = create_container(
         db_path=PluginPath.data_db_path,
         image_store_path=PluginPath.data_image_root,
+        render_device_factor=default_cfg.showcase.render_device_factor,
     )
 
     # 3) 绑定到 NoneBot Driver（shutdown 时自动关闭容器）

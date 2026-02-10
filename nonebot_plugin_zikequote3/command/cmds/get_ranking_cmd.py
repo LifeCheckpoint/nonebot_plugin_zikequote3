@@ -26,6 +26,7 @@ from ...services import (
     StatisticsService,
     UserService,
 )
+from ...services.html_render_service import HtmlRenderServiceBase
 from ._error_handlers import command_error_handler
 from ...utils.base64_encoder import to_data_uri
 from ...templates.schema.rank import (
@@ -35,7 +36,6 @@ from ...templates.schema.rank import (
     TemplateRankingStatsData,
     render_rank,
 )
-from ...html_capture import html_img_render
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +74,7 @@ async def handle_get_ranking(
         user_svc = await request_scope.get(UserService)
         group_svc = await request_scope.get(GroupService)
         quote_read_svc = await request_scope.get(QuoteReadService)
+        html_render_svc = await request_scope.get(HtmlRenderServiceBase)
 
         async with command_error_handler(matcher_get_ranking, "获取语录排行"):
             # 获取统计数据
@@ -175,7 +176,7 @@ async def handle_get_ranking(
                 line_chart=line_chart_data,
                 stats=stats_data,
             ))
-            img = await html_img_render(
+            img = await html_render_svc.render(
                 html, width=1920, height=1080, wait=3000,
             )
             await matcher_get_ranking.finish(MsgSeg.image(img))

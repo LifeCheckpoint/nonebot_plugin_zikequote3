@@ -21,10 +21,10 @@ from ..command_definition import matcher_get_quote_list
 from ..parse_helper.datatype_parse import parse_page_range
 from ...di import get_container
 from ...services import QuoteReadService, StatisticsService, UserService
+from ...services.html_render_service import HtmlRenderServiceBase
 from ...database.image_store import ImageStore
 from ._error_handlers import command_error_handler
 from ...templates.schema.listing import TemplateQuoteListData, render_list
-from ...html_capture import html_img_render
 from ._display_helpers import transform_quotes_to_template_boxes
 
 logger = logging.getLogger(__name__)
@@ -47,6 +47,7 @@ async def handle_get_quote_list(
         user_svc = await request_scope.get(UserService)
         quote_read_svc = await request_scope.get(QuoteReadService)
         image_store = await request_scope.get(ImageStore)
+        html_render_svc = await request_scope.get(HtmlRenderServiceBase)
 
         async with command_error_handler(matcher_get_quote_list, "解析参数"):
             user_qq: str | None = None
@@ -142,5 +143,5 @@ async def handle_get_quote_list(
                 addition=hitokoto_text,
                 quotes=quote_boxes,
             ))
-            img = await html_img_render(html, width=1520, height=200)
+            img = await html_render_svc.render(html, width=1520, height=200)
             await matcher_get_quote_list.finish(MsgSeg.image(img))

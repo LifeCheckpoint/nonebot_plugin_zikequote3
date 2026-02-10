@@ -22,11 +22,11 @@ from nonebot.params import CommandArg
 from ..command_definition import matcher_random_quote_card
 from ...di import get_container
 from ...services import QuoteReadService, QuoteWriteService, UserService
+from ...services.html_render_service import HtmlRenderServiceBase
 from ...database.image_store import ImageStore
 from ._error_handlers import command_error_handler, suppress_error
 from ...templates.schema.card import TemplateCommentData, TemplateQuoteCardData
 from ...templates import card as card_template
-from ...html_capture import html_img_render
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +56,7 @@ async def handle_random_quote_card(
         quote_write_svc = await request_scope.get(QuoteWriteService)
         user_svc = await request_scope.get(UserService)
         image_store = await request_scope.get(ImageStore)
+        html_render_svc = await request_scope.get(HtmlRenderServiceBase)
 
         q_result = None
 
@@ -129,7 +130,7 @@ async def handle_random_quote_card(
                     comments=comments,
                 )
             )
-            quote_card_img = await html_img_render(quote_card_html, width=800, height=120)
+            quote_card_img = await html_render_svc.render(quote_card_html, width=800, height=120)
             send_msg = await matcher_random_quote_card.send(MsgSeg.image(quote_card_img))
 
         # 更新语录出现次数

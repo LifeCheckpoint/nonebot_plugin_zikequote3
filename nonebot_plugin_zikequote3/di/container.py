@@ -21,6 +21,7 @@ from .providers.service_provider import ServiceProvider
 def create_container(
     db_path: Union[str, Path],
     image_store_path: Union[str, Path],
+    render_device_factor: float = 2.0,
 ) -> AsyncContainer:
     """
     组装并返回 dishka AsyncContainer。
@@ -28,13 +29,14 @@ def create_container(
     参数:
         db_path: 数据库文件路径，或 ":memory:" 表示内存数据库。
         image_store_path: 图片存储根目录路径。
+        render_device_factor: HTML 截图设备缩放因子（默认 2.0）。
 
     返回:
         配置好所有 Provider 的 AsyncContainer 实例。
     """
     return make_async_container(
         DatabaseProvider(db_path),
-        InfraProvider(image_store_path),
+        InfraProvider(image_store_path, render_device_factor=render_device_factor),
         RepositoryProvider(),
         ServiceProvider(),
     )

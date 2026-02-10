@@ -22,10 +22,10 @@ from pydantic import BaseModel
 from ..command_definition import matcher_search_quote
 from ...di import get_container
 from ...services import StatisticsService, QuoteReadService, UserService
+from ...services.html_render_service import HtmlRenderServiceBase
 from ...database.image_store import ImageStore
 from ._error_handlers import command_error_handler
 from ...templates.schema.listing import TemplateQuoteListData, render_list
-from ...html_capture import html_img_render
 from ._display_helpers import transform_quotes_to_template_boxes
 
 logger = logging.getLogger(__name__)
@@ -57,6 +57,7 @@ async def handle_search_quote(
         quote_read_svc = await request_scope.get(QuoteReadService)
         user_svc = await request_scope.get(UserService)
         image_store = await request_scope.get(ImageStore)
+        html_render_svc = await request_scope.get(HtmlRenderServiceBase)
 
         async with command_error_handler(matcher_search_quote, "解析参数"):
             if max_result.available:
@@ -138,5 +139,5 @@ async def handle_search_quote(
                 addition=hitokoto_text,
                 quotes=quote_boxes,
             ))
-            img = await html_img_render(html, width=1520, height=200)
+            img = await html_render_svc.render(html, width=1520, height=200)
             await matcher_search_quote.finish(MsgSeg.image(img))
