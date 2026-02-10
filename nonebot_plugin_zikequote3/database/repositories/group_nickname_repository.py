@@ -1,7 +1,7 @@
 """
-GroupNicknameRepository —— 群名片数据仓储，对应原 ``GroupNicknameDAO``。
+GroupNicknameRepository —— 群名片数据仓储。
 
-覆盖原 DAO 的所有公开方法，返回 Pydantic DTO。
+覆盖原 ``GroupNicknameDAO`` 的所有公开方法，返回 Pydantic DTO。
 """
 
 from __future__ import annotations
@@ -16,7 +16,12 @@ from .base import BaseRepository
 
 
 class GroupNicknameRepository(BaseRepository[GroupNicknameModel, GroupNicknameCreate, GroupNickname]):
-    """群名片 Repository。"""
+    """
+    群名片 Repository，封装群名片表的数据访问操作。
+
+    :param session: 异步数据库会话
+    :type session: AsyncSession
+    """
 
     model_class = GroupNicknameModel
 
@@ -25,7 +30,20 @@ class GroupNicknameRepository(BaseRepository[GroupNicknameModel, GroupNicknameCr
     async def add_group_nickname(
         self, qq_id: str, group_id: str, current_using: bool, name: str
     ) -> GroupNickname:
-        """添加群名片并返回 DTO。"""
+        """
+        添加群名片并返回 DTO。
+
+        :param qq_id: QQ 号
+        :type qq_id: str
+        :param group_id: 群号
+        :type group_id: str
+        :param current_using: 是否正在使用
+        :type current_using: bool
+        :param name: 群名片名称
+        :type name: str
+        :returns: 群名片 DTO
+        :rtype: GroupNickname
+        """
         dto = GroupNicknameCreate(
             qq_id=qq_id, group_id=group_id, current_using=current_using, name=name
         )
@@ -34,7 +52,16 @@ class GroupNicknameRepository(BaseRepository[GroupNicknameModel, GroupNicknameCr
     # ---- 查询 ----
 
     async def get_current_group_nickname(self, qq_id: str, group_id: str) -> Optional[str]:
-        """获取用户在群组中当前使用的名片名称，不存在返回 None。"""
+        """
+        获取用户在群组中当前使用的名片名称。
+
+        :param qq_id: QQ 号
+        :type qq_id: str
+        :param group_id: 群号
+        :type group_id: str
+        :returns: 当前名片名称，不存在返回 ``None``
+        :rtype: Optional[str]
+        """
         stmt = select(GroupNicknameModel).where(
             GroupNicknameModel.qq_id == qq_id,
             GroupNicknameModel.group_id == group_id,
@@ -45,7 +72,16 @@ class GroupNicknameRepository(BaseRepository[GroupNicknameModel, GroupNicknameCr
         return row.name if row else None
 
     async def get_all_group_nicknames(self, qq_id: str, group_id: str) -> Sequence[GroupNickname]:
-        """获取用户在群组中的所有名片记录。"""
+        """
+        获取用户在群组中的所有名片记录。
+
+        :param qq_id: QQ 号
+        :type qq_id: str
+        :param group_id: 群号
+        :type group_id: str
+        :returns: 群名片 DTO 序列
+        :rtype: Sequence[GroupNickname]
+        """
         stmt = select(GroupNicknameModel).where(
             GroupNicknameModel.qq_id == qq_id,
             GroupNicknameModel.group_id == group_id,
@@ -54,13 +90,27 @@ class GroupNicknameRepository(BaseRepository[GroupNicknameModel, GroupNicknameCr
         return [row.to_dto() for row in result.scalars().all()]
 
     async def get_nicknames_by_group(self, group_id: str) -> Sequence[GroupNickname]:
-        """获取群组中的所有名片记录。"""
+        """
+        获取群组中的所有名片记录。
+
+        :param group_id: 群号
+        :type group_id: str
+        :returns: 群名片 DTO 序列
+        :rtype: Sequence[GroupNickname]
+        """
         stmt = select(GroupNicknameModel).where(GroupNicknameModel.group_id == group_id)
         result = await self._session.execute(stmt)
         return [row.to_dto() for row in result.scalars().all()]
 
     async def get_user_all_group_nicknames(self, qq_id: str) -> Sequence[GroupNickname]:
-        """获取用户在所有群组中的名片记录。"""
+        """
+        获取用户在所有群组中的名片记录。
+
+        :param qq_id: QQ 号
+        :type qq_id: str
+        :returns: 群名片 DTO 序列
+        :rtype: Sequence[GroupNickname]
+        """
         stmt = select(GroupNicknameModel).where(GroupNicknameModel.qq_id == qq_id)
         result = await self._session.execute(stmt)
         return [row.to_dto() for row in result.scalars().all()]
@@ -68,7 +118,16 @@ class GroupNicknameRepository(BaseRepository[GroupNicknameModel, GroupNicknameCr
     async def search_users_by_nickname_in_group(
         self, name_pattern: str, group_id: str
     ) -> Sequence[GroupNickname]:
-        """通过昵称模式搜索群组内用户（LIKE 匹配）。"""
+        """
+        通过昵称模式搜索群组内用户（LIKE 匹配）。
+
+        :param name_pattern: LIKE 匹配模式
+        :type name_pattern: str
+        :param group_id: 群号
+        :type group_id: str
+        :returns: 匹配的群名片 DTO 序列
+        :rtype: Sequence[GroupNickname]
+        """
         stmt = select(GroupNicknameModel).where(
             GroupNicknameModel.name.like(name_pattern),
             GroupNicknameModel.group_id == group_id,
@@ -77,7 +136,14 @@ class GroupNicknameRepository(BaseRepository[GroupNicknameModel, GroupNicknameCr
         return [row.to_dto() for row in result.scalars().all()]
 
     async def get_group_nickname_statistics(self, group_id: str) -> Dict[str, Any]:
-        """获取群组名片统计信息。"""
+        """
+        获取群组名片统计信息。
+
+        :param group_id: 群号
+        :type group_id: str
+        :returns: 包含 ``total_nicknames``、``users_with_nicknames``、``current_nicknames`` 的字典
+        :rtype: Dict[str, Any]
+        """
         stmt = (
             select(
                 func.count().label("total_nicknames"),
@@ -100,7 +166,20 @@ class GroupNicknameRepository(BaseRepository[GroupNicknameModel, GroupNicknameCr
     # ---- 更新 ----
 
     async def set_current_group_nickname(self, qq_id: str, group_id: str, name: str) -> bool:
-        """设置用户在群组中的当前名片（先取消该群组中所有 current_using，再设置目标；若不存在则创建）。"""
+        """
+        设置用户在群组中的当前名片。
+
+        先取消该群组中所有 current_using，再设置目标；若不存在则创建。
+
+        :param qq_id: QQ 号
+        :type qq_id: str
+        :param group_id: 群号
+        :type group_id: str
+        :param name: 目标名片名称
+        :type name: str
+        :returns: 操作成功返回 ``True``
+        :rtype: bool
+        """
         # 1. 取消该用户在该群组的所有 current_using
         stmt_clear = (
             update(GroupNicknameModel)
@@ -137,7 +216,18 @@ class GroupNicknameRepository(BaseRepository[GroupNicknameModel, GroupNicknameCr
     # ---- 删除 ----
 
     async def remove_group_nickname(self, qq_id: str, group_id: str, name: str) -> bool:
-        """删除指定群名片，返回是否成功。"""
+        """
+        删除指定群名片。
+
+        :param qq_id: QQ 号
+        :type qq_id: str
+        :param group_id: 群号
+        :type group_id: str
+        :param name: 名片名称
+        :type name: str
+        :returns: 删除成功返回 ``True``，不存在返回 ``False``
+        :rtype: bool
+        """
         stmt = select(GroupNicknameModel).where(
             GroupNicknameModel.qq_id == qq_id,
             GroupNicknameModel.group_id == group_id,
@@ -152,7 +242,16 @@ class GroupNicknameRepository(BaseRepository[GroupNicknameModel, GroupNicknameCr
         return False
 
     async def clear_user_group_nicknames(self, qq_id: str, group_id: str) -> bool:
-        """清空用户在指定群组中的所有名片。"""
+        """
+        清空用户在指定群组中的所有名片。
+
+        :param qq_id: QQ 号
+        :type qq_id: str
+        :param group_id: 群号
+        :type group_id: str
+        :returns: 操作成功返回 ``True``
+        :rtype: bool
+        """
         stmt = delete(GroupNicknameModel).where(
             GroupNicknameModel.qq_id == qq_id,
             GroupNicknameModel.group_id == group_id,
@@ -162,7 +261,14 @@ class GroupNicknameRepository(BaseRepository[GroupNicknameModel, GroupNicknameCr
         return True
 
     async def clear_group_all_nicknames(self, group_id: str) -> bool:
-        """清空群组中所有用户的名片。"""
+        """
+        清空群组中所有用户的名片。
+
+        :param group_id: 群号
+        :type group_id: str
+        :returns: 操作成功返回 ``True``
+        :rtype: bool
+        """
         stmt = delete(GroupNicknameModel).where(GroupNicknameModel.group_id == group_id)
         await self._session.execute(stmt)
         await self._session.flush()

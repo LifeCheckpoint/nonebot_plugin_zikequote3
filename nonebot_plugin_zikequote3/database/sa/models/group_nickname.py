@@ -17,12 +17,24 @@ if TYPE_CHECKING:
 
 
 class GroupNicknameModel(Base):
-    """群名片 ORM 模型，对应 ``group_nicknames`` 表。"""
+    """
+    群名片 ORM 模型，对应 ``group_nicknames`` 表。
+
+    :param id: 自增代理主键
+    :type id: int
+    :param qq_id: QQ 号，外键关联 ``users.qq_id``
+    :type qq_id: str
+    :param group_id: 群号，外键关联 ``groups.group_id``
+    :type group_id: str
+    :param current_using: 是否正在使用
+    :type current_using: bool
+    :param name: 群名片名称
+    :type name: str
+    """
 
     __tablename__ = "group_nicknames"
 
-    # 原始表定义中 group_nicknames 没有显式主键，
-    # 但 ORM 要求主键，因此添加自增 id 作为代理主键。
+    # 原始表定义中无显式主键，ORM 要求主键，故添加自增 id 作为代理主键
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     qq_id: Mapped[str] = mapped_column(
         String, ForeignKey("users.qq_id"), nullable=False
@@ -39,7 +51,12 @@ class GroupNicknameModel(Base):
 
     # ---- DTO 转换 ----
     def to_dto(self):
-        """转换为 Pydantic Full DTO ``GroupNickname``。"""
+        """
+        转换为 Pydantic Full DTO ``GroupNickname``。
+
+        :returns: 群名片 DTO 对象
+        :rtype: GroupNickname
+        """
         from ...models.group_nicknames import GroupNickname
 
         return GroupNickname(
@@ -51,7 +68,14 @@ class GroupNicknameModel(Base):
 
     @classmethod
     def from_create_dto(cls, dto) -> GroupNicknameModel:
-        """从 Pydantic ``GroupNicknameCreate`` DTO 创建 ORM 实例。"""
+        """
+        从 Pydantic ``GroupNicknameCreate`` DTO 创建 ORM 实例。
+
+        :param dto: 创建群名片的 DTO
+        :type dto: GroupNicknameCreate
+        :returns: 群名片 ORM 实例
+        :rtype: GroupNicknameModel
+        """
         return cls(
             qq_id=dto.qq_id,
             group_id=dto.group_id,

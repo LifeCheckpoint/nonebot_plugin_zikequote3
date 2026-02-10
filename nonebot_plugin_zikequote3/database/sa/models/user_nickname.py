@@ -16,12 +16,22 @@ if TYPE_CHECKING:
 
 
 class UserNicknameModel(Base):
-    """用户昵称 ORM 模型，对应 ``user_nicknames`` 表。"""
+    """
+    用户昵称 ORM 模型，对应 ``user_nicknames`` 表。
+
+    :param id: 自增代理主键
+    :type id: int
+    :param qq_id: QQ 号，外键关联 ``users.qq_id``
+    :type qq_id: str
+    :param current_using: 是否正在使用
+    :type current_using: bool
+    :param name: 昵称
+    :type name: str
+    """
 
     __tablename__ = "user_nicknames"
 
-    # 原始表定义中 user_nicknames 没有显式主键，
-    # 但 ORM 要求主键，因此添加自增 id 作为代理主键。
+    # 原始表定义中无显式主键，ORM 要求主键，故添加自增 id 作为代理主键
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     qq_id: Mapped[str] = mapped_column(
         String, ForeignKey("users.qq_id"), nullable=False
@@ -34,7 +44,12 @@ class UserNicknameModel(Base):
 
     # ---- DTO 转换 ----
     def to_dto(self):
-        """转换为 Pydantic Full DTO ``UserNickname``。"""
+        """
+        转换为 Pydantic Full DTO ``UserNickname``。
+
+        :returns: 用户昵称 DTO 对象
+        :rtype: UserNickname
+        """
         from ...models.user_nicknames import UserNickname
 
         return UserNickname(
@@ -45,7 +60,14 @@ class UserNicknameModel(Base):
 
     @classmethod
     def from_create_dto(cls, dto) -> UserNicknameModel:
-        """从 Pydantic ``UserNicknameCreate`` DTO 创建 ORM 实例。"""
+        """
+        从 Pydantic ``UserNicknameCreate`` DTO 创建 ORM 实例。
+
+        :param dto: 创建用户昵称的 DTO
+        :type dto: UserNicknameCreate
+        :returns: 用户昵称 ORM 实例
+        :rtype: UserNicknameModel
+        """
         return cls(
             qq_id=dto.qq_id,
             current_using=dto.current_using,

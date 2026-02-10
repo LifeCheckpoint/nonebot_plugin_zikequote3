@@ -1,6 +1,4 @@
-"""
-图像文件存储管理类
-"""
+"""图像文件存储管理 —— 基于 UUID 的两层目录结构文件存储。"""
 
 import hashlib
 import io
@@ -13,34 +11,31 @@ from PIL.Image import Image as PILImageType
 
 
 class ImageStore:
+    """图像文件存储管理类。
+
+    提供以下功能：
+
+    - 上传图像文件，生成 UUID 并按两层目录结构存储
+    - 根据 UUID 获取图像文件路径
+    - 根据 UUID 删除图像文件
     """
-    图像文件存储管理类
-    
-    功能：
-    - 上传图像文件，生成UUID并按照两层目录结构存储
-    - 根据UUID获取图像文件路径
-    - 根据UUID删除图像文件
-    """
-    
+
     def __init__(self, storage_path: Path) -> None:
-        """
-        初始化图像存储管理器
-        
-        Args:
-            storage_path: 图像存储根目录路径
+        """初始化图像存储管理器。
+
+        :param storage_path: 图像存储根目录路径。
+        :type storage_path: Path
         """
         self.storage_path = Path(storage_path)
         self.storage_path.mkdir(parents=True, exist_ok=True)
     
     def _get_storage_path_for_uuid(self, uuid_str: str) -> Path:
-        """
-        根据UUID生成存储路径
-        
-        Args:
-            uuid_str: UUID字符串
-            
-        Returns:
-            存储目录路径
+        """根据 UUID 生成存储路径。
+
+        :param uuid_str: UUID 字符串。
+        :type uuid_str: str
+        :returns: 存储目录路径。
+        :rtype: Path
         """
         # 使用UUID的前4个字符创建两层目录结构
         dir1 = uuid_str[:2]
@@ -56,15 +51,14 @@ class ImageStore:
         image_data: Union[bytes, Path, PILImageType],
         filename: Optional[str] = None
     ) -> str:
-        """
-        确定图像文件扩展名
-        
-        Args:
-            image_data: 图像数据
-            filename: 原始文件名（可选）
-            
-        Returns:
-            文件扩展名（包含点号，如 ".png"）
+        """确定图像文件扩展名。
+
+        :param image_data: 图像数据。
+        :type image_data: Union[bytes, Path, PILImageType]
+        :param filename: 原始文件名（可选）。
+        :type filename: Optional[str]
+        :returns: 文件扩展名（包含点号，如 ``".png"``）。
+        :rtype: str
         """
         # 如果有文件名，优先使用文件名的扩展名
         if filename:
@@ -99,19 +93,16 @@ class ImageStore:
         image_data: Union[bytes, Path, PILImageType],
         filename: Optional[str] = None
     ) -> str:
-        """
-        上传图像文件
-        
-        Args:
-            image_data: 图像数据，可以是字节、文件路径或PIL图像对象
-            filename: 原始文件名（可选，用于确定扩展名）
-            
-        Returns:
-            生成的UUID字符串
-            
-        Raises:
-            ValueError: 图像数据格式不支持
-            IOError: 文件读写错误
+        """上传图像文件。
+
+        :param image_data: 图像数据，可以是字节、文件路径或 PIL 图像对象。
+        :type image_data: Union[bytes, Path, PILImageType]
+        :param filename: 原始文件名（可选，用于确定扩展名）。
+        :type filename: Optional[str]
+        :returns: 生成的 UUID 字符串。
+        :rtype: str
+        :raises ValueError: 图像数据格式不支持。
+        :raises IOError: 文件读写错误。
         """
         # 生成UUID
         image_uuid = str(uuid.uuid4()).replace("-", "").lower()
@@ -150,17 +141,15 @@ class ImageStore:
         return image_uuid
     
     def get_path(self, image_uuid: str) -> Path:
-        """
-        根据UUID获取图像文件路径
-        
-        Args:
-            image_uuid: 图像UUID
-            
-        Returns:
-            图像文件的完整路径
-            
-        Note:
-            不检查文件是否存在，只是构建路径
+        """根据 UUID 获取图像文件路径。
+
+        .. note::
+            若目录下未找到匹配文件，则返回以 ``.png`` 为扩展名的预期路径。
+
+        :param image_uuid: 图像 UUID。
+        :type image_uuid: str
+        :returns: 图像文件的完整路径。
+        :rtype: Path
         """
         storage_dir = self._get_storage_path_for_uuid(image_uuid)
         
@@ -172,14 +161,12 @@ class ImageStore:
         return storage_dir / f"{image_uuid}.png"
     
     def delete(self, image_uuid: str) -> bool:
-        """
-        根据UUID删除图像文件
-        
-        Args:
-            image_uuid: 图像UUID
-            
-        Returns:
-            是否成功删除（文件存在并成功删除返回True，文件不存在返回False）
+        """根据 UUID 删除图像文件。
+
+        :param image_uuid: 图像 UUID。
+        :type image_uuid: str
+        :returns: 文件存在并成功删除返回 ``True``，文件不存在返回 ``False``。
+        :rtype: bool
         """
         file_path = self.get_path(image_uuid)
         
@@ -190,30 +177,24 @@ class ImageStore:
         return False
     
     def exists(self, image_uuid: str) -> bool:
-        """
-        检查图像文件是否存在
-        
-        Args:
-            image_uuid: 图像UUID
-            
-        Returns:
-            文件是否存在
+        """检查图像文件是否存在。
+
+        :param image_uuid: 图像 UUID。
+        :type image_uuid: str
+        :returns: 文件是否存在。
+        :rtype: bool
         """
         return self.get_path(image_uuid).exists()
     
     def get_sha256(self, image_uuid: str) -> str:
-        """
-        根据UUID获取图像文件的SHA256哈希值
-        
-        Args:
-            image_uuid: 图像UUID
-            
-        Returns:
-            SHA256哈希值的十六进制字符串
-            
-        Raises:
-            FileNotFoundError: 图像文件不存在
-            IOError: 文件读取错误
+        """根据 UUID 获取图像文件的 SHA-256 哈希值。
+
+        :param image_uuid: 图像 UUID。
+        :type image_uuid: str
+        :returns: SHA-256 哈希值的十六进制字符串。
+        :rtype: str
+        :raises FileNotFoundError: 图像文件不存在。
+        :raises IOError: 文件读取错误。
         """
         file_path = self.get_path(image_uuid)
         

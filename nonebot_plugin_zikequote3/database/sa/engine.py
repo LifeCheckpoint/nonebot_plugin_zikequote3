@@ -18,7 +18,12 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 
 def _register_pragma_listeners(engine: AsyncEngine) -> None:
-    """为 engine 的底层同步引擎注册 SQLite PRAGMA 事件监听器。"""
+    """
+    为 engine 的底层同步引擎注册 SQLite PRAGMA 事件监听器。
+
+    :param engine: 异步引擎实例
+    :type engine: AsyncEngine
+    """
 
     @event.listens_for(engine.sync_engine, "connect")
     def _set_sqlite_pragma(dbapi_conn, connection_record):  # noqa: ANN001, ARG001
@@ -35,11 +40,10 @@ def create_async_engine_factory(
     """
     创建配置好的 AsyncEngine 实例。
 
-    参数:
-        db_path: 数据库文件路径，或 ":memory:" 表示内存数据库。
-
-    返回:
-        已注册 PRAGMA 监听器的 AsyncEngine。
+    :param db_path: 数据库文件路径，或 ``":memory:"`` 表示内存数据库
+    :type db_path: Union[str, Path]
+    :returns: 已注册 PRAGMA 监听器的 AsyncEngine
+    :rtype: AsyncEngine
     """
     # 处理 :memory: 特殊值
     path_str = str(db_path)

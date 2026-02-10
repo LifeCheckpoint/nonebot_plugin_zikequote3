@@ -14,7 +14,22 @@ from nonebot_plugin_zikequote3.database.sa.base import Base
 
 
 class ImageModel(Base):
-    """图片 ORM 模型，对应 ``images`` 表。"""
+    """
+    图片 ORM 模型，对应 ``images`` 表。
+
+    :param uuid: 图片 UUID，主键
+    :type uuid: str
+    :param original_filename: 原始文件名，可为空
+    :type original_filename: Optional[str]
+    :param stored_filename: 存储文件名
+    :type stored_filename: str
+    :param file_path: 文件路径
+    :type file_path: str
+    :param time_stamp: 创建时间，默认为当前时间
+    :type time_stamp: datetime
+    :param checksum_sha256: SHA256 校验和
+    :type checksum_sha256: str
+    """
 
     __tablename__ = "images"
 
@@ -31,7 +46,12 @@ class ImageModel(Base):
 
     # ---- DTO 转换 ----
     def to_dto(self):
-        """转换为 Pydantic Full DTO ``Image``。"""
+        """
+        转换为 Pydantic Full DTO ``Image``。
+
+        :returns: 图片 DTO 对象
+        :rtype: Image
+        """
         from ...models.images import Image
 
         return Image(
@@ -45,7 +65,14 @@ class ImageModel(Base):
 
     @classmethod
     def from_create_dto(cls, dto) -> ImageModel:
-        """从 Pydantic ``ImageCreate`` DTO 创建 ORM 实例。"""
+        """
+        从 Pydantic ``ImageCreate`` DTO 创建 ORM 实例。
+
+        :param dto: 创建图片的 DTO
+        :type dto: ImageCreate
+        :returns: 图片 ORM 实例
+        :rtype: ImageModel
+        """
         return cls(
             uuid=dto.uuid,
             original_filename=dto.original_filename,

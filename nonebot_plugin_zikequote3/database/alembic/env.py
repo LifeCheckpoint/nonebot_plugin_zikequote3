@@ -1,9 +1,9 @@
-"""
-Alembic env.py -- async migration environment configuration.
+"""Alembic 异步迁移环境配置。
 
-Supports two modes:
-1. CLI: ``alembic upgrade head`` -- reads URL from alembic.ini, creates async engine
-2. Programmatic: pass an existing sync connection via ``config.attributes["connection"]``
+支持两种运行模式：
+
+1. CLI 模式：``alembic upgrade head`` —— 从 ``alembic.ini`` 读取 URL 并创建异步引擎
+2. 编程模式：通过 ``config.attributes["connection"]`` 传入已有的同步连接
 """
 
 from __future__ import annotations
@@ -53,7 +53,7 @@ target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
-    """Run migrations in 'offline' mode (generate SQL script only)."""
+    """以离线模式运行迁移（仅生成 SQL 脚本）。"""
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -68,7 +68,11 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    """Execute migrations on the given sync connection."""
+    """在给定的同步连接上执行迁移。
+
+    :param connection: SQLAlchemy 同步连接。
+    :type connection: Connection
+    """
     context.configure(
         connection=connection,
         target_metadata=target_metadata,
@@ -80,7 +84,7 @@ def do_run_migrations(connection: Connection) -> None:
 
 
 async def run_async_migrations() -> None:
-    """Create an async engine and run migrations."""
+    """创建异步引擎并运行迁移。"""
     connectable = async_engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
@@ -94,11 +98,12 @@ async def run_async_migrations() -> None:
 
 
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode.
+    """以在线模式运行迁移。
 
-    Supports two approaches:
-    - Programmatic: pass connection via config.attributes["connection"]
-    - CLI: create async engine from config
+    支持两种方式：
+
+    - 编程式调用：通过 ``config.attributes["connection"]`` 传入已有连接。
+    - CLI 调用：根据配置创建异步引擎。
     """
     connectable = config.attributes.get("connection", None)
 

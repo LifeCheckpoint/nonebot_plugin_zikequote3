@@ -13,7 +13,20 @@ from nonebot_plugin_zikequote3.database.sa.base import Base
 
 
 class MsgQueueModel(Base):
-    """消息队列 ORM 模型，对应 ``msgs_queue`` 表。"""
+    """
+    消息队列 ORM 模型，对应 ``msgs_queue`` 表。
+
+    :param msg_id: 消息 ID，主键
+    :type msg_id: str
+    :param group_id: 群号，外键关联 ``groups.group_id``
+    :type group_id: str
+    :param qq_id: QQ 号，外键关联 ``users.qq_id``
+    :type qq_id: str
+    :param time_stamp: 消息时间，默认为当前时间
+    :type time_stamp: datetime
+    :param content: 消息内容
+    :type content: str
+    """
 
     __tablename__ = "msgs_queue"
 
@@ -31,7 +44,12 @@ class MsgQueueModel(Base):
 
     # ---- DTO 转换 ----
     def to_dto(self):
-        """转换为 Pydantic Full DTO ``MsgQueue``。"""
+        """
+        转换为 Pydantic Full DTO ``MsgQueue``。
+
+        :returns: 消息队列 DTO 对象
+        :rtype: MsgQueue
+        """
         from ...models.msgs_queue import MsgQueue
 
         return MsgQueue(
@@ -44,9 +62,15 @@ class MsgQueueModel(Base):
 
     @classmethod
     def from_create_dto(cls, dto) -> MsgQueueModel:
-        """从 Pydantic ``MsgQueueCreate`` DTO 创建 ORM 实例。
+        """
+        从 Pydantic ``MsgQueueCreate`` DTO 创建 ORM 实例。
 
         当 ``dto.time_stamp`` 为 ``None`` 时，依赖数据库列默认值 (``func.now()``)。
+
+        :param dto: 创建消息的 DTO
+        :type dto: MsgQueueCreate
+        :returns: 消息队列 ORM 实例
+        :rtype: MsgQueueModel
         """
         kwargs: dict = {
             "msg_id": dto.msg_id,

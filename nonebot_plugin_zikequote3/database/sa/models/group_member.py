@@ -17,7 +17,14 @@ if TYPE_CHECKING:
 
 
 class GroupMemberModel(Base):
-    """群成员关系 ORM 模型，对应 ``group_members`` 表（联合主键）。"""
+    """
+    群成员关系 ORM 模型，对应 ``group_members`` 表（联合主键）。
+
+    :param group_id: 群号，外键关联 ``groups.group_id``，联合主键之一
+    :type group_id: str
+    :param qq_id: QQ 号，外键关联 ``users.qq_id``，联合主键之一
+    :type qq_id: str
+    """
 
     __tablename__ = "group_members"
 
@@ -34,12 +41,24 @@ class GroupMemberModel(Base):
 
     # ---- DTO 转换 ----
     def to_dto(self):
-        """转换为 Pydantic Full DTO ``GroupMember``。"""
+        """
+        转换为 Pydantic Full DTO ``GroupMember``。
+
+        :returns: 群成员关系 DTO 对象
+        :rtype: GroupMember
+        """
         from ...models.group_members import GroupMember
 
         return GroupMember(group_id=self.group_id, qq_id=self.qq_id)
 
     @classmethod
     def from_create_dto(cls, dto) -> GroupMemberModel:
-        """从 Pydantic ``GroupMemberCreate`` DTO 创建 ORM 实例。"""
+        """
+        从 Pydantic ``GroupMemberCreate`` DTO 创建 ORM 实例。
+
+        :param dto: 创建群成员关系的 DTO
+        :type dto: GroupMemberCreate
+        :returns: 群成员关系 ORM 实例
+        :rtype: GroupMemberModel
+        """
         return cls(group_id=dto.group_id, qq_id=dto.qq_id)

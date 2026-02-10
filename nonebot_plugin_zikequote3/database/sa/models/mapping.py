@@ -11,7 +11,14 @@ from nonebot_plugin_zikequote3.database.sa.base import Base
 
 
 class MsgIdQuoteIdMapModel(Base):
-    """消息ID-语录ID映射 ORM 模型，对应 ``msgid_quoteid_map`` 表。"""
+    """
+    消息ID-语录ID映射 ORM 模型，对应 ``msgid_quoteid_map`` 表。
+
+    :param msg_id: 消息 ID，主键
+    :type msg_id: str
+    :param quote_id: 语录 ID，外键关联 ``quotes.quote_id``
+    :type quote_id: str
+    """
 
     __tablename__ = "msgid_quoteid_map"
 
@@ -22,7 +29,12 @@ class MsgIdQuoteIdMapModel(Base):
 
     # ---- DTO 转换 ----
     def to_dto(self):
-        """转换为 Pydantic Full DTO ``MsgQuoteID``。"""
+        """
+        转换为 Pydantic Full DTO ``MsgQuoteID``。
+
+        :returns: 消息-语录映射 DTO 对象
+        :rtype: MsgQuoteID
+        """
         from ...models.msgid_quoteid_map import MsgQuoteID
 
         return MsgQuoteID(
@@ -32,7 +44,14 @@ class MsgIdQuoteIdMapModel(Base):
 
     @classmethod
     def from_create_dto(cls, dto) -> MsgIdQuoteIdMapModel:
-        """从 Pydantic ``MsgQuoteIDCreate`` DTO 创建 ORM 实例。"""
+        """
+        从 Pydantic ``MsgQuoteIDCreate`` DTO 创建 ORM 实例。
+
+        :param dto: 创建映射的 DTO
+        :type dto: MsgQuoteIDCreate
+        :returns: 映射 ORM 实例
+        :rtype: MsgIdQuoteIdMapModel
+        """
         return cls(
             msg_id=dto.msg_id,
             quote_id=dto.quote_id,

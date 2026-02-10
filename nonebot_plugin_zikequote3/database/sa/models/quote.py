@@ -20,7 +20,24 @@ if TYPE_CHECKING:
 
 
 class QuoteModel(Base):
-    """语录 ORM 模型，对应 ``quotes`` 表。"""
+    """
+    语录 ORM 模型，对应 ``quotes`` 表。
+
+    :param quote_id: 语录 ID，主键
+    :type quote_id: str
+    :param time_stamp: 创建时间，默认为当前时间
+    :type time_stamp: datetime
+    :param author_id: 作者 QQ 号，外键关联 ``users.qq_id``
+    :type author_id: str
+    :param group_id: 群号，外键关联 ``groups.group_id``
+    :type group_id: str
+    :param content: 语录内容
+    :type content: str
+    :param image_content_uuid: 关联图片 UUID，可为空
+    :type image_content_uuid: Optional[str]
+    :param total_show_time: 总展示次数，默认为 0
+    :type total_show_time: int
+    """
 
     __tablename__ = "quotes"
 
@@ -70,7 +87,12 @@ class QuoteModel(Base):
 
     # ---- DTO 转换 ----
     def to_dto(self):
-        """转换为 Pydantic Full DTO ``Quote``。"""
+        """
+        转换为 Pydantic Full DTO ``Quote``。
+
+        :returns: 语录 DTO 对象
+        :rtype: Quote
+        """
         from ...models.quotes import Quote
 
         return Quote(
@@ -85,7 +107,14 @@ class QuoteModel(Base):
 
     @classmethod
     def from_create_dto(cls, dto) -> QuoteModel:
-        """从 Pydantic ``QuoteCreate`` DTO 创建 ORM 实例。"""
+        """
+        从 Pydantic ``QuoteCreate`` DTO 创建 ORM 实例。
+
+        :param dto: 创建语录的 DTO
+        :type dto: QuoteCreate
+        :returns: 语录 ORM 实例
+        :rtype: QuoteModel
+        """
         return cls(
             quote_id=dto.quote_id,
             author_id=dto.author_id,

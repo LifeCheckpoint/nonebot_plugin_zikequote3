@@ -17,7 +17,14 @@ if TYPE_CHECKING:
 
 
 class UserModel(Base):
-    """用户 ORM 模型，对应 ``users`` 表。"""
+    """
+    用户 ORM 模型，对应 ``users`` 表。
+
+    :param qq_id: QQ 号，主键
+    :type qq_id: str
+    :param avatar: 头像二进制数据，可为空
+    :type avatar: Optional[bytes]
+    """
 
     __tablename__ = "users"
 
@@ -36,12 +43,24 @@ class UserModel(Base):
 
     # ---- DTO 转换 ----
     def to_dto(self):
-        """转换为 Pydantic Full DTO ``User``。"""
+        """
+        转换为 Pydantic Full DTO ``User``。
+
+        :returns: 用户 DTO 对象
+        :rtype: User
+        """
         from ...models.users import User
 
         return User(qq_id=self.qq_id, avatar=self.avatar)
 
     @classmethod
     def from_create_dto(cls, dto) -> UserModel:
-        """从 Pydantic ``UserCreate`` DTO 创建 ORM 实例。"""
+        """
+        从 Pydantic ``UserCreate`` DTO 创建 ORM 实例。
+
+        :param dto: 创建用户的 DTO
+        :type dto: UserCreate
+        :returns: 用户 ORM 实例
+        :rtype: UserModel
+        """
         return cls(qq_id=dto.qq_id, avatar=dto.avatar)

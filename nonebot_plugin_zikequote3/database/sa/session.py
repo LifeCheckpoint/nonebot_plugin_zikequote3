@@ -18,11 +18,10 @@ def create_async_session_factory(
     """
     创建配置好的 async_sessionmaker 实例。
 
-    参数:
-        engine: 已配置的 AsyncEngine。
-
-    返回:
-        async_sessionmaker 实例，调用即可获得 AsyncSession。
+    :param engine: 已配置的 AsyncEngine
+    :type engine: AsyncEngine
+    :returns: async_sessionmaker 实例，调用即可获得 AsyncSession
+    :rtype: async_sessionmaker[AsyncSession]
     """
     return async_sessionmaker(
         engine,

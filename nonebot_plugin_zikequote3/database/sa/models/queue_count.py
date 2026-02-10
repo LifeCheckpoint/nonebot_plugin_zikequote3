@@ -11,7 +11,14 @@ from nonebot_plugin_zikequote3.database.sa.base import Base
 
 
 class QueueGroupMessageCountModel(Base):
-    """群消息计数 ORM 模型，对应 ``queue_group_message_counts`` 表。"""
+    """
+    群消息计数 ORM 模型，对应 ``queue_group_message_counts`` 表。
+
+    :param group_id: 群号，外键关联 ``groups.group_id``，主键
+    :type group_id: str
+    :param message_count: 消息计数，默认为 0
+    :type message_count: int
+    """
 
     __tablename__ = "queue_group_message_counts"
 
@@ -24,7 +31,12 @@ class QueueGroupMessageCountModel(Base):
 
     # ---- DTO 转换 ----
     def to_dto(self):
-        """转换为 Pydantic Full DTO ``QueueGroupMessageCount``。"""
+        """
+        转换为 Pydantic Full DTO ``QueueGroupMessageCount``。
+
+        :returns: 群消息计数 DTO 对象
+        :rtype: QueueGroupMessageCount
+        """
         from ...models.queue_group_message_counts import QueueGroupMessageCount
 
         return QueueGroupMessageCount(
@@ -34,7 +46,14 @@ class QueueGroupMessageCountModel(Base):
 
     @classmethod
     def from_create_dto(cls, dto) -> QueueGroupMessageCountModel:
-        """从 Pydantic ``QueueGroupMessageCountCreate`` DTO 创建 ORM 实例。"""
+        """
+        从 Pydantic ``QueueGroupMessageCountCreate`` DTO 创建 ORM 实例。
+
+        :param dto: 创建群消息计数的 DTO
+        :type dto: QueueGroupMessageCountCreate
+        :returns: 群消息计数 ORM 实例
+        :rtype: QueueGroupMessageCountModel
+        """
         return cls(
             group_id=dto.group_id,
             message_count=dto.message_count,
