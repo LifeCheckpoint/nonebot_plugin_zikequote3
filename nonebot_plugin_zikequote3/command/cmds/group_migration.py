@@ -5,7 +5,7 @@
 通过 dishka 容器获取服务依赖。
 
 注意：
-- 旧版本使用 HTML 截图生成迁移确认卡片，新版本暂用文本方式展示。
+- 迁移确认卡片通过 HtmlRenderServiceBase 渲染 migration 模板为图片。
 - TokenManager 通过 DI 容器获取（APP scope 单例）。
 """
 
@@ -14,12 +14,18 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from nonebot.adapters.onebot.v11 import GroupMessageEvent
+from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment as MsgSeg
 from nonebot_plugin_alconna import Match, Query
 
 from ..command_definition import matcher_group_migration
 from ...di import get_container
 from ...services import MigrationService, GroupService
+from ...services.html_render_service import HtmlRenderServiceBase
+from ...templates.schema.migration import (
+    TemplateDiffItemData,
+    TemplateMigrationData,
+    render_migration_diff,
+)
 from ._error_handlers import command_error_handler
 from ...utils.token_generate import TokenManager
 
@@ -43,6 +49,7 @@ async def handle_group_migration(
         migration_svc = await request_scope.get(MigrationService)
         group_svc = await request_scope.get(GroupService)
         token_mgr = await request_scope.get(TokenManager)
+        html_render_svc = await request_scope.get(HtmlRenderServiceBase)
 
         # 群聊存在性确认
         async with command_error_handler(
@@ -101,10 +108,70 @@ async def handle_group_migration(
                     "来源群没有语录，无法进行迁移哦~"
                 )
 
-        # 生成确认信息（文本方式）
-        # TODO: 旧版本使用 HTML 截图生成迁移确认卡片图片，
-        # 新版本暂用文本方式展示，后续可恢复图片方式。
-        confirm_text = (
+        # 生成 Token
+        check_wait_time = 60
+        token = token_mgr.generate(ttl=check_wait_time)
+        logger.warning("迁移语录请求")
+        logger.warning(
+            "来源群：%s -> 目标群：%s", source.result, target.result,
+        )
+        logger.warning("TOKEN: %s", token)
+
+        # 构建迁移确认卡片数据
+        migration_data = TemplateMigrationData(
+            status_title="迁移确认",
+            title="📋 群语录迁移",
+            description=(
+                f"来源群 {source.result} → 目标群 {target.result}"
+            ),
+            diff_items=[
+                TemplateDiffItemData(
+                    label="来源群语录数",
+                    oldval=str(source_count),
+                    newval=str(source_count),
+                ),
+                TemplateDiffItemData(
+                    label="目标群语录数",
+                    oldval=str(target_count),
+                    newval=str(final_count),
+                ),
+                TemplateDiffItemData(
+                    label="覆写模式",
+                    oldval="-",
+                    newval="是" if overwrite.result else "否",
+                ),
+                TemplateDiffItemData(
+                    label="去重",
+                    oldval="-",
+                    newval="是" if duplicate.result else "否",
+                ),
+                TemplateDiffItemData(
+                    label="排除非成员",
+                    oldval="-",
+                    newval="是" if exclude_member.result else "否",
+                ),
+                TemplateDiffItemData(
+                    label="清除源群信息",
+                    oldval="-",
+                    newval="是" if clear_member_info.result else "否",
+                ),
+                TemplateDiffItemData(
+                    label="保留源群语录",
+                    oldval="-",
+                    newval="是" if keep_source.result else "否",
+                ),
+                TemplateDiffItemData(
+                    label="成员数",
+                    oldval=str(before_members),
+                    newval=str(after_members),
+                ),
+            ],
+            right_button=f"确认 {token}",
+            left_button="取消",
+        )
+
+        # 尝试渲染为图片，失败时降级为纯文本
+        confirm_fallback_text = (
             f"📋 群语录迁移确认\n"
             f"━━━━━━━━━━━━━━━━\n"
             f"来源群：{source.result}\n"
@@ -123,22 +190,23 @@ async def handle_group_migration(
             f"━━━━━━━━━━━━━━━━\n"
         )
 
-        # 生成 Token，发出提示并等待用户确认
-        check_wait_time = 60
-        token = token_mgr.generate(ttl=check_wait_time)
-        logger.warning("迁移语录请求")
-        logger.warning(
-            "来源群：%s -> 目标群：%s", source.result, target.result,
+        token_hint = (
+            f"请输入「确认 {token}」执行迁移"
+            f"（{check_wait_time}秒内有效）"
         )
-        logger.warning("TOKEN: %s", token)
+
+        try:
+            html = render_migration_diff(migration_data)
+            img = await html_render_svc.render(
+                html, width=600, height=800,
+            )
+            prompt_msg = MsgSeg.image(img) + token_hint
+        except Exception as e:
+            logger.warning("迁移确认卡片图片渲染失败，降级为纯文本: %s", e)
+            prompt_msg = confirm_fallback_text + token_hint
 
         import nonebot_plugin_waiter as waiter
 
-        prompt_msg = (
-            confirm_text
-            + f"请输入「确认 {token}」执行迁移"
-            + f"（{check_wait_time}秒内有效）"
-        )
         resp = await waiter.prompt(  # type: ignore[misc]
             prompt_msg, timeout=check_wait_time,
         )
