@@ -10,6 +10,7 @@ import pytest
 from nonebot_plugin_zikequote3.database.models.msgs_queue import MsgQueue
 from nonebot_plugin_zikequote3.exceptions import ValidationException
 from nonebot_plugin_zikequote3.services.quote_collection_service import (
+    CollectedQuote,
     CollectionLockError,
     QuoteCollectionService,
     SelectedQuote,
@@ -269,6 +270,9 @@ class TestCollectAndSave:
             result = await quote_collection_service.collect_and_save("12345")
 
         assert len(result) == 1
+        assert isinstance(result[0], CollectedQuote)
+        assert result[0].quote_id == "99999999999"
+        assert result[0].comment is None
 
     @pytest.mark.asyncio
     async def test_collect_releases_lock_on_error(
@@ -297,3 +301,177 @@ class TestCollectAndSave:
             await quote_collection_service.collect_and_save("12345")
 
         quote_collection_service.release_lock("12345")
+
+
+# ------------------------------------------------------------------ #
+#  CollectedQuote 数据类
+# ------------------------------------------------------------------ #
+
+class TestCollectedQuote:
+    """测试 CollectedQuote 数据类。"""
+
+    def test_default_comment_is_none(self) -> None:
+        cq = CollectedQuote(quote_id="q001")
+        assert cq.quote_id == "q001"
+        assert cq.comment is None
+
+    def test_with_comment(self) -> None:
+        cq = CollectedQuote(quote_id="q002", comment="好句子！")
+        assert cq.quote_id == "q002"
+        assert cq.comment == "好句子！"
+
+    def test_equality(self) -> None:
+        a = CollectedQuote(quote_id="q003", comment="评论")
+        b = CollectedQuote(quote_id="q003", comment="评论")
+        assert a == b
+
+
+# ------------------------------------------------------------------ #
+#  收集流程 — comment 传递
+# ------------------------------------------------------------------ #
+
+class TestCollectAndSaveWithComment:
+    """测试 collect_and_save 返回 CollectedQuote 含 comment。"""
+
+    @pytest.mark.asyncio
+    async def test_collect_with_filter_preserves_comment(
+        self,
+        mock_msg_queue_repo: AsyncMock,
+        mock_quote_repo: AsyncMock,
+        mock_image_repo: AsyncMock,
+        mock_mapping_repo: AsyncMock,
+        mock_user_repo: AsyncMock,
+        mock_user_nickname_repo: AsyncMock,
+        mock_group_nickname_repo: AsyncMock,
+        mock_group_member_repo: AsyncMock,
+        mock_group_repo: AsyncMock,
+    ) -> None:
+        """当 MessageFilter 返回带 comment 的 SelectedQuote 时，
+        collect_and_save 应返回含 comment 的 CollectedQuote。"""
+        from nonebot_plugin_zikequote3.services.user_service import UserService
+        from nonebot_plugin_zikequote3.services.quote_write_service import QuoteWriteService
+        from nonebot_plugin_zikequote3.services.group_service import GroupService
+
+        us = UserService(
+            user_repo=mock_user_repo,
+            user_nickname_repo=mock_user_nickname_repo,
+            group_nickname_repo=mock_group_nickname_repo,
+            group_member_repo=mock_group_member_repo,
+        )
+        qws = QuoteWriteService(
+            quote_repo=mock_quote_repo,
+            image_repo=mock_image_repo,
+            mapping_repo=mock_mapping_repo,
+            user_service=us,
+        )
+        gs = GroupService(
+            group_repo=mock_group_repo,
+            group_member_repo=mock_group_member_repo,
+            group_nickname_repo=mock_group_nickname_repo,
+        )
+
+        # 构造 mock MessageFilter，返回带 comment 的 SelectedQuote
+        mock_filter = AsyncMock()
+        mock_filter.filter_messages.return_value = [
+            SelectedQuote(
+                msg_id="msg_001",
+                content="这是一句名言",
+                comment="AI觉得这句话很有哲理",
+            ),
+        ]
+
+        svc = QuoteCollectionService(
+            msg_queue_repo=mock_msg_queue_repo,
+            quote_write_service=qws,
+            user_service=us,
+            group_service=gs,
+            message_filter=mock_filter,
+        )
+
+        msg = _make_msg(content="这是一句名言")
+        mock_msg_queue_repo.get_msgs_by_group.return_value = [msg]
+        mock_msg_queue_repo.get_msg_by_id.return_value = msg
+        mock_user_repo.get_by_qq_id.return_value = None
+        mock_user_repo.create_user.return_value = None
+        mock_image_repo.image_exists.return_value = False
+
+        with patch(
+            "nonebot_plugin_zikequote3.services.quote_write_service._generate_quote_id",
+            return_value="88888888888",
+        ):
+            mock_quote_repo.create_quote.return_value = None
+            result = await svc.collect_and_save("12345")
+
+        assert len(result) == 1
+        assert isinstance(result[0], CollectedQuote)
+        assert result[0].quote_id == "88888888888"
+        assert result[0].comment == "AI觉得这句话很有哲理"
+
+    @pytest.mark.asyncio
+    async def test_collect_empty_comment_becomes_none(
+        self,
+        mock_msg_queue_repo: AsyncMock,
+        mock_quote_repo: AsyncMock,
+        mock_image_repo: AsyncMock,
+        mock_mapping_repo: AsyncMock,
+        mock_user_repo: AsyncMock,
+        mock_user_nickname_repo: AsyncMock,
+        mock_group_nickname_repo: AsyncMock,
+        mock_group_member_repo: AsyncMock,
+        mock_group_repo: AsyncMock,
+    ) -> None:
+        """当 SelectedQuote.comment 为空字符串时，
+        CollectedQuote.comment 应为 None。"""
+        from nonebot_plugin_zikequote3.services.user_service import UserService
+        from nonebot_plugin_zikequote3.services.quote_write_service import QuoteWriteService
+        from nonebot_plugin_zikequote3.services.group_service import GroupService
+
+        us = UserService(
+            user_repo=mock_user_repo,
+            user_nickname_repo=mock_user_nickname_repo,
+            group_nickname_repo=mock_group_nickname_repo,
+            group_member_repo=mock_group_member_repo,
+        )
+        qws = QuoteWriteService(
+            quote_repo=mock_quote_repo,
+            image_repo=mock_image_repo,
+            mapping_repo=mock_mapping_repo,
+            user_service=us,
+        )
+        gs = GroupService(
+            group_repo=mock_group_repo,
+            group_member_repo=mock_group_member_repo,
+            group_nickname_repo=mock_group_nickname_repo,
+        )
+
+        # comment 为空字符串（SelectedQuote 默认值）
+        mock_filter = AsyncMock()
+        mock_filter.filter_messages.return_value = [
+            SelectedQuote(msg_id="msg_001", content="普通消息", comment=""),
+        ]
+
+        svc = QuoteCollectionService(
+            msg_queue_repo=mock_msg_queue_repo,
+            quote_write_service=qws,
+            user_service=us,
+            group_service=gs,
+            message_filter=mock_filter,
+        )
+
+        msg = _make_msg(content="普通消息")
+        mock_msg_queue_repo.get_msgs_by_group.return_value = [msg]
+        mock_msg_queue_repo.get_msg_by_id.return_value = msg
+        mock_user_repo.get_by_qq_id.return_value = None
+        mock_user_repo.create_user.return_value = None
+        mock_image_repo.image_exists.return_value = False
+
+        with patch(
+            "nonebot_plugin_zikequote3.services.quote_write_service._generate_quote_id",
+            return_value="77777777777",
+        ):
+            mock_quote_repo.create_quote.return_value = None
+            result = await svc.collect_and_save("12345")
+
+        assert len(result) == 1
+        assert result[0].quote_id == "77777777777"
+        assert result[0].comment is None
