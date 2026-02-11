@@ -30,6 +30,7 @@ from ...services import ConfigService, QuoteReadService, StatisticsService, User
 from ...services.html_render_service import HtmlRenderServiceBase
 from ...database.image_store import ImageStore
 from ._error_handlers import command_error_handler
+from ...templates.registry import LISTING
 from ...templates.schema.listing import TemplateQuoteListData, render_list
 from ._display_helpers import transform_quotes_to_template_boxes
 
@@ -170,5 +171,5 @@ async def handle_get_quote_list(
             addition=hitokoto_text,
             quotes=quote_boxes,
         ))
-        img = await html_render_svc.render(html, width=1520, height=200)
+        img = await html_render_svc.render(html, width=LISTING.width, height=LISTING.height)
         await matcher_get_quote_list.finish(MsgSeg.image(img))

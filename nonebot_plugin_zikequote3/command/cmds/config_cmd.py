@@ -27,6 +27,7 @@ from ..command_definition import (
 from ...di import Inject, inject
 from ...services import ConfigService
 from ...services.html_render_service import HtmlRenderServiceBase
+from ...templates.registry import CODE_FRAME
 from ...templates.schema.code_frame import TemplateCodeFrameData, render_code_frame
 from ._error_handlers import command_error_handler
 
@@ -76,7 +77,7 @@ async def handle_get_current_config(
                 code=toml_str,
             ))
             img = await html_render_svc.render(
-                html, width=800, height=600,
+                html, width=CODE_FRAME.width, height=CODE_FRAME.height,
             )
             await matcher_get_current_config.finish(MsgSeg.image(img))
         except FinishedException:

@@ -57,12 +57,12 @@ class TestHandleGetHelp:
                     html_render_svc=mock_render_svc,
                 )
 
-        # 验证渲染服务被调用，宽度为 900（两列布局）
+        # 验证渲染服务被调用，宽度/高度与 HELP 常量一致
+        from nonebot_plugin_zikequote3.templates.registry import HELP
         mock_render_svc.render.assert_awaited_once()
         call_kwargs = mock_render_svc.render.call_args
-        assert call_kwargs.kwargs.get("width") == 900 or (
-            len(call_kwargs.args) > 1 and call_kwargs.args[1] == 900
-        )
+        assert call_kwargs.kwargs.get("width") == HELP.width
+        assert call_kwargs.kwargs.get("height") == HELP.height
 
     async def test_render_failure_fallback(
         self,

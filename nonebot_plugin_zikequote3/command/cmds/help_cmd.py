@@ -15,6 +15,7 @@ from nonebot.exception import FinishedException
 from ..command_definition import matcher_get_help
 from ...di import Inject, inject
 from ...services.html_render_service import HtmlRenderServiceBase
+from ...templates.registry import HELP
 from ...templates.schema.help import build_default_help_data, render_help
 
 logger = logging.getLogger(__name__)
@@ -36,7 +37,7 @@ async def handle_get_help(
     try:
         data = build_default_help_data()
         html = render_help(data)
-        img = await html_render_svc.render(html, width=900)
+        img = await html_render_svc.render(html, width=HELP.width, height=HELP.height)
         await matcher_get_help.finish(MsgSeg.image(img))
     except FinishedException:
         raise

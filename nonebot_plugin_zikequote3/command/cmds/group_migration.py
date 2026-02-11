@@ -20,6 +20,7 @@ from ..command_definition import matcher_group_migration
 from ...di import Inject, inject
 from ...services import MigrationService, GroupService
 from ...services.html_render_service import HtmlRenderServiceBase
+from ...templates.registry import MIGRATION
 from ...templates.schema.migration import (
     TemplateDiffItemData,
     TemplateMigrationData,
@@ -225,7 +226,7 @@ async def handle_group_migration(
     try:
         html = render_migration_diff(migration_data)
         img = await html_render_svc.render(
-            html, width=600, height=800,
+            html, width=MIGRATION.width, height=MIGRATION.height,
         )
         prompt_msg = MsgSeg.image(img) + token_hint
     except Exception as e:

@@ -28,6 +28,7 @@ from ...services import StatisticsService, UserService
 from ...services.html_render_service import HtmlRenderServiceBase
 from ._error_handlers import command_error_handler
 from ...utils.base64_encoder import to_data_uri
+from ...templates.registry import USER_INFO
 from ...templates.schema.user_info import TemplateUserInfoData, render_user_info
 
 logger = logging.getLogger(__name__)
@@ -163,5 +164,5 @@ async def handle_get_user_info(
             history_nicks=history_nicks,
             history_group_cards=history_cards,
         ))
-        img = await html_render_svc.render(html, width=450, height=100)
+        img = await html_render_svc.render(html, width=USER_INFO.width, height=USER_INFO.height)
         await matcher_get_user_info.finish(MsgSeg.image(img))

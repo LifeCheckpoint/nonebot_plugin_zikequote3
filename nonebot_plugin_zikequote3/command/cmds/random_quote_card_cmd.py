@@ -40,6 +40,7 @@ from ...services.review_service import AUTHOR_AI
 from ...database.image_store import ImageStore
 from ._error_handlers import command_error_handler, suppress_error
 from ...templates.schema.card import TemplateCommentData, TemplateQuoteCardData
+from ...templates.registry import CARD
 from ...templates import card as card_template
 
 logger = logging.getLogger(__name__)
@@ -184,7 +185,7 @@ async def handle_random_quote_card(
                 comments=comments,
             )
         )
-        quote_card_img = await html_render_svc.render(quote_card_html, width=800, height=120)
+        quote_card_img = await html_render_svc.render(quote_card_html, width=CARD.width, height=CARD.height)
         send_msg = await matcher_random_quote_card.send(MsgSeg.image(quote_card_img))
 
     # 更新语录出现次数

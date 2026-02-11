@@ -16,6 +16,7 @@ from ..command_definition import matcher_get_privacy
 from ...di import Inject, inject
 from ...services.html_render_service import HtmlRenderServiceBase
 from ...paths import PluginPath
+from ...templates.registry import MD
 from ...templates import md as md_template
 
 logger = logging.getLogger(__name__)
@@ -44,7 +45,7 @@ async def handle_get_privacy(
     try:
         md_content = privacy_markdown.read_text(encoding="utf-8")
         html = md_template.render_markdown(md_content)
-        img = await html_render_svc.render(html, width=800)
+        img = await html_render_svc.render(html, width=MD.width, height=MD.height)
         await matcher_get_privacy.finish(MsgSeg.image(img))
     except FinishedException:
         raise

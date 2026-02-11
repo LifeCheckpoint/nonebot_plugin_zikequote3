@@ -28,6 +28,7 @@ from ...services import (
 from ...services.html_render_service import HtmlRenderServiceBase
 from ._error_handlers import command_error_handler
 from ...utils.base64_encoder import to_data_uri
+from ...templates.registry import RANK
 from ...templates.schema.rank import (
     TemplateBasicRankingItemData,
     TemplateLineChartData,
@@ -202,6 +203,6 @@ async def handle_get_ranking(
             stats=stats_data,
         ))
         img = await html_render_svc.render(
-            html, width=1920, height=1080, wait=3000,
+            html, width=RANK.width, height=RANK.height, wait=RANK.wait,
         )
         await matcher_get_ranking.finish(MsgSeg.image(img))
