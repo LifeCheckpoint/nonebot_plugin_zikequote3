@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import logging
 import random
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from ..database.models.quotes import Quote
 from ..database.repositories.image_repository import ImageRepository
@@ -26,6 +26,9 @@ from ..exceptions import (
     ValidationException,
 )
 from .user_service import UserService
+
+if TYPE_CHECKING:
+    from ..vector_search.search_service import VectorSearchService
 
 logger = logging.getLogger(__name__)
 
@@ -60,11 +63,13 @@ class QuoteWriteService:
         image_repo: ImageRepository,
         mapping_repo: MappingRepository,
         user_service: UserService,
+        vector_search_svc: VectorSearchService | None = None,
     ) -> None:
         self._quote_repo = quote_repo
         self._image_repo = image_repo
         self._mapping_repo = mapping_repo
         self._user_service = user_service
+        self._vector_search_svc = vector_search_svc
 
     # ------------------------------------------------------------------ #
     #  添加语录
@@ -119,6 +124,12 @@ class QuoteWriteService:
             "语录已添加: quote_id=%s, group=%s, author=%s",
             quote_id, group_id, author_id,
         )
+
+        # 异步更新向量索引（不影响主流程）
+        quote = await self._quote_repo.get_quote_by_id(quote_id)
+        if quote is not None:
+            await self._try_index_quote(quote)
+
         return quote_id
 
     async def add_quote_with_image_data(
@@ -213,6 +224,11 @@ class QuoteWriteService:
 
         logger.info("语录已更新: quote_id=%s", quote_id)
 
+        # 异步更新向量索引（不影响主流程）
+        updated_quote = await self._quote_repo.get_quote_by_id(quote_id)
+        if updated_quote is not None:
+            await self._try_index_quote(updated_quote)
+
     # ------------------------------------------------------------------ #
     #  删除语录
     # ------------------------------------------------------------------ #
@@ -237,6 +253,9 @@ class QuoteWriteService:
         await self._mapping_repo.delete_mappings_by_quote_id(quote_id)
 
         logger.info("语录已删除: quote_id=%s", quote_id)
+
+        # 异步删除向量索引（不影响主流程）
+        await self._try_remove_quote(quote_id)
 
     # ------------------------------------------------------------------ #
     #  消息ID → 语录ID 映射（原 mapping_service.py）
@@ -265,6 +284,28 @@ class QuoteWriteService:
         :rtype: Optional[str]
         """
         return await self._mapping_repo.get_quote_id_by_msg_id(msg_id)
+
+    # ------------------------------------------------------------------ #
+    #  向量索引辅助方法
+    # ------------------------------------------------------------------ #
+
+    async def _try_index_quote(self, quote: Quote) -> None:
+        """尝试为语录建立向量索引，失败仅记录日志。"""
+        if self._vector_search_svc is None:
+            return
+        try:
+            await self._vector_search_svc.index_quote(quote)
+        except Exception as e:
+            logger.warning("向量索引更新失败 (quote_id=%s): %s", quote.quote_id, e)
+
+    async def _try_remove_quote(self, quote_id: str) -> None:
+        """尝试删除语录的向量索引，失败仅记录日志。"""
+        if self._vector_search_svc is None:
+            return
+        try:
+            await self._vector_search_svc.remove_quote(quote_id)
+        except Exception as e:
+            logger.warning("向量索引删除失败 (quote_id=%s): %s", quote_id, e)
 
     # ------------------------------------------------------------------ #
     #  去重检查

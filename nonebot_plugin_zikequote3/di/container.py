@@ -17,6 +17,7 @@ from .providers.database_provider import DatabaseProvider
 from .providers.infra_provider import InfraProvider
 from .providers.repository_provider import RepositoryProvider
 from .providers.service_provider import ServiceProvider
+from .providers.vector_provider import VectorProvider
 
 
 def create_container(
@@ -51,11 +52,8 @@ def create_container(
         InfraProvider(image_store_path, render_device_factor=render_device_factor),
         RepositoryProvider(),
         ServiceProvider(),
+        # 始终注册 VectorProvider；disabled 时各 provide 方法返回 None
+        VectorProvider(embedding_config, llm_config, vector_db_path),
     ]
-
-    # 仅在 embedding 启用时注册向量搜索 Provider
-    if embedding_config and embedding_config.enabled and llm_config and vector_db_path:
-        from .providers.vector_provider import VectorProvider
-        providers.append(VectorProvider(embedding_config, llm_config, vector_db_path))
 
     return make_async_container(*providers)

@@ -417,4 +417,19 @@ matcher_get_help = on_command(
 perm_nodes.n_perm_s.patch_matcher(matcher_get_help)
 
 
+cmdname_rebuild_index = (
+    "重建语录索引", "语录重建索引", "重建索引",
+)
+alc_rebuild_index = Alconna(
+    cmdname_rebuild_index[0],
+    Option("--all", dest="rebuild_all", action=store_true, default=False, help_text="重建所有群的向量索引（超级管理员）"),
+)
+matcher_rebuild_index = on_alconna(
+    alc_rebuild_index,
+    aliases=set(cmdname_rebuild_index[1:]),
+    use_cmd_start=True, priority=10, block=True, skip_for_unmatch=False,
+)
+perm_nodes.n_forcerefresh.patch_matcher(matcher_rebuild_index)
+
+
 # endregion

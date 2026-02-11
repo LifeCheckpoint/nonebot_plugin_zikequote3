@@ -10,10 +10,15 @@ nonebot-plugin-zikequote3 新插件入口（dishka DI 版本）。
 - 模块导入时: matcher 定义（on_command 等）自动注册到 NoneBot
 """
 
+import logging
+
+from dishka import AsyncContainer
 from nonebot import get_driver, require
 from nonebot.plugin import PluginMetadata
 
 from .config import ConfigPath
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # require 声明 —— 保留原 imports.py 中的全部 require
@@ -110,6 +115,35 @@ async def _startup() -> None:
 
     # 4) 绑定到 NoneBot Driver（shutdown 时自动关闭容器）
     setup_dishka(container, driver)
+
+    # 5) 启动时检查向量索引模型一致性
+    if default_cfg.embedding.enabled:
+        await _check_vector_index_consistency(container)
+
+
+async def _check_vector_index_consistency(container: AsyncContainer) -> None:
+    """启动时检查向量索引的模型一致性。"""
+    from .vector_search.search_service import VectorSearchService
+
+    try:
+        async with container() as request_scope:
+            svc = await request_scope.get(VectorSearchService)
+            if svc is None:
+                return
+            consistent = await svc.check_model_consistency()
+            if not consistent:
+                logger.warning(
+                    "⚠️ 向量索引模型不一致！当前配置的 embedding 模型或维度与已存储的索引不匹配。"
+                    "模糊搜索功能暂不可用，请执行 /重建语录索引 --all 重建索引。"
+                )
+            else:
+                count = await svc.get_index_count()
+                if count > 0:
+                    logger.info("向量索引就绪，共 %d 条记录", count)
+                else:
+                    logger.info("向量索引为空，请执行 /重建语录索引 建立索引")
+    except Exception as e:
+        logger.warning("向量索引一致性检查失败: %s", e)
 
 
 # ---------------------------------------------------------------------------

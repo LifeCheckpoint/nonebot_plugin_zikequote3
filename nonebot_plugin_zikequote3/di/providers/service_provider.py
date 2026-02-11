@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dishka import Provider, Scope, provide
 
+from ...vector_search.search_service import VectorSearchService
 from ...database.repositories.group_config_repository import GroupConfigRepository
 from ...database.repositories.group_member_repository import GroupMemberRepository
 from ...database.repositories.group_nickname_repository import GroupNicknameRepository
@@ -198,6 +199,7 @@ class ServiceProvider(Provider):
         image_repo: ImageRepository,
         mapping_repo: MappingRepository,
         user_service: UserService,
+        vector_search_svc: VectorSearchService,
     ) -> QuoteWriteService:
         """
         提供语录写入服务实例。
@@ -210,6 +212,8 @@ class ServiceProvider(Provider):
         :type mapping_repo: MappingRepository
         :param user_service: 用户服务
         :type user_service: UserService
+        :param vector_search_svc: 向量搜索服务（embedding 未启用时为 None）
+        :type vector_search_svc: VectorSearchService
         :returns: 语录写入服务实例
         :rtype: QuoteWriteService
         """
@@ -218,6 +222,7 @@ class ServiceProvider(Provider):
             image_repo=image_repo,
             mapping_repo=mapping_repo,
             user_service=user_service,
+            vector_search_svc=vector_search_svc,
         )
 
     @provide

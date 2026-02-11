@@ -34,6 +34,10 @@ class VectorSearchService:
         threshold: float = 0.0,
     ) -> List[Tuple[Quote, float]]:
         """语义搜索，返回 [(Quote, similarity_score), ...]。"""
+        if not await self.check_model_consistency():
+            raise ValueError(
+                "向量索引模型不一致，请先执行 /重建语录索引 重建索引"
+            )
         query_vector = await self._embedding.embed_query(query)
         results = await self._store.search(
             query_vector, group_id=group_id, limit=limit, threshold=threshold,
