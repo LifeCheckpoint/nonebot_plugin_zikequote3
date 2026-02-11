@@ -1,5 +1,8 @@
 .VSCodeCounter/
 
+# template preview output
+nonebot_plugin_zikequote3/templates/output/rendered_html/preview_*.html
+
 # test
 .coverage
 htmlcov/
