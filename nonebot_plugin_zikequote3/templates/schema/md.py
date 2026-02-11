@@ -4,6 +4,8 @@ Markdown 模板。
 提供 Markdown 内容的 HTML 渲染方法。
 """
 
+import markdown
+
 from .. import render_template, read_resource_file
 
 def render_markdown(content: str) -> str:
@@ -15,18 +17,17 @@ def render_markdown(content: str) -> str:
     :returns: 渲染后的 HTML 字符串
     :rtype: str
     """
-    inline_katex_min_css = read_resource_file("css/vendor/katex.min.css")
     inline_css = read_resource_file("css/md.css")
-    katex_min_js = read_resource_file("js/vendor/katex.min.js")
-    katex_auto_render_js = read_resource_file("js/vendor/auto-render.min.js")
+
+    html_content = markdown.markdown(
+        content,
+        extensions=["tables", "fenced_code", "toc", "nl2br"],
+    )
 
     return render_template(
         "htmls/md.html.jinja2",
-        inline_katex_min_css=inline_katex_min_css,
         inline_css=inline_css,
-        katex_min_js=katex_min_js,
-        katex_auto_render_js=katex_auto_render_js,
-        content=content
+        content=html_content,
     )
 
 

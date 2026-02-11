@@ -128,7 +128,7 @@ def build_default_help_data() -> TemplateHelpData:
                     HelpCommandItem(
                         name="/语录卡",
                         aliases=["语录卡片", "语录card"],
-                        description="以精美卡片形式展示随机语录",
+                        description="以卡片形式展示随机语录",
                         usage="/语录卡 [查询内容]",
                         examples=["/语录卡 @某人"],
                         query_support=True,
@@ -157,13 +157,13 @@ def build_default_help_data() -> TemplateHelpData:
                     HelpCommandItem(
                         name="/语录列表",
                         aliases=["语录list", "列语录", "个人语录"],
-                        description="查看用户的语录列表，支持分页",
+                        description="查看用户的语录列表，支持查询范围",
                         usage="/语录列表 [页码/范围] [用户]",
                         examples=[
                             "/语录列表 → 自己的语录",
                             "/语录列表 @某人 → 该用户的语录",
-                            "/语录列表 2 → 第2页",
-                            "/语录列表 2-5 → 第2到5页",
+                            "/语录列表 2 → 第2条开始",
+                            "/语录列表 2-5 → 第2到5条",
                         ],
                         query_support=True,
                     ),
@@ -184,7 +184,7 @@ def build_default_help_data() -> TemplateHelpData:
                         name="/加语录图",
                         aliases=["加语录图片", "语录加图"],
                         description="为已有语录附加图片",
-                        usage="回复消息 + /加语录图",
+                        usage="回复消息 + /加语录图 + 图片",
                     ),
                     HelpCommandItem(
                         name="/删语录",
@@ -303,7 +303,7 @@ def build_default_help_data() -> TemplateHelpData:
                     HelpCommandItem(
                         name="/停用语录",
                         aliases=["停用zikequote3"],
-                        description="停用本群的语录功能",
+                        description="（即将启用）停用个人的语录功能",
                         usage="/停用语录",
                         permission="权限节点控制",
                     ),

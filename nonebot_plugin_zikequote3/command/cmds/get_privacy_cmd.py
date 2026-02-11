@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 
 from nonebot.adapters.onebot.v11 import MessageSegment as MsgSeg
+from nonebot.exception import FinishedException
 
 from ..command_definition import matcher_get_privacy
 from ...di import Inject, inject
@@ -45,6 +46,8 @@ async def handle_get_privacy(
         html = md_template.render_markdown(md_content)
         img = await html_render_svc.render(html, width=800)
         await matcher_get_privacy.finish(MsgSeg.image(img))
+    except FinishedException:
+        raise
     except Exception:
         logger.warning("渲染隐私政策图片失败，回退为纯文本", exc_info=True)
         await matcher_get_privacy.finish(

@@ -36,7 +36,7 @@ async def handle_get_help(
     try:
         data = build_default_help_data()
         html = render_help(data)
-        img = await html_render_svc.render(html, width=1400)
+        img = await html_render_svc.render(html, width=900)
         await matcher_get_help.finish(MsgSeg.image(img))
     except FinishedException:
         raise

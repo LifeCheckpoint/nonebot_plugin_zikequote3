@@ -1,62 +1,19 @@
 {#
     渲染 Markdown 内容模板
 
-    - inline_katex_min_css: 内联 KaTeX 样式
     - inline_css: 内联自定义样式
-    - katex_min_js: 内联 KaTeX 脚本
-    - auto_render_js: 内联 KaTeX 自动渲染脚本
-
-    - content: 要渲染的 Markdown 内容
+    - content: 预渲染的 HTML 内容（由 Python 端 Markdown 库转换）
 #}
 
 <!DOCTYPE html>
 <html>
 <head>
     <title>Markdown 文档</title>
-    <style> {{ inline_katex_min_css | safe }} </style>
     <style> {{ inline_css | safe }} </style>
-    <script> {{ katex_min_js | safe }} </script>
-    <script> {{ auto_render_js | safe }} </script>
 </head>
 <body>
     <div id="preview">
         {{ content | safe }}
     </div>
-
-    <script>
-        // 转换arithmatex格式为KaTeX可识别的格式
-        function convertArithmatexToKatex() {
-            document.querySelectorAll('.arithmatex').forEach(el => {
-                const texScript = el.querySelector('script[type="math/tex"]');
-                if (texScript) {
-                    const texContent = texScript.textContent;
-                    const isDisplayMode = texScript.previousElementSibling?.classList.contains('MathJax_Preview');
-                    
-                    // 创建KaTeX兼容的span
-                    const katexSpan = document.createElement('span');
-                    katexSpan.textContent = `$${texContent}$`;
-                    
-                    // 替换原有内容
-                    el.innerHTML = '';
-                    el.appendChild(katexSpan);
-                }
-            });
-        }
-
-        document.addEventListener("DOMContentLoaded", function() {
-            convertArithmatexToKatex();
-
-            renderMathInElement(document.getElementById('preview'), {
-
-                delimiters: [
-                    {left: '$$', right: '$$', display: true},
-                    {left: '$', right: '$', display: false},
-                    {left: '\$', right: '\$', display: false},
-                    {left: '\$$', right: '\$$', display: true}
-                ],
-                throwOnError: false
-            });
-        });
-    </script>
 </body>
 </html>
