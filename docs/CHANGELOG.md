@@ -12,6 +12,12 @@ All notable changes to this project will be documented in this file.
 > - 定期数据备份功能
 > - 后端管理功能
 
+## \[0.5.0alpha2\] - 2026-02-??
+
+## Changed
+
+- 重构了更加健壮的渲染模板架构
+
 ## \[0.5.0alpha1\] - 2026-02-10 \[BREAKING CHANGES\]
 
 ### Added
