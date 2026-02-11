@@ -7,7 +7,7 @@
 
 # ZikeQuote3
 
-✨ _一个 LLM 介入的群聊语录插件_ ✨
+✨ _LLM 介入，功能丰富的群聊语录自动收集与管理插件_ ✨
 
 <a href="./LICENSE">
     <img src="https://img.shields.io/github/license/LifeCheckpoint/nonebot_plugin_zikequote3.svg" alt="license">
@@ -24,141 +24,291 @@
 
 </div>
 
-## 📖 介绍
+## ✨ 功能特性
 
-ZikeQuote3 基于 NoneBot2 开发，便于群聊语录自动收集与管理，支持通过 LLM 自动收集群聊消息作为语录、手动管理语录、以及多种方式查看等功能。
+- **🤖 智能收集** — 持续监听群聊消息，达到阈值后由 LLM 自动分析并提取语录，附带简短评论
+- **✏️ 手动管理** — 通过命令增删语录、添加/删除评论、附加/移除图片
+- **🎨 多样展示** — 随机语录（文字/卡片/图片）、关键词搜索、用户语录列表
+- **📊 统计排行** — 语录排行榜、用户语录统计信息、近 15 天走势
+- **⚙️ 灵活配置** — 群粒度配置、热更新、基于 `nonebot-plugin-access-control` 的权限控制
+- **🔒 隐私保护** — 内置隐私政策查看、个人停用功能（即将启用）
 
-## 🗒️ 功能
+## 📦 安装
 
-### 🤖 智能收集
+### 环境要求
 
-- **自动收集**: 持续监听群聊消息，达到消息量阈值**自动触发**筛选。
-- **LLM 集成**: LLM **自动分析**消息历史，根据指导提取**群友语录**并生成简短评论。
+| 依赖 | 版本要求 |
+|------|---------|
+| Python | >= 3.12 |
+| NoneBot2 | >= 2.0.0 |
+| 适配器 | OneBot V11 |
 
-### 👨‍💻 手动管理
+### 安装方式
 
-- **手动管理**: 支持通过命令增删查改。
-- **语录评论**: 对已有语录**添加评论**，丰富内容。
+使用 nb-cli（推荐）：
 
-### 🎨 展示查询
+```bash
+nb plugin install nonebot-plugin-zikequote3
+```
 
-- **随机语录**: 支持**不同算法**模式下的随机语录推荐，同时允许多种**筛选推荐**，支持图像和文字。
-- **语录搜索**: 可**搜索罗列**筛选语录。
-- **语录排行**: 统计成员语录数量，生成**图片排行榜**。
-- **语录列表**: 展示查看用户**语录列表**。
+或使用包管理器：
 
-### 📊 插件配置
+```bash
+pip install nonebot-plugin-zikequote3
+# 或
+uv add nonebot-plugin-zikequote3
+# 或
+poetry add nonebot-plugin-zikequote3
+```
 
-- **群粒度控制**: 支持精细到群粒度的语录插件配置。
-- **动态更新**: 支持热调整配置与热重载配置，灵活方便。
+> 如果不使用 nb-cli 安装，需要在 `pyproject.toml` 的 `[tool.nonebot]` 中添加：
+> ```toml
+> plugins = ["nonebot_plugin_zikequote3"]
+> ```
 
-### ⚙️ 权限控制
+### 安装后配置
 
-- **灵活强大**: 基于 `nonebot-plugin-access-control` 的权限控制，全面精确。
+1. **配置 LLM API Key**：创建文件 `llm_services/api_key`（相对插件根目录），写入你的 API Key。可在 `config.toml` 的 `[llm]` 部分修改端点、模型等参数。
 
-## 🔧 安装
+2. **权限控制（推荐）**：安装 `nonebot-plugin-access-control` 并配置权限，详见其 [文档](https://github.com/bot-ssttkkl/nonebot-plugin-access-control)。
 
-1. 确保您已经安装了 NoneBot2，然后**安装插件本体**
-    <details close>
-    <summary>手动安装</summary>
-    下载该仓库后，进入命令行并使用
+3. **截图渲染**：插件依赖 `nonebot-plugin-htmlrender`（Playwright）。如遇到"找不到浏览器"错误，可在 `.env` 中设置：
+   ```
+   htmlrender_browser_channel=msedge
+   ```
 
-        poetry install
+4. **Sentry（可选）**：创建文件 `utils/sentry_dsn` 写入 DSN 即可启用错误追踪。
 
-    以安装 `pyproject.toml` 中的依赖
-    </details>
+## 🔧 配置
 
-    <details close>
-    <summary>使用 nb-cli 安装</summary>
-    在 nonebot2 项目的根目录下打开命令行, 输入以下指令即可安装
+### .env 配置
 
-        nb plugin install nonebot-plugin-zikequote3
+| 配置项 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| `config_toml` | `str` | 插件目录下的 `config.toml` | TOML 配置文件路径 |
 
-    </details>
+### 群组配置（config.toml）
 
-    <details>
-    <summary>使用包管理器安装</summary>
-    在 nonebot2 项目的插件目录下, 打开命令行, 根据你使用的包管理器, 输入相应的安装命令
+插件的主要配置位于 `config.toml` 文件中，支持群粒度覆盖。可通过 `/修改语录配置` 命令在线修改群组配置。
 
-    <details close>
-    <summary>pip</summary>
+#### `[collecting]` 语录收集
 
-        pip install nonebot-plugin-zikequote3
-    </details>
-    <details>
-    <summary>uv (推荐插件管理器)</summary>
+| 配置项 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| `enable_auto_collect` | `bool` | `true` | 启用自动收集（需配置 LLM） |
+| `pickup_interval` | `int` | `80` | 自动收集触发的消息数量阈值 |
+| `msg_max_length` | `int` | `35` | 最大可被处理的消息长度 |
+| `at_least_selections` | `int` | `0` | LLM 筛选结果个数下限 |
+| `at_most_selections` | `int` | `3` | LLM 筛选结果个数上限 |
+| `enable_duplicate` | `bool` | `false` | 允许群内个人重复语录 |
+| `enable_image_collection` | `bool` | `true` | 允许图片语录收集 |
+| `img_max_sidelength` | `int` | `3840` | 图片最大边长（px），超出裁剪 |
+| `img_max_size_mb` | `float` | `5` | 图片最大体积（MB） |
+| `update_personal_info_probability` | `float` | `0.05` | 收到消息时更新个人信息的概率 |
 
-        uv add nonebot-plugin-zikequote3
-    </details>
-    <details>
-    <summary>poetry</summary>
+#### `[fetching]` 语录抽取
 
-        poetry add nonebot-plugin-zikequote3
-    </details>
-    <details>
-    <summary>conda</summary>
+| 配置项 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| `algorithm` | `str` | `"IFW --lambda 1.0"` | 语录推荐算法命令（IFW / LogIFW 等） |
 
-        conda install nonebot-plugin-zikequote3
-    </details>
+#### `[showcase]` 语录展示
 
-    如果不使用 nb cli 安装，需要打开 nonebot2 项目根目录下的 `pyproject.toml` 文件, 在 `[tool.nonebot]` 部分追加写入
+| 配置项 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| `max_rank_user_num` | `int` | `40` | 排行榜最大用户数 |
+| `quote_num_per_page` | `int` | `20` | 每页展示语录数 |
+| `max_quotes_in_list` | `int` | `50` | 语录列表最大条数 |
+| `comment_show_method` | `str` | `"noai"` | 评论展示方式：`no` / `noai` / `all` |
+| `hitokoto_url` | `str` | `"https://v1.hitokoto.cn"` | Hitokoto API 地址 |
+| `render_device_factor` | `float` | `2.0` | 图片渲染设备像素比 |
+| `quote_content_max_length` | `int` | `500` | 列表中单条语录最大显示字符数，`0` 不限制 |
 
-        ```toml
-        plugins = ["nonebot-plugin-zikequote3"]
-        ```
+#### `[comment]` 评论
 
-2. **推荐安装权限控制主插件** `nonebot-plugin-access-control`，然后设置默认权限
-    <details>
-    <summary>权限控制主插件安装方式</summary>
-        与常规插件安装方式类似，例如
+| 配置项 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| `enable_comment_without_prefix` | `bool` | `true` | 允许直接回复语录消息进行评论（无需 `/评语录` 前缀） |
 
-        pip install nonebot-plugin-access-control
-    </details>
+#### `[llm]` LLM 服务
 
-    <details>
-    <summary>问题排除</summary>
-        - 如遇到新版 nonebot 启动后 `FakeIO` 报错 `expected str instance, bytes found`，可通过命令 `nb orm --upgrade` 升级权限插件的 orm 数据库后端后重新启动
-    </details>
+| 配置项 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| `base_url` | `str` | `"https://openrouter.ai/api/v1"` | LLM API 端点 |
+| `api_key_path` | `str` | `"llm_services/api_key"` | API Key 文件路径 |
+| `model` | `str` | `"deepseek/deepseek-v3.2-exp"` | 使用的模型 |
+| `temperature` | `float` | `0.2` | 生成温度 |
+| `max_retries` | `int` | `3` | 请求失败重试次数 |
 
-    <details>
-    <summary>配置权限</summary>
-        可以参照其<a herf="https://github.com/bot-ssttkkl/nonebot-plugin-access-control">文档</a>对本插件进行权限配置，具体配置项可见本插件文档或本插件根目录下的 `nonebot_plugin_zikequote3\services\permission_management\permission_node_definition.py`
-    </details>
+#### `[sentry]` 错误追踪
 
-3. 截图相关插件调整
-    <details close>
-    <summary>问题排除</summary>
-    如果出现报错如“找不到浏览器”等，可以在配置中指定 `htmlrender_browser_channel = "msedge"` 指定使用系统浏览器
-    </details>
+| 配置项 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| `dsn_path` | `str` | `"utils/sentry_dsn"` | Sentry DSN 文件路径，留空不启用 |
 
-4. 创建文件 `llm_services/api_key` 配置 LLM API Key，可修改 `llm_services/client.py` 使用自定义客户端、模型与自定义参数
+## 📖 命令列表
 
-5. (可选) 创建文件 `utils/sentry_dsn` 可配置 Sentry 异常报错捕获平台的 dsn
+> 🔍 标有「统一查询」的命令支持多种查询方式：@某人、QQ号、昵称片段、关键词、语录ID。无参数时部分命令默认查询自己。
 
-## ⚙ 配置
+### 📖 语录查询与浏览
 
-插件的配置项位于 `config.toml` 文件中，部分设置支持动态修改
+| 命令 | 别名 | 格式 | 说明 |
+|------|------|------|------|
+| `/语录` | `随机语录` `名人名言` `群友语录` | `/语录 [查询内容]` | 随机抽取一条语录 🔍 |
+| `/语录卡` | `语录卡片` `语录card` | `/语录卡 [查询内容]` | 以卡片形式展示随机语录 🔍 |
+| `/语录图` | `语录原图` `语录图片` | `/语录图 [查询内容]` | 随机获取含图片的语录原图 🔍 |
+| `/查语录` | `搜索语录` `搜语录` `找语录` | `/查语录 [关键词] [@某人] [-r] [-ni] [-m 数量]` | 按关键词搜索语录，支持正则 🔍 |
+| `/语录列表` | `语录list` `列语录` `个人语录` | `/语录列表 [页码/范围] [用户]` | 查看用户的语录列表 🔍 |
 
-## 🎉 使用
+### ✏️ 语录收集与管理
 
-插件主要命令：
+| 命令 | 别名 | 格式 | 说明 |
+|------|------|------|------|
+| `/加语录` | `添加语录` `新增语录` | 回复消息 + `/加语录` | 将回复的消息添加为语录 |
+| `/加语录图` | `加语录图片` `语录加图` | 回复消息 + `/加语录图` + 图片 | 为已有语录附加图片 |
+| `/删语录` | `删除语录` | `/删语录 [语录ID]` 或 回复语录 + `/删语录` | 删除一条语录 |
+| `/删语录图` | `删语录图片` `移除语录图` | 回复消息 + `/删语录图` | 移除语录附带的图片 |
+| `/评语录` | `评论语录` `评价语录` | 回复语录 + `/评语录 评论内容` | 添加语录评论 |
+| `/删评论` | `删除评论` `删语评` | `/删评论 评论ID` | 删除一条评论 |
 
-- `/语录rank`: 查看语录排行榜。
-- `(回复消息) /加语录`: 添加语录。
-- `(回复语录) /删语录 或 /删语录 语录ID`: 删除语录 (TODO)。
-- `(回复语录) 评价内容`: 评论语录。
-- `/删评论 评论ID`: 删除评论 (TODO)。
-- `/语录 [关键词]`: 随机获取一条语录，可按关键词筛选。
-- `/语录卡 [关键词]`: 生成语录卡片图片，可按关键词筛选。
-- `/语录图 [关键词]`: 随机抽取一张语录图片，可按附带语录信息的关键词筛选。
-- `/语录列表 [用户名] 或 /语录列表 @用户`: 查看某个用户的语录列表。
-- `/查语录 关键词`: 搜索包含指定关键词的语录，可指定正则等选项。
-- `/查看语录配置`: 查看本群的语录配置情况
+### 📊 用户与统计
 
-## 🖼️ 更新日志
+| 命令 | 别名 | 格式 | 说明 |
+|------|------|------|------|
+| `/语录用户信息` | `语录用户` `语录作者` `作者信息` | `/语录用户信息 [用户]` | 查看用户语录统计信息 🔍 |
+| `/语录排行` | `语录排行榜` `语录统计` `语录rank` | `/语录排行 [显示人数]` | 查看群语录排行榜和近 15 天走势 |
 
-`docs/CHANGELOG.md`
+### 🔄 语录更新
 
-## 🤺 隐私告知与考量
+| 命令 | 别名 | 格式 | 说明 |
+|------|------|------|------|
+| `/语录强制更新` | `更新语录` `刷新语录` | `/语录强制更新` | 手动触发 LLM 语录收集流程 |
+
+### ⚙️ 配置管理
+
+| 命令 | 别名 | 格式 | 说明 |
+|------|------|------|------|
+| `/查看语录配置` | `当前语录设置` `查看语录设置` | `/查看语录配置` | 查看当前群组的插件配置 |
+| `/修改语录配置` | `修改语录设置` `设置语录配置` | `/修改语录配置 配置项 新值` | 修改当前群组的单项配置 |
+
+### 📌 其他
+
+| 命令 | 别名 | 格式 | 说明 |
+|------|------|------|------|
+| `/语录隐私政策` | `语录隐私` `语录政策` | `/语录隐私政策` | 查看隐私政策 |
+| `/迁移群语录` | `迁移所有群语录` `移动群语录` | `/迁移群语录 源群号 目标群号 [选项]` | 将语录从一个群迁移到另一个群 |
+| `/停用语录` | `停用zikequote3` | `/停用语录` | 停用个人语录功能（即将启用） |
+
+## 🏗️ 架构概览
+
+```
+Command 层（命令解析与交互）
+    ↓
+Service 层（业务逻辑）
+    ↓
+Repository 层（数据访问抽象）
+    ↓
+ORM 层（SQLAlchemy 2.0 async + aiosqlite）
+```
+
+核心技术栈：
+
+| 组件 | 技术 | 说明 |
+|------|------|------|
+| 依赖注入 | [dishka](https://github.com/reagento/dishka) | AsyncContainer 管理所有依赖生命周期 |
+| 数据库 | SQLAlchemy 2.0 async + aiosqlite | 异步 ORM，SQLite 存储 |
+| 数据库迁移 | Alembic | 数据库 schema 版本管理 |
+| 模板渲染 | Jinja2 + nonebot-plugin-htmlrender | HTML 模板 → Playwright 截图 |
+| 命令框架 | nonebot-plugin-alconna | 命令解析与参数处理 |
+| 权限控制 | nonebot-plugin-access-control-api | 精细化权限节点树 |
+
+### 权限节点树
+
+插件定义了完整的权限节点树，可通过 `nonebot-plugin-access-control` 进行精细控制：
+
+```
+nonebot_plugin_zikequote3
+├── be_collected          # 被收集权限
+│   ├── llm               # LLM 自动收集
+│   └── manual            # 手动添加
+├── get                   # 获取语录
+│   ├── text / card / image
+├── search                # 搜索语录
+├── ranking               # 排行榜
+├── listing               # 语录列表
+│   ├── self / get_user / others
+├── review                # 评论
+│   ├── add
+│   └── delete (self / others)
+├── quote                 # 语录管理
+│   ├── add (text / image)
+│   ├── delete (self / others)
+│   ├── attach_image / remove_image
+├── settings              # 配置管理
+│   ├── get
+│   ├── modify (group / global)
+│   └── reset (group / global)
+├── force_refresh         # 强制更新
+├── group_migration       # 群迁移
+└── others                # 其他
+```
+
+## 🛠️ 开发
+
+### 开发环境搭建
+
+```bash
+git clone https://github.com/LifeCheckpoint/nonebot_plugin_zikequote3.git
+cd nonebot_plugin_zikequote3
+pip install -e ".[dev]"
+```
+
+### 项目结构
+
+```
+nonebot_plugin_zikequote3/
+├── __init__.py              # 插件入口，生命周期管理
+├── config.py                # 配置模型定义
+├── config.toml              # 默认配置文件
+├── paths.py                 # 路径常量
+├── command/                 # 命令层：命令定义与处理
+│   ├── cmds/                # 各命令实现
+│   └── parse_helper/        # 参数解析工具
+├── services/                # 服务层：业务逻辑
+│   └── permission_management/  # 权限节点定义
+├── database/                # 数据层
+│   ├── models/              # 领域模型
+│   ├── repositories/        # 仓储层
+│   └── sa/                  # SQLAlchemy ORM 模型与引擎
+├── di/                      # 依赖注入
+│   └── providers/           # dishka Provider 定义
+├── templates/               # Jinja2 模板与数据模型
+├── html_capture/            # Playwright 截图
+├── llm_services/            # LLM 客户端
+├── exceptions/              # 异常定义
+├── msgtexts/                # 消息文本模板
+└── utils/                   # 工具函数
+```
+
+### 测试
+
+```bash
+pytest
+```
+
+测试配置已在 `pyproject.toml` 中定义，默认启用覆盖率报告：
+
+```bash
+# 等价于
+pytest --cov=nonebot_plugin_zikequote3 --cov-report=term-missing --cov-report=html
+```
+
+测试目录结构：`tests/unit/`（单元测试）和 `tests/integration/`（集成测试），覆盖命令、仓储、服务三层。
+
+## 🤺 隐私告知
 
 本插件涉及用户聊天记录的收集和分析。部署者是数据控制者，有责任遵守当地法律法规，并尊重群成员的隐私。建议部署者在使用前向群成员进行充分告知。
+
+## 📄 许可证
+
+本项目基于 [MIT](./LICENSE) 许可证开源。
