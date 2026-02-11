@@ -1,0 +1,31 @@
+/* base.css — 公共样式 */
+
+/* === Reset === */
+*, *::before, *::after {
+  margin: 0; padding: 0; box-sizing: border-box;
+}
+
+/* === 设计令牌 === */
+:root {
+  --font-main: 'SF Pro Display', 'Helvetica Neue', '句读黑体 Hans Medium', 'PingFang SC', Arial, sans-serif;
+  --font-mono: 'SF Mono', 'Monaco', 'Courier New', monospace;
+  --bg-page: #F6F7F9;
+  --bg-card: #ffffff;
+  --bg-sidebar: #1a1a1a;
+  --text-primary: #212121;
+  --text-secondary: #666666;
+  --text-muted: #7D8492;
+  --accent-blue: #007aff;
+  --border-light: rgba(0, 0, 0, 0.06);
+  --shadow-card: 0 2px 16px rgba(0, 0, 0, 0.06);
+  --radius-card: 10px;
+  --radius-lg: 22px;
+}
+
+html, body {
+  width: 100vw; min-height: 100vh;
+  font-family: var(--font-main);
+  background: var(--bg-page);
+  overflow: auto;
+  -webkit-font-smoothing: antialiased;
+}

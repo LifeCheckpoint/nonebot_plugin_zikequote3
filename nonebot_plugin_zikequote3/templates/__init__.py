@@ -54,6 +54,7 @@ from .schema import rank
 from .schema import md
 from .schema import migration
 from .schema import user_info
+from .registry import TemplateSpec, render_with_spec, ALL_SPECS
 
 __all__ = [
     "card",
@@ -63,5 +64,8 @@ __all__ = [
     "rank",
     "md",
     "migration",
-    "user_info"
+    "user_info",
+    "TemplateSpec",
+    "render_with_spec",
+    "ALL_SPECS",
 ]

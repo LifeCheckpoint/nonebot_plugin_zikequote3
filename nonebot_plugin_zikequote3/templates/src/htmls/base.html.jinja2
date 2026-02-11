@@ -1,0 +1,14 @@
+{# base.html.jinja2 — 所有模板的基础骨架 #}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}ZikeQuote3{% endblock %}</title>
+  <style>{{ base_css | safe }}</style>
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+  {% block body %}{% endblock %}
+</body>
+</html>
