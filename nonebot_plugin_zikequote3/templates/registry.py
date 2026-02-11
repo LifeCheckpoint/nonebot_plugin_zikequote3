@@ -27,7 +27,7 @@ CARD = TemplateSpec(
     name="card",
     template="htmls/card.html.jinja2",
     css_files=("css/card.css",),
-    width=800,
+    width=300,
     height=120,
 )
 
@@ -43,7 +43,7 @@ HELP = TemplateSpec(
     name="help",
     template="htmls/help.html.jinja2",
     css_files=("css/help.css",),
-    width=1400,
+    width=800,
     height=800,
 )
 
