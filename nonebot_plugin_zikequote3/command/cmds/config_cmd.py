@@ -23,7 +23,6 @@ from ..command_definition import (
     matcher_modify_config,
     matcher_batch_modify_config,
     matcher_reset_config,
-    matcher_reload_config,
 )
 from ...di import Inject, inject
 from ...services import ConfigService
@@ -172,27 +171,5 @@ async def handle_reset_config(event: GroupMessageEvent) -> None:
     """
     # TODO: 旧版本中此功能也是 TODO 状态，保持一致
     await matcher_reset_config.finish("重置配置功能暂未实现~")
-
-# endregion
-
-
-# ===================================================================
-# region 重载配置
-# ===================================================================
-
-@matcher_reload_config.handle()
-async def handle_reload_config(event: GroupMessageEvent) -> None:
-    """
-    处理重载当前群组配置命令。
-
-    新架构中配置通过 ConfigService 从数据库按需读取，
-    不再依赖旧的全局缓存重载机制。此命令仅作确认用途。
-
-    :param event: 群消息事件
-    :type event: GroupMessageEvent
-    """
-    await matcher_reload_config.finish(
-        "新版本配置已改为实时从数据库读取，无需手动重载~"
-    )
 
 # endregion

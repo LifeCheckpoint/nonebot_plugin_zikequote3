@@ -333,18 +333,6 @@ matcher_reset_config = on_command(
 )
 perm_nodes.n_settings_reset_group.patch_matcher(matcher_reset_config)
 
-
-cmdname_reload_config = (
-    "重载语录设置", "重载语录配置", "重新加载语录设置", "重新加载语录配置",
-    "刷新语录设置", "刷新语录配置",
-)
-matcher_reload_config = on_command(
-    cmdname_reload_config[0],
-    aliases=set(cmdname_reload_config[1:]),
-    priority=10, block=True
-)
-perm_nodes.n_settings_modify.patch_matcher(matcher_reload_config)
-
 # endregion
 
 # ===================================================================

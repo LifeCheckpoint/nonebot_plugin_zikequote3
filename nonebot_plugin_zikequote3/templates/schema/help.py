@@ -277,13 +277,6 @@ def build_default_help_data() -> TemplateHelpData:
                         examples=["/修改语录配置 showcase.max_rank_user_num 20"],
                         permission="权限节点控制",
                     ),
-                    HelpCommandItem(
-                        name="/重载语录配置",
-                        aliases=["刷新语录配置"],
-                        description="重载配置（新版本已改为实时读取）",
-                        usage="/重载语录配置",
-                        permission="权限节点控制",
-                    ),
                 ],
             ),
             HelpCategoryData(
