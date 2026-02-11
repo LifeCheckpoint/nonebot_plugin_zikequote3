@@ -1,0 +1,6 @@
+{
+  "title": "查看语录配置",
+  "subtitle": "当前群组配置信息",
+  "language": "toml",
+  "code": "[showcase]\nmax_rank_user_num = 15\nmax_list_page_size = 10\nmax_search_result = 20\n\n[collection]\nenable_auto_collect = true\ncollect_interval_hours = 24\nmin_message_count = 50\n\n[permission]\nallow_self_add = true\nallow_self_delete = true\nrequire_review = false\n\n[display]\ncard_primary_color = \"#667eea\"\ncard_secondary_color = \"#764ba2\"\nshow_comment_in_card = true"
+}

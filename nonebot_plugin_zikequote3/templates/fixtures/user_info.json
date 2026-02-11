@@ -1,0 +1,10 @@
+{
+  "ranking_value": 3,
+  "quote_count": 42,
+  "qq_id": "123456789",
+  "primary_nick": "张三",
+  "primary_group_card": "摸鱼大师·张三",
+  "avatar": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzY2N2VlYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZmZmIiBmb250LXNpemU9IjQwIj7lvKA8L3RleHQ+PC9zdmc+",
+  "history_nicks": ["小张", "张三丰", "代码搬运工"],
+  "history_group_cards": ["张三", "摸鱼选手张三", "摸鱼大师·张三"]
+}

@@ -1,0 +1,88 @@
+{
+  "title": "语录插件使用帮助",
+  "version": "3.2.0",
+  "query_note": "🔍 标有「统一查询」的命令支持多种查询方式：@某人、QQ号、昵称片段、关键词、语录ID。无参数时部分命令默认查询自己。",
+  "categories": [
+    {
+      "name": "语录查询与浏览",
+      "icon": "📖",
+      "commands": [
+        {
+          "name": "/语录",
+          "aliases": ["随机语录", "名人名言"],
+          "description": "随机抽取一条语录，支持按用户、关键词或语录ID筛选",
+          "usage": "/语录 [查询内容]",
+          "examples": ["/语录", "/语录 @某人", "/语录 42", "/语录 摸鱼"],
+          "permission": "所有人",
+          "query_support": true
+        },
+        {
+          "name": "/语录卡",
+          "aliases": ["语录卡片"],
+          "description": "以卡片形式展示随机语录",
+          "usage": "/语录卡 [查询内容]",
+          "examples": ["/语录卡 @某人"],
+          "permission": "所有人",
+          "query_support": true
+        },
+        {
+          "name": "/查语录",
+          "aliases": ["搜索语录", "搜语录"],
+          "description": "按关键词搜索语录，支持正则、排除图片等高级选项",
+          "usage": "/查语录 [关键词] [@某人] [-m 数量]",
+          "examples": ["/查语录 摸鱼", "/查语录 摸鱼 @某人"],
+          "permission": "所有人",
+          "query_support": true
+        }
+      ]
+    },
+    {
+      "name": "语录收集与管理",
+      "icon": "✏️",
+      "commands": [
+        {
+          "name": "/加语录",
+          "aliases": ["添加语录"],
+          "description": "回复一条消息将其添加为语录",
+          "usage": "回复消息 + /加语录",
+          "examples": ["[回复某条消息] /加语录"],
+          "permission": "所有人",
+          "query_support": false
+        },
+        {
+          "name": "/删语录",
+          "aliases": ["删除语录"],
+          "description": "删除一条语录",
+          "usage": "/删语录 [语录ID]",
+          "examples": ["/删语录 42"],
+          "permission": "所有人",
+          "query_support": false
+        }
+      ]
+    },
+    {
+      "name": "用户与统计",
+      "icon": "📊",
+      "commands": [
+        {
+          "name": "/语录用户信息",
+          "aliases": ["语录用户"],
+          "description": "查看用户的语录统计信息",
+          "usage": "/语录用户信息 [用户]",
+          "examples": ["/语录用户信息", "/语录用户信息 @某人"],
+          "permission": "所有人",
+          "query_support": true
+        },
+        {
+          "name": "/语录排行",
+          "aliases": ["语录排行榜"],
+          "description": "查看群语录排行榜和近15天走势",
+          "usage": "/语录排行 [显示人数]",
+          "examples": ["/语录排行", "/语录排行 10"],
+          "permission": "所有人",
+          "query_support": false
+        }
+      ]
+    }
+  ]
+}

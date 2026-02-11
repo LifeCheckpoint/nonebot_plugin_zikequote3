@@ -1,0 +1,20 @@
+{
+  "quote_id": "42",
+  "quote": "人生苦短，我用 Python。摸鱼的时候写代码，写代码的时候摸鱼，这就是程序员的日常。",
+  "image_uri": null,
+  "author_name": "张三",
+  "comments": [
+    {
+      "content": "说得太对了！",
+      "author_name": "李四",
+      "comment_id": "c001"
+    },
+    {
+      "content": "深有同感，每天都在摸鱼和写代码之间反复横跳",
+      "author_name": "王五",
+      "comment_id": "c002"
+    }
+  ],
+  "primary_color": "#667eea",
+  "secondary_color": "#764ba2"
+}

@@ -1,0 +1,42 @@
+{
+  "title": "张三的语录列表",
+  "desc": "共 5 条语录 · 第 1-5 条",
+  "addition": "输入 /语录列表 2 查看下一页",
+  "quotes": [
+    {
+      "quote_id": "1",
+      "quote_text": "今天的 bug 明天再修，明天的 bug 后天再说。",
+      "quote_image": null,
+      "quote_author": "张三",
+      "quote_comment": "经典摸鱼语录"
+    },
+    {
+      "quote_id": "7",
+      "quote_text": "代码能跑就行，不要问为什么能跑。",
+      "quote_image": null,
+      "quote_author": "张三",
+      "quote_comment": null
+    },
+    {
+      "quote_id": "15",
+      "quote_text": null,
+      "quote_image": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2RkZCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOTk5Ij7lm77niYfor63lvZU8L3RleHQ+PC9zdmc+",
+      "quote_author": "张三",
+      "quote_comment": "这张图太搞笑了"
+    },
+    {
+      "quote_id": "23",
+      "quote_text": "不是在开会，就是在去开会的路上。",
+      "quote_image": null,
+      "quote_author": "张三",
+      "quote_comment": null
+    },
+    {
+      "quote_id": "31",
+      "quote_text": "周五下午的代码质量和周一早上的精神状态一样不可靠。",
+      "quote_image": null,
+      "quote_author": "张三",
+      "quote_comment": "太真实了"
+    }
+  ]
+}
