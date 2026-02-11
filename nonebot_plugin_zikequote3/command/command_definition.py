@@ -397,4 +397,15 @@ matcher_stop_using_zikequote3 = on_command(
 perm_nodes.n_perm_s.patch_matcher(matcher_stop_using_zikequote3)
 
 
+cmdname_get_help = (
+    "语录帮助", "查看语录帮助", "语录help", "阅读语录帮助",
+)
+matcher_get_help = on_command(
+    cmdname_get_help[0],
+    aliases=set(cmdname_get_help[1:]),
+    priority=10, block=True
+)
+perm_nodes.n_perm_s.patch_matcher(matcher_get_help)
+
+
 # endregion

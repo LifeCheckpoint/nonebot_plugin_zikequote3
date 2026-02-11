@@ -139,6 +139,7 @@ _ALL_MATCHER_NAMES = [
     "matcher_group_migration",
     "matcher_get_privacy",
     "matcher_stop_using_zikequote3",
+    "matcher_get_help",
 ]
 
 

@@ -20,3 +20,4 @@ from .search_quote_cmd import *
 from .update_quote_force_cmd import *
 from .group_migration import *
 from .get_user_info_cmd import *
+from .help_cmd import *
