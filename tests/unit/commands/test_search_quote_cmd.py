@@ -19,6 +19,7 @@ from nonebot_plugin_zikequote3.services.html_render_service import HtmlRenderSer
 from nonebot_plugin_zikequote3.services.quote_read_service import QuoteReadService
 from nonebot_plugin_zikequote3.services.statistics_service import StatisticsService
 from nonebot_plugin_zikequote3.services.user_service import UserService
+from nonebot_plugin_zikequote3.vector_search.search_service import VectorSearchService
 
 # 运行时从 stub 模块获取 mock matcher
 _stub_cmd_def = sys.modules[
@@ -90,6 +91,8 @@ class TestHandleSearchQuote:
         mock_cfg.showcase.quote_content_max_length = 500
         mock_config_svc.get_parsed_config = AsyncMock(return_value=mock_cfg)
 
+        mock_vector_svc = AsyncMock(spec=VectorSearchService)
+
         patch_container({
             StatisticsService: mock_stats_svc,
             QuoteReadService: mock_read_svc,
@@ -97,6 +100,7 @@ class TestHandleSearchQuote:
             ImageStore: mock_image_store,
             HtmlRenderServiceBase: mock_render_svc,
             ConfigService: mock_config_svc,
+            VectorSearchService: mock_vector_svc,
         })
 
         # Act & Assert
@@ -107,8 +111,11 @@ class TestHandleSearchQuote:
                 qq=_make_match(),
                 max_result=_make_match(),
                 keyword=_make_keyword_match("测试关键词"),
+                similarity=_make_match(),
+                top_n=_make_match(),
                 no_image=_make_query(result=False),
                 use_regex=_make_query(result=False),
+                use_fuzzy=_make_query(result=False),
                 stats_svc=mock_stats_svc,
                 quote_read_svc=mock_read_svc,
                 user_svc=mock_user_svc,
@@ -137,6 +144,8 @@ class TestHandleSearchQuote:
         mock_cfg.showcase.quote_content_max_length = 500
         mock_config_svc.get_parsed_config = AsyncMock(return_value=mock_cfg)
 
+        mock_vector_svc = AsyncMock(spec=VectorSearchService)
+
         patch_container({
             StatisticsService: mock_stats_svc,
             QuoteReadService: mock_read_svc,
@@ -144,6 +153,7 @@ class TestHandleSearchQuote:
             ImageStore: mock_image_store,
             HtmlRenderServiceBase: mock_render_svc,
             ConfigService: mock_config_svc,
+            VectorSearchService: mock_vector_svc,
         })
 
         # Act & Assert
@@ -154,8 +164,11 @@ class TestHandleSearchQuote:
                 qq=_make_match(),
                 max_result=_make_match(available=True, result=0),
                 keyword=_make_keyword_match("测试"),
+                similarity=_make_match(),
+                top_n=_make_match(),
                 no_image=_make_query(result=False),
                 use_regex=_make_query(result=False),
+                use_fuzzy=_make_query(result=False),
                 stats_svc=mock_stats_svc,
                 quote_read_svc=mock_read_svc,
                 user_svc=mock_user_svc,
@@ -189,6 +202,8 @@ class TestHandleSearchQuote:
         mock_cfg.showcase.quote_content_max_length = 500
         mock_config_svc.get_parsed_config = AsyncMock(return_value=mock_cfg)
 
+        mock_vector_svc = AsyncMock(spec=VectorSearchService)
+
         patch_container({
             StatisticsService: mock_stats_svc,
             QuoteReadService: mock_read_svc,
@@ -196,6 +211,7 @@ class TestHandleSearchQuote:
             ImageStore: mock_image_store,
             HtmlRenderServiceBase: mock_render_svc,
             ConfigService: mock_config_svc,
+            VectorSearchService: mock_vector_svc,
         })
 
         # Act & Assert
@@ -206,8 +222,11 @@ class TestHandleSearchQuote:
                 qq=_make_match(),
                 max_result=_make_match(),
                 keyword=_make_keyword_match("测试"),
+                similarity=_make_match(),
+                top_n=_make_match(),
                 no_image=_make_query(result=False),
                 use_regex=_make_query(result=False),
+                use_fuzzy=_make_query(result=False),
                 stats_svc=mock_stats_svc,
                 quote_read_svc=mock_read_svc,
                 user_svc=mock_user_svc,

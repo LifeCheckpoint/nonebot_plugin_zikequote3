@@ -233,6 +233,9 @@ alc_search_quote = Alconna(
     Option("-m|--max-result", Arg("max_result", int, None, notice="最大返回结果数量，至少为1")),
     Option("-ni|--no-image", dest="no_image", action=store_true, default=False, help_text="是否排除包含图片的语录"),
     Option("-r|--regex", dest="use_regex", action=store_true, default=False, help_text="是否使用正则表达式进行搜索"),
+    Option("-f|--fuzzy", dest="use_fuzzy", action=store_true, default=False, help_text="启用模糊语义搜索"),
+    Option("-s", Arg("similarity", float, None, notice="相似度阈值(0-1)")),
+    Option("-n", Arg("top_n", int, None, notice="返回前N个结果")),
     Arg("keyword", AllParam(str), "", notice="搜索的关键词或模式"),
 )
 matcher_search_quote = on_alconna(
@@ -241,6 +244,24 @@ matcher_search_quote = on_alconna(
     use_cmd_start=True, priority=10, block=True, skip_for_unmatch=False,
 )
 perm_nodes.n_search.patch_matcher(matcher_search_quote)
+
+
+cmdname_fuzzy_search = ("模糊查语录", "查模糊语录")
+alc_fuzzy_search_quote = Alconna(
+    cmdname_fuzzy_search[0],
+    Arg("at_user?", At, None, notice="At 段用户，用于筛选语录作者"),
+    Option("-qq", Arg("qq", int, None, notice="用于筛选的QQ号")),
+    Option("-ni|--no-image", dest="no_image", action=store_true, default=False, help_text="是否排除包含图片的语录"),
+    Option("-s", Arg("similarity", float, None, notice="相似度阈值(0-1)")),
+    Option("-n", Arg("top_n", int, None, notice="返回前N个结果")),
+    Arg("keyword", AllParam(str), "", notice="搜索关键词"),
+)
+matcher_fuzzy_search_quote = on_alconna(
+    alc_fuzzy_search_quote,
+    aliases=set(cmdname_fuzzy_search[1:]),
+    use_cmd_start=True, priority=10, block=True, skip_for_unmatch=False,
+)
+perm_nodes.n_search.patch_matcher(matcher_fuzzy_search_quote)
 
 
 cmdname_random_quote_image = (

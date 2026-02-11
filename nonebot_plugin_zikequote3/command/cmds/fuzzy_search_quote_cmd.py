@@ -1,0 +1,137 @@
+"""
+模糊语义搜索命令处理器（/模糊查语录）。
+
+通过 @inject 装饰器自动从 dishka 容器获取服务依赖。
+支持简写位置参数和显式 -s / -n 选项。
+"""
+
+from __future__ import annotations
+
+import logging
+from typing import Optional
+
+from nonebot.adapters.onebot.v11 import GroupMessageEvent
+from nonebot_plugin_alconna import Match, Query
+from nonebot_plugin_alconna.uniseg import UniMessage
+from nonebot_plugin_alconna.uniseg.segment import At
+
+from ..command_definition import matcher_fuzzy_search_quote
+from ..parse_helper.query_resolver import extract_at_qq
+from ...di import Inject, inject
+from ...services import ConfigService, QuoteReadService, UserService
+from ...services.html_render_service import HtmlRenderServiceBase
+from ...database.image_store import ImageStore
+from ...vector_search.search_service import VectorSearchService
+from ._error_handlers import command_error_handler
+from .search_quote_cmd import _ArgsValidater, _do_fuzzy_search
+
+logger = logging.getLogger(__name__)
+
+
+def _parse_fuzzy_shorthand(
+    tokens: list[str],
+) -> tuple[Optional[int], Optional[float], str]:
+    """
+    解析模糊搜索命令的简写位置参数。
+
+    首个 token 若为整数 → top_n，若为小数 → similarity，其余为 keyword。
+
+    :returns: (top_n, similarity, keyword)
+    """
+    if not tokens:
+        return None, None, ""
+
+    first = tokens[0]
+    top_n: Optional[int] = None
+    similarity: Optional[float] = None
+    rest_start = 0
+
+    try:
+        val = float(first)
+        if "." in first:
+            similarity = val
+        else:
+            top_n = int(val)
+        rest_start = 1
+    except ValueError:
+        pass
+
+    keyword = " ".join(tokens[rest_start:])
+    return top_n, similarity, keyword
+
+
+@matcher_fuzzy_search_quote.handle()
+@inject
+async def handle_fuzzy_search_quote(
+    event: GroupMessageEvent,
+    at_user: Match[At],
+    qq: Match[int],
+    keyword: Match[UniMessage],
+    similarity: Match[float],
+    top_n: Match[int],
+    no_image: Query[bool] = Query("no_image.value", False),
+    vector_search_svc: VectorSearchService = Inject(VectorSearchService),
+    quote_read_svc: QuoteReadService = Inject(QuoteReadService),
+    user_svc: UserService = Inject(UserService),
+    image_store: ImageStore = Inject(ImageStore),
+    html_render_svc: HtmlRenderServiceBase = Inject(HtmlRenderServiceBase),
+    config_svc: ConfigService = Inject(ConfigService),
+) -> None:
+    """
+    处理专用模糊搜索命令（/模糊查语录）。
+
+    支持简写位置参数：首个 token 若为整数 → top_n，若为小数 → similarity。
+    例如：``/模糊查语录 15 xxxx`` → top_n=15, keyword="xxxx"
+    例如：``/模糊查语录 0.7 xxxx`` → similarity=0.7, keyword="xxxx"
+    """
+    group_id = str(event.group_id)
+
+    async with command_error_handler(matcher_fuzzy_search_quote, "解析参数"):
+        at_qq = extract_at_qq(at_user)
+        resolved_qq: int | None = None
+        if at_qq is not None:
+            resolved_qq = int(at_qq)
+        elif qq.available and qq.result is not None:
+            resolved_qq = qq.result
+
+        raw_text = (
+            keyword.result.extract_plain_text()
+            if keyword.available else ""
+        )
+        tokens = raw_text.split() if raw_text else []
+
+        parsed_top_n, parsed_similarity, parsed_keyword = _parse_fuzzy_shorthand(tokens)
+
+        # 显式 -s / -n 选项优先于简写
+        final_similarity = (
+            similarity.result
+            if similarity.available and similarity.result is not None
+            else parsed_similarity
+        )
+        final_top_n = (
+            top_n.result
+            if top_n.available and top_n.result is not None
+            else parsed_top_n
+        )
+
+        params = _ArgsValidater(
+            qq=resolved_qq,
+            search_with_image=(
+                (not no_image.result) if no_image.available else True
+            ),
+            use_fuzzy=True,
+            similarity=final_similarity,
+            top_n=final_top_n,
+            pattern=parsed_keyword,
+        )
+        logger.debug("模糊搜索解析结果: %s", params)
+
+    await _do_fuzzy_search(
+        matcher_fuzzy_search_quote, group_id, params,
+        vector_search_svc=vector_search_svc,
+        quote_read_svc=quote_read_svc,
+        user_svc=user_svc,
+        image_store=image_store,
+        html_render_svc=html_render_svc,
+        config_svc=config_svc,
+    )

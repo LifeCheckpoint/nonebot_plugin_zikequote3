@@ -129,6 +129,7 @@ _ALL_MATCHER_NAMES = [
     "matcher_random_quote",
     "matcher_random_quote_card",
     "matcher_search_quote",
+    "matcher_fuzzy_search_quote",
     "matcher_random_quote_image",
     "matcher_update_quote_force",
     "matcher_get_current_config",
