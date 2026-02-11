@@ -1,0 +1,70 @@
+{#
+    命令使用帮助模板
+
+    - inline_css: 内联CSS样式
+
+    - title: 标题
+    - version: 可选，版本号
+    - categories: 命令分类列表
+        - name: 分类名
+        - icon: emoji 图标
+        - commands: 命令列表
+            - name: 命令名
+            - aliases: 别名列表
+            - description: 简要描述
+            - usage: 使用格式
+            - examples: 使用示例列表
+            - permission: 权限要求
+            - query_support: 是否支持统一查询
+    - query_note: 可选，统一查询方式说明
+#}
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width">
+  <title>{{ title }}</title>
+  <style>
+    {{ inline_css }}
+  </style>
+</head>
+<body>
+  <div class="help-container">
+    <div class="help-header">
+      <div class="help-title">{{ title }}{% if version %}<span class="help-version">v{{ version }}</span>{% endif %}</div>
+    </div>
+
+    {% if query_note %}
+    <div class="query-note">{{ query_note }}</div>
+    {% endif %}
+
+    {% for cat in categories %}
+    <div class="help-category">
+      <div class="category-title"><span class="category-icon">{{ cat.icon }}</span>{{ cat.name }}</div>
+      <div class="cmd-list">
+        {% for cmd in cat.commands %}
+        <div class="cmd-card">
+          <div class="cmd-header">
+            <span class="cmd-name">{{ cmd.name }}</span>
+            {% for alias in cmd.aliases %}<span class="cmd-alias">{{ alias }}</span>{% endfor %}
+            {% if cmd.query_support %}<span class="cmd-query-badge">🔍 统一查询</span>{% endif %}
+          </div>
+          <div class="cmd-desc">{{ cmd.description }}</div>
+          <div class="cmd-usage">{{ cmd.usage }}</div>
+          {% if cmd.examples %}
+          <div class="cmd-examples">
+            {% for ex in cmd.examples %}<span>{{ ex }}</span>{% endfor %}
+          </div>
+          {% endif %}
+          {% if cmd.permission != "所有人" %}
+          <span class="cmd-perm">🔒 {{ cmd.permission }}</span>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</body>
+</html>

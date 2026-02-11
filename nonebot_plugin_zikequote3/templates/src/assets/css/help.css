@@ -1,0 +1,149 @@
+html, body {
+    width: 100vw;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    font-family: 'SF Pro Display', 'Helvetica Neue', '句读黑体 Hans Medium', Arial, sans-serif;
+    background: #F6F7F9;
+    overflow: auto;
+}
+
+/* 页面容器 */
+.help-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 20px 32px 20px;
+}
+
+/* 顶部标题区 */
+.help-header {
+    margin-bottom: 16px;
+}
+.help-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #212121;
+    margin: 0 0 4px 0;
+    letter-spacing: 1px;
+}
+.help-version {
+    font-size: 0.85rem;
+    color: #999;
+    margin-left: 8px;
+    font-weight: 400;
+}
+
+/* 统一查询说明 */
+.query-note {
+    background: #eaf4f8;
+    border-left: 3px solid #2c6b80;
+    border-radius: 0 6px 6px 0;
+    padding: 8px 14px;
+    margin-bottom: 18px;
+    font-size: 0.82rem;
+    color: #2c6b80;
+    line-height: 1.6;
+}
+
+/* 分类区块 */
+.help-category {
+    margin-bottom: 16px;
+}
+.category-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #212121;
+    margin: 0 0 8px 0;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e5e5e5;
+}
+.category-icon {
+    margin-right: 6px;
+}
+
+/* 命令卡片列表 */
+.cmd-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* 单个命令卡片 */
+.cmd-card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+    padding: 12px 16px;
+}
+.cmd-header {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+.cmd-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #212121;
+}
+.cmd-alias {
+    font-size: 0.72rem;
+    color: #999;
+    background: #f3f3f3;
+    border-radius: 3px;
+    padding: 1px 5px;
+}
+.cmd-query-badge {
+    font-size: 0.7rem;
+    color: #2c6b80;
+    background: #eaf4f8;
+    border-radius: 3px;
+    padding: 1px 5px;
+}
+.cmd-desc {
+    font-size: 0.82rem;
+    color: #667;
+    margin-bottom: 5px;
+    line-height: 1.5;
+}
+.cmd-usage {
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.78rem;
+    color: #333;
+    background: #f6f7f9;
+    border-radius: 4px;
+    padding: 4px 10px;
+    margin-bottom: 4px;
+    display: inline-block;
+}
+.cmd-examples {
+    font-size: 0.75rem;
+    color: #999;
+    line-height: 1.6;
+    margin-top: 2px;
+}
+.cmd-examples span {
+    display: block;
+}
+.cmd-perm {
+    display: inline-block;
+    font-size: 0.7rem;
+    color: #c0392b;
+    background: #fdf0ef;
+    border-radius: 3px;
+    padding: 1px 5px;
+    margin-top: 4px;
+}
+
+/* 底部装饰 */
+body::after {
+    content: "";
+    position: fixed;
+    left: 80px; top: 40px;
+    width: 240px; height: 120px;
+    background: radial-gradient(circle, #e3f0fb77 70%, transparent 100%);
+    opacity: 0.6;
+    z-index: 0;
+    pointer-events: none;
+}

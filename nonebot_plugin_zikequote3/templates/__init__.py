@@ -48,6 +48,7 @@ def read_resource_file(file_path: str) -> str:
 
 from .schema import card
 from .schema import code_frame
+from .schema import help
 from .schema import listing
 from .schema import rank
 from .schema import md
@@ -56,7 +57,8 @@ from .schema import user_info
 
 __all__ = [
     "card",
-    "code_frame", 
+    "code_frame",
+    "help",
     "listing",
     "rank",
     "md",
