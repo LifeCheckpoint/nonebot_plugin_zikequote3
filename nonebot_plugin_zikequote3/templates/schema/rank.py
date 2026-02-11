@@ -5,8 +5,7 @@
 """
 from typing import List, Optional
 from pydantic import BaseModel
-from .. import render_template
-from ...paths import PluginPath
+from .. import render_template, get_resource_path
 import random, base64
 
 
@@ -106,10 +105,10 @@ def render_rank(data: TemplateRankingData) -> str:
         encoded_svg = base64.b64encode(svg_content.encode("utf-8")).decode("utf-8")
         return f"data:image/svg+xml;base64,{encoded_svg}"
     
-    echarts_js = PluginPath.module_templates_js_root / "vendor" / "echarts.min.js"
-    rank_css = PluginPath.module_templates_css_root / "rank.css"
-    rank_js = PluginPath.module_templates_js_root / "rank.js"
-    color_thief_js = PluginPath.module_templates_js_root / "vendor" / "color-thief.min.js"
+    echarts_js = get_resource_path("js/vendor/echarts.min.js")
+    rank_css = get_resource_path("css/rank.css")
+    rank_js = get_resource_path("js/rank.js")
+    color_thief_js = get_resource_path("js/vendor/color-thief.min.js")
 
     max_avatar_threshold = 10
 
@@ -134,10 +133,10 @@ def render_rank(data: TemplateRankingData) -> str:
 
     return render_template(
         "htmls/rank.html.jinja2",
-        echarts_js=str(echarts_js.absolute()),
-        rank_css=str(rank_css.absolute()),
-        rank_js=str(rank_js.absolute()),
-        color_thief_js=str(color_thief_js.absolute()),
+        echarts_js=str(echarts_js),
+        rank_css=str(rank_css),
+        rank_js=str(rank_js),
+        color_thief_js=str(color_thief_js),
 
         group_name=data.group_name,
         date_time=data.date_time,

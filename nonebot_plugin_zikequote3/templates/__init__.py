@@ -29,6 +29,9 @@ def render_template(template_name: str, **kwargs) -> str:
     template = env.get_template(template_name)
     return template.render(**kwargs)
 
+_ASSETS_ROOT = Path(__file__).parent / "src" / "assets"
+
+
 @lru_cache(maxsize=32)
 def read_resource_file(file_path: str) -> str:
     """
@@ -40,10 +43,26 @@ def read_resource_file(file_path: str) -> str:
     :rtype: str
     :raises FileNotFoundError: 当资源文件不存在时抛出
     """
-    resource_path = Path(__file__).parent / "src" / "assets" / file_path
+    resource_path = _ASSETS_ROOT / file_path
     if not resource_path.exists():
         raise FileNotFoundError(f"资源文件未找到: {resource_path}")
     return resource_path.read_text(encoding='utf-8')
+
+
+def get_resource_path(file_path: str) -> Path:
+    """
+    获取资源文件的绝对路径（用于 file:// 协议引用）。
+
+    :param file_path: 相对于 assets 目录的资源路径
+    :type file_path: str
+    :returns: 资源文件的绝对路径
+    :rtype: Path
+    :raises FileNotFoundError: 当资源文件不存在时抛出
+    """
+    resource_path = _ASSETS_ROOT / file_path
+    if not resource_path.exists():
+        raise FileNotFoundError(f"资源文件未找到: {resource_path}")
+    return resource_path.resolve()
     
 
 from .schema import card

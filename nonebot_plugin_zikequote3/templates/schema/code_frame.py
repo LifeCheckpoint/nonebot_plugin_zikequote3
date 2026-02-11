@@ -3,8 +3,9 @@
 
 提供代码高亮显示的数据模型与 HTML 渲染方法。
 """
-from .. import render_template, read_resource_file
 from pydantic import BaseModel
+from .. import read_resource_file
+from ..registry import CODE_FRAME, render_with_spec
 
 
 class TemplateCodeFrameData(BaseModel):
@@ -36,24 +37,21 @@ def render_code_frame(data: TemplateCodeFrameData) -> str:
     :returns: 渲染后的 HTML 字符串
     :rtype: str
     """
-    inline_css = read_resource_file("css/codeframe.css")
-    
     try:
         inline_github_dark_min_css = read_resource_file("css/vendor/github-dark.min.css")
     except FileNotFoundError:
         inline_github_dark_min_css = ""
-    
+
     try:
         inline_highlight_min_js = read_resource_file("js/vendor/highlight.min.js")
     except FileNotFoundError:
         inline_highlight_min_js = ""
-    
-    return render_template(
-        "htmls/code_frame.html.jinja2",
-        inline_css=inline_css,
+
+    return render_with_spec(
+        CODE_FRAME,
         inline_github_dark_min_css=inline_github_dark_min_css,
         inline_highlight_min_js=inline_highlight_min_js,
-        **data.model_dump()
+        **data.model_dump(),
     )
 
 

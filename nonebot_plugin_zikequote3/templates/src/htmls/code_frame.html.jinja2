@@ -11,23 +11,13 @@
     code: 代码内容
 #}
 
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }}</title>
-    
-    <!-- Highlight.js CSS -->
-    <style>
-        {{ inline_github_dark_min_css | safe }}
-    </style>
-    
-    <style>
-        {{ inline_css | safe }}
-    </style>
-</head>
-<body>
+{% extends "htmls/base.html.jinja2" %}
+{% block title %}{{ title }}{% endblock %}
+{% block head_extra %}
+<style>{{ inline_github_dark_min_css | safe }}</style>
+<style>{{ inline_css | safe }}</style>
+{% endblock %}
+{% block body %}
     <div class="container">
         <div class="header">
             <h2>{{ title }}</h2>
@@ -48,5 +38,4 @@
     <script>
         hljs.highlightAll();
     </script>
-</body>
-</html>
+{% endblock %}
