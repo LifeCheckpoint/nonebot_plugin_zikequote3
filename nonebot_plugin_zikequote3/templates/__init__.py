@@ -3,13 +3,15 @@ HTML 模板渲染中转层。
 
 提供类型安全的 Jinja2 模板渲染方法，处理 CSS/JS 资源内联。
 """
+from functools import lru_cache
 from pathlib import Path
-from jinja2 import Environment, FileSystemLoader, select_autoescape
+from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
 
 template_path = Path(__file__).parent / "src"
 env = Environment(
     loader=FileSystemLoader(template_path),
     autoescape=select_autoescape(['html', 'xml']),
+    undefined=StrictUndefined,
     trim_blocks=True,
     lstrip_blocks=True
 )
@@ -27,6 +29,7 @@ def render_template(template_name: str, **kwargs) -> str:
     template = env.get_template(template_name)
     return template.render(**kwargs)
 
+@lru_cache(maxsize=32)
 def read_resource_file(file_path: str) -> str:
     """
     读取资源文件内容（CSS/JS）。
@@ -38,12 +41,9 @@ def read_resource_file(file_path: str) -> str:
     :raises FileNotFoundError: 当资源文件不存在时抛出
     """
     resource_path = Path(__file__).parent / "src" / "assets" / file_path
-    try:
-        return resource_path.read_text(encoding='utf-8')
-    except FileNotFoundError:
+    if not resource_path.exists():
         raise FileNotFoundError(f"资源文件未找到: {resource_path}")
-    except Exception as e:
-        raise Exception(f"读取资源文件失败: {e}")
+    return resource_path.read_text(encoding='utf-8')
     
 
 from .schema import card
