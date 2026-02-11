@@ -75,6 +75,27 @@ class LLMConfig(BaseModel):
     max_retries: int = 3
 
 
+class EmbeddingConfig(BaseModel):
+    """Embedding 服务配置。"""
+
+    enabled: bool = False
+    """是否启用模糊语义搜索功能。"""
+    model: str = "qwen/qwen3-embedding-8b"
+    """Embedding 模型名称。"""
+    dimensions: int = 4096
+    """模型输出向量维度。"""
+    base_url: str = ""
+    """Embedding API 地址，为空时复用 llm.base_url。"""
+    api_key_path: str = ""
+    """Embedding API Key 文件路径，为空时复用 llm.api_key_path。"""
+    batch_size: int = 64
+    """批量向量化时每批的文本数量。"""
+    default_top_n: int = 10
+    """默认返回的搜索结果数量。"""
+    default_threshold: float = 0.0
+    """默认相似度阈值，0 表示不过滤。"""
+
+
 class SentryConfig(BaseModel):
     """Sentry 错误追踪相关配置。"""
 
@@ -106,6 +127,7 @@ class ConfigSchema(BaseModel):
     showcase: ShowcaseConfig = Field(default_factory=ShowcaseConfig)
     comment: CommentConfig = Field(default_factory=CommentConfig)
     llm: LLMConfig = Field(default_factory=LLMConfig)
+    embedding: EmbeddingConfig = Field(default_factory=EmbeddingConfig)
     sentry: SentryConfig = Field(default_factory=SentryConfig)
     configure: ConfigureConfig = Field(default_factory=ConfigureConfig)
 

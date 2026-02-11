@@ -282,6 +282,16 @@ class QuoteRepository(BaseRepository[QuoteModel, QuoteCreate, Quote]):
         result = await self._session.execute(stmt)
         return [row.to_dto() for row in result.scalars().all()]
 
+    async def get_all_quotes(self) -> Sequence[Quote]:
+        """获取所有语录（按时间升序）。
+
+        :returns: 全部语录 DTO 序列。
+        :rtype: Sequence[Quote]
+        """
+        stmt = select(QuoteModel).order_by(QuoteModel.time_stamp.asc())
+        result = await self._session.execute(stmt)
+        return [row.to_dto() for row in result.scalars().all()]
+
     # ---- 存在性检查 ----
 
     async def check_quote_exists_by_author_content(

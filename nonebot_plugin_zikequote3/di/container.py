@@ -8,10 +8,11 @@ dishka AsyncContainer 组装。
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 from dishka import AsyncContainer, make_async_container
 
+from ..config import EmbeddingConfig, LLMConfig
 from .providers.database_provider import DatabaseProvider
 from .providers.infra_provider import InfraProvider
 from .providers.repository_provider import RepositoryProvider
@@ -22,6 +23,10 @@ def create_container(
     db_path: Union[str, Path],
     image_store_path: Union[str, Path],
     render_device_factor: float = 2.0,
+    *,
+    embedding_config: Optional[EmbeddingConfig] = None,
+    llm_config: Optional[LLMConfig] = None,
+    vector_db_path: Optional[Union[str, Path]] = None,
 ) -> AsyncContainer:
     """
     组装并返回 dishka AsyncContainer。
@@ -32,12 +37,25 @@ def create_container(
     :type image_store_path: Union[str, Path]
     :param render_device_factor: HTML 截图设备缩放因子，默认 2.0
     :type render_device_factor: float
+    :param embedding_config: Embedding 配置，为 None 或未启用时不注册向量搜索
+    :type embedding_config: Optional[EmbeddingConfig]
+    :param llm_config: LLM 配置，向量搜索需要
+    :type llm_config: Optional[LLMConfig]
+    :param vector_db_path: 向量数据库存储路径
+    :type vector_db_path: Optional[Union[str, Path]]
     :returns: 配置好所有 Provider 的 AsyncContainer 实例
     :rtype: AsyncContainer
     """
-    return make_async_container(
+    providers = [
         DatabaseProvider(db_path),
         InfraProvider(image_store_path, render_device_factor=render_device_factor),
         RepositoryProvider(),
         ServiceProvider(),
-    )
+    ]
+
+    # 仅在 embedding 启用时注册向量搜索 Provider
+    if embedding_config and embedding_config.enabled and llm_config and vector_db_path:
+        from .providers.vector_provider import VectorProvider
+        providers.append(VectorProvider(embedding_config, llm_config, vector_db_path))
+
+    return make_async_container(*providers)

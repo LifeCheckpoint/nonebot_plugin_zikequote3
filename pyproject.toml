@@ -37,6 +37,7 @@ dependencies = [
   "aiosqlite>=0.20.0",
   "dishka>=1.0.0",
   "alembic>=1.15.0",
+  "lancedb>=0.29.2",
 ]
 
 [project.optional-dependencies]
