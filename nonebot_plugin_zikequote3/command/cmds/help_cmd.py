@@ -16,7 +16,8 @@ from ..command_definition import matcher_get_help
 from ...di import Inject, inject
 from ...services.html_render_service import HtmlRenderServiceBase
 from ...templates.registry import HELP
-from ...templates.schema.help import build_default_help_data, render_help
+from ...templates.schema.help import render_help
+from ._help_data import build_default_help_data
 
 logger = logging.getLogger(__name__)
 
