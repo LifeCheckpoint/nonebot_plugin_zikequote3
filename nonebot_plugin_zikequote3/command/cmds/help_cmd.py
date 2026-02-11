@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 
 from nonebot.adapters.onebot.v11 import MessageSegment as MsgSeg
+from nonebot.exception import FinishedException
 
 from ..command_definition import matcher_get_help
 from ...di import Inject, inject
@@ -35,8 +36,10 @@ async def handle_get_help(
     try:
         data = build_default_help_data()
         html = render_help(data)
-        img = await html_render_svc.render(html, width=900)
+        img = await html_render_svc.render(html, width=1400)
         await matcher_get_help.finish(MsgSeg.image(img))
+    except FinishedException:
+        raise
     except Exception:
         logger.warning("渲染帮助文档图片失败，回退为纯文本提示", exc_info=True)
         await matcher_get_help.finish(

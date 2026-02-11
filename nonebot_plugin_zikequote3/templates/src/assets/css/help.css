@@ -8,16 +8,19 @@ html, body {
     overflow: auto;
 }
 
-/* 页面容器 */
+/* 页面容器 — 两列瀑布流 */
 .help-container {
-    max-width: 900px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 24px 20px 32px 20px;
+    column-count: 2;
+    column-gap: 28px;
 }
 
 /* 顶部标题区 */
 .help-header {
     margin-bottom: 16px;
+    column-span: all;
 }
 .help-title {
     font-size: 2rem;
@@ -43,11 +46,13 @@ html, body {
     font-size: 0.82rem;
     color: #2c6b80;
     line-height: 1.6;
+    column-span: all;
 }
 
 /* 分类区块 */
 .help-category {
     margin-bottom: 16px;
+    break-inside: avoid;
 }
 .category-title {
     font-size: 1.1rem;

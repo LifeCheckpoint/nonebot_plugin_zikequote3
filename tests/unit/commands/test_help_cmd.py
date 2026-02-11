@@ -57,11 +57,11 @@ class TestHandleGetHelp:
                     html_render_svc=mock_render_svc,
                 )
 
-        # 验证渲染服务被调用，宽度为 900
+        # 验证渲染服务被调用，宽度为 1400（两列布局）
         mock_render_svc.render.assert_awaited_once()
         call_kwargs = mock_render_svc.render.call_args
-        assert call_kwargs.kwargs.get("width") == 900 or (
-            len(call_kwargs.args) > 1 and call_kwargs.args[1] == 900
+        assert call_kwargs.kwargs.get("width") == 1400 or (
+            len(call_kwargs.args) > 1 and call_kwargs.args[1] == 1400
         )
 
     async def test_render_failure_fallback(
