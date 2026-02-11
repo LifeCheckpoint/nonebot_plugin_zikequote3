@@ -11,7 +11,7 @@
     - avatar: 头像 (可以为 Base64 或 URL)
     - history_nicks: 曾用昵称列表
     - history_group_cards: 曾用群名片列表
-    - guide_text: 引导文本
+    - guide_command: 引导命令名（纯文本）
 #}
 
 {% extends "htmls/base.html.jinja2" %}
@@ -82,7 +82,7 @@
             <div class="footer-bar">
                 <div class="watermark">@ZikeQuote3</div>
                 <div class="guide-text">
-                    {{ guide_text | safe }}
+                    输入 <span class="guide-key">{{ guide_command }}</span> 查看更多语录
                 </div>
             </div>
         </div>

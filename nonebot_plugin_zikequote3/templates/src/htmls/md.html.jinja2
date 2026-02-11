@@ -3,10 +3,11 @@
 
     - inline_css: 内联自定义样式
     - content: 预渲染的 HTML 内容（由 Python 端 Markdown 库转换）
+    - title: 文档标题（默认 "Markdown 文档"）
 #}
 
 {% extends "htmls/base.html.jinja2" %}
-{% block title %}Markdown 文档{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 {% block head_extra %}
 <style>{{ inline_css | safe }}</style>
 {% endblock %}

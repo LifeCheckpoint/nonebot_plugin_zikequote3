@@ -49,8 +49,8 @@ def render_user_info(data: TemplateUserInfoData) -> str:
     :returns: 渲染后的 HTML 字符串
     :rtype: str
     """
-    guide_text = "输入 <span class=\"guide-key\">/语录列表</span> 查看更多语录"
-    return render_with_spec(USER_INFO, guide_text=guide_text, **data.model_dump())
+    guide_command = "/语录列表"
+    return render_with_spec(USER_INFO, guide_command=guide_command, **data.model_dump())
 
 
 __all__ = [
