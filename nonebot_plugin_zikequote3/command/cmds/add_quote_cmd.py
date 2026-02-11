@@ -83,6 +83,7 @@ async def handle_add_quote(
 
     # 检查图片数据存在性
     image_uuid = None
+    img_url_or_file: str = ""
     if reply.message.count("image") >= 1:
         async with command_error_handler(matcher_add_quote, "获取将要添加的图片数据"):
             picseg_data = reply.message.get("image")[0].data
@@ -100,12 +101,26 @@ async def handle_add_quote(
 
     qid: str = ""
     async with command_error_handler(matcher_add_quote, "添加语录"):
-        qid = await quote_write_svc.add_quote(
-            group_id=group_id,
-            author_id=str(reply.sender.user_id),
-            content=content_text,
-            image_content_uuid=image_uuid,
-        )
+        if image_uuid is not None:
+            # 有图片时使用 add_quote_with_image_data，同时注册图片元数据到数据库
+            stored_path = image_store.get_path(image_uuid)
+            qid = await quote_write_svc.add_quote_with_image_data(
+                group_id=group_id,
+                author_id=str(reply.sender.user_id),
+                content=content_text,
+                image_uuid=image_uuid,
+                original_filename=img_url_or_file,
+                stored_filename=stored_path.name,
+                file_path=str(stored_path),
+                checksum_sha256=image_store.get_sha256(image_uuid),
+            )
+        else:
+            qid = await quote_write_svc.add_quote(
+                group_id=group_id,
+                author_id=str(reply.sender.user_id),
+                content=content_text,
+                image_content_uuid=None,
+            )
 
     await matcher_add_quote.send("语录添加成功~(≧▽≦)")
 

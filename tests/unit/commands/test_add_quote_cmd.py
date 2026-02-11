@@ -234,3 +234,139 @@ class TestHandleAddQuote:
         # 验证 finish 包含 "发生错误" 通用消息
         finish_calls = matcher_add_quote.finish.call_args_list
         assert any("发生错误" in str(c) for c in finish_calls)
+
+    async def test_add_image_quote_success(
+        self,
+        patch_container,
+        mock_group_event: MagicMock,
+        mock_bot: MagicMock,
+    ) -> None:
+        """回复含图片消息：使用 add_quote_with_image_data 添加语录成功。"""
+        from pathlib import Path
+
+        # Arrange
+        mock_write_svc = AsyncMock(spec=QuoteWriteService)
+        mock_write_svc.add_quote_with_image_data = AsyncMock(return_value="Q-IMG-1")
+        mock_write_svc.create_msg_quote_mapping = AsyncMock(return_value=None)
+        mock_group_svc = AsyncMock(spec=GroupService)
+        mock_group_svc.ensure_member = AsyncMock(return_value=None)
+        mock_image_store = MagicMock(spec=ImageStore)
+        mock_image_store.upload.return_value = "abc123uuid"
+        mock_image_store.get_path.return_value = Path("/fake/ab/c1/abc123uuid.png")
+        mock_image_store.get_sha256.return_value = "deadbeef" * 8
+
+        patch_container({
+            QuoteWriteService: mock_write_svc,
+            GroupService: mock_group_svc,
+            ImageStore: mock_image_store,
+        })
+
+        mock_bot.self_id = "999999"
+
+        # 构造含图片的回复
+        reply = MagicMock()
+        reply.message_id = 66666
+        reply.sender = MagicMock()
+        reply.sender.user_id = 111111
+        reply.message = MagicMock()
+        reply.message.extract_plain_text.return_value = "图片语录文本"
+        reply.message.count.return_value = 1  # 有 1 张图片
+        reply.message.only.return_value = False
+        img_seg = MagicMock()
+        img_seg.data = {"url": "https://example.com/img.png"}
+        reply.message.get.return_value = [img_seg]
+        mock_group_event.reply = reply
+
+        # mock _fetch_image_from_url_or_file
+        with patch(
+            "nonebot_plugin_zikequote3.command.cmds.add_quote_cmd._fetch_image_from_url_or_file",
+            new_callable=AsyncMock,
+            return_value=b"\x89PNG fake image data",
+        ):
+            await handle_add_quote(
+                event=mock_group_event,
+                bot=mock_bot,
+                quote_write_svc=mock_write_svc,
+                group_svc=mock_group_svc,
+                image_store=mock_image_store,
+            )
+
+        # 验证使用了 add_quote_with_image_data 而非 add_quote
+        mock_write_svc.add_quote_with_image_data.assert_awaited_once_with(
+            group_id="123456",
+            author_id="111111",
+            content="图片语录文本",
+            image_uuid="abc123uuid",
+            original_filename="https://example.com/img.png",
+            stored_filename="abc123uuid.png",
+            file_path=str(Path("/fake/ab/c1/abc123uuid.png")),
+            checksum_sha256="deadbeef" * 8,
+        )
+        mock_write_svc.add_quote.assert_not_awaited()
+
+    async def test_add_image_only_quote_success(
+        self,
+        patch_container,
+        mock_group_event: MagicMock,
+        mock_bot: MagicMock,
+    ) -> None:
+        """回复纯图片消息（无文本）：content 为 None。"""
+        from pathlib import Path
+
+        # Arrange
+        mock_write_svc = AsyncMock(spec=QuoteWriteService)
+        mock_write_svc.add_quote_with_image_data = AsyncMock(return_value="Q-IMG-2")
+        mock_write_svc.create_msg_quote_mapping = AsyncMock(return_value=None)
+        mock_group_svc = AsyncMock(spec=GroupService)
+        mock_group_svc.ensure_member = AsyncMock(return_value=None)
+        mock_image_store = MagicMock(spec=ImageStore)
+        mock_image_store.upload.return_value = "def456uuid"
+        mock_image_store.get_path.return_value = Path("/fake/de/f4/def456uuid.jpg")
+        mock_image_store.get_sha256.return_value = "cafebabe" * 8
+
+        patch_container({
+            QuoteWriteService: mock_write_svc,
+            GroupService: mock_group_svc,
+            ImageStore: mock_image_store,
+        })
+
+        mock_bot.self_id = "999999"
+
+        # 构造纯图片回复（无文本）
+        reply = MagicMock()
+        reply.message_id = 77777
+        reply.sender = MagicMock()
+        reply.sender.user_id = 222222
+        reply.message = MagicMock()
+        reply.message.extract_plain_text.return_value = ""
+        reply.message.count.return_value = 1  # 有 1 张图片
+        reply.message.only.return_value = True  # 仅图片
+        img_seg = MagicMock()
+        img_seg.data = {"file": "local_img.jpg"}
+        reply.message.get.return_value = [img_seg]
+        mock_group_event.reply = reply
+
+        with patch(
+            "nonebot_plugin_zikequote3.command.cmds.add_quote_cmd._fetch_image_from_url_or_file",
+            new_callable=AsyncMock,
+            return_value=b"\xff\xd8\xff fake jpg",
+        ):
+            await handle_add_quote(
+                event=mock_group_event,
+                bot=mock_bot,
+                quote_write_svc=mock_write_svc,
+                group_svc=mock_group_svc,
+                image_store=mock_image_store,
+            )
+
+        # content 应为 None（纯图片）
+        mock_write_svc.add_quote_with_image_data.assert_awaited_once_with(
+            group_id="123456",
+            author_id="222222",
+            content=None,
+            image_uuid="def456uuid",
+            original_filename="local_img.jpg",
+            stored_filename="def456uuid.jpg",
+            file_path=str(Path("/fake/de/f4/def456uuid.jpg")),
+            checksum_sha256="cafebabe" * 8,
+        )
