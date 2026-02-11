@@ -5,15 +5,13 @@
     - content: 预渲染的 HTML 内容（由 Python 端 Markdown 库转换）
 #}
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Markdown 文档</title>
-    <style> {{ inline_css | safe }} </style>
-</head>
-<body>
+{% extends "htmls/base.html.jinja2" %}
+{% block title %}Markdown 文档{% endblock %}
+{% block head_extra %}
+<style>{{ inline_css | safe }}</style>
+{% endblock %}
+{% block body %}
     <div id="preview">
         {{ content | safe }}
     </div>
-</body>
-</html>
+{% endblock %}

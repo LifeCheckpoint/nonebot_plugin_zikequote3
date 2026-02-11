@@ -6,7 +6,7 @@ Markdown 模板。
 
 import markdown
 
-from .. import render_template, read_resource_file
+from ..registry import MD, render_with_spec
 
 def render_markdown(content: str) -> str:
     """
@@ -17,18 +17,12 @@ def render_markdown(content: str) -> str:
     :returns: 渲染后的 HTML 字符串
     :rtype: str
     """
-    inline_css = read_resource_file("css/md.css")
-
     html_content = markdown.markdown(
         content,
         extensions=["tables", "fenced_code", "toc", "nl2br"],
     )
 
-    return render_template(
-        "htmls/md.html.jinja2",
-        inline_css=inline_css,
-        content=html_content,
-    )
+    return render_with_spec(MD, content=html_content)
 
 
 __all__ = [

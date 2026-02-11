@@ -6,7 +6,7 @@
 from typing import List
 from pydantic import BaseModel
 
-from .. import render_template, read_resource_file
+from ..registry import HELP, render_with_spec
 
 
 class HelpCommandItem(BaseModel):
@@ -84,13 +84,7 @@ def render_help(data: TemplateHelpData) -> str:
     :returns: 渲染后的 HTML 字符串
     :rtype: str
     """
-    inline_css = read_resource_file("css/help.css")
-
-    return render_template(
-        "htmls/help.html.jinja2",
-        inline_css=inline_css,
-        **data.model_dump()
-    )
+    return render_with_spec(HELP, **data.model_dump())
 
 
 def build_default_help_data() -> TemplateHelpData:

@@ -5,7 +5,7 @@
 """
 from typing import List, Optional
 from pydantic import BaseModel
-from .. import render_template, read_resource_file
+from ..registry import USER_INFO, render_with_spec
 
 
 class TemplateUserInfoData(BaseModel):
@@ -49,15 +49,8 @@ def render_user_info(data: TemplateUserInfoData) -> str:
     :returns: 渲染后的 HTML 字符串
     :rtype: str
     """
-    inline_css = read_resource_file("css/user_info.css")
     guide_text = "输入 <span class=\"guide-key\">/语录列表</span> 查看更多语录"
-
-    return render_template(
-        "htmls/user_info.html.jinja2",
-        inline_css=inline_css,
-        guide_text=guide_text,
-        **data.model_dump(),
-    )
+    return render_with_spec(USER_INFO, guide_text=guide_text, **data.model_dump())
 
 
 __all__ = [

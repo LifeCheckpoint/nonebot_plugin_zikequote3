@@ -15,17 +15,12 @@
     - secondary_color: 次色调，可选，默认 #764ba2
 #}
 
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>语录卡片</title>
-    <style>
-        {{ inline_css | safe }}
-    </style>
-</head>
-<body>
+{% extends "htmls/base.html.jinja2" %}
+{% block title %}语录卡片{% endblock %}
+{% block head_extra %}
+<style>{{ inline_css | safe }}</style>
+{% endblock %}
+{% block body %}
     <div class="quote-card" style="--primary-color: {{ primary_color | default('#667eea') }}; --secondary-color: {{ secondary_color | default('#764ba2') }};">
         <div class="quote-header">
             <div class="quote-id"># {{ quote_id }}</div>
@@ -68,5 +63,4 @@
         
         <div class="decorative-element"></div>
     </div>
-</body>
-</html>
+{% endblock %}

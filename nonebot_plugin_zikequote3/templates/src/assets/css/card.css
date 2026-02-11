@@ -1,15 +1,4 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
 html, body {
-    width: 100vw;
-    min-height: 100vh;
-    font-family: 'SF Pro Display', 'Helvetica Neue', '句读黑体 Hans Medium', Arial, sans-serif;
-    background: #F6F7F9;
-    overflow: auto;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -17,10 +6,10 @@ html, body {
 }
 
 .quote-card {
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 2px 16px rgba(0,0,0,0.06);
-    color: #212121;
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    color: var(--text-primary);
     max-width: 90vw;
     width: 100%;
     padding: 29px 24px 21px 24px;
@@ -51,7 +40,7 @@ html, body {
     font-size: 2.5rem;
     font-weight: 600;
     line-height: 1.5;
-    color: #212121;
+    color: var(--text-primary);
     margin-left: 0; /* 移除偏移 */
 }
 
@@ -76,14 +65,14 @@ html, body {
     max-width: 400px;
     display: block;
     margin: 10px auto 12px auto;
-    border-radius: 10px;
+    border-radius: var(--radius-card);
     object-fit: cover;
 }
 
 .quote-image img {
     width: 100%;
     height: auto;
-    border-radius: 10px;
+    border-radius: var(--radius-card);
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 

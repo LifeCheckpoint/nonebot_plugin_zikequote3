@@ -1,18 +1,15 @@
 body {
     font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     line-height: 1.6;
-    margin: 0;
     background-color: #f4f7f6;
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    min-height: 100vh;
     padding: 20px;
-    box-sizing: border-box;
 }
 
 #preview {
-    background-color: #ffffff;
+    background-color: var(--bg-card);
     border-radius: 16px;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
     padding: 30px;
@@ -25,17 +22,13 @@ body {
 
 #title {
     color: #333;
-    /* text-align: center; /* 移除居中对齐 */
     margin-bottom: 30px;
     font-size: 2em;
     font-weight: 600;
-    /* 确保标题在卡片左上方 */
-    text-align: left; /* 靠左对齐 */
-    margin-top: 0; /* 移除顶部外边距，让它更靠近卡片顶部 */
+    text-align: left;
+    margin-top: 0;
 }
 
-
-/* 调整Markdown内容样式 (与之前相同，此处省略以保持简洁) */
 #preview h1,
 #preview h2,
 #preview h3,
@@ -55,31 +48,30 @@ body {
 #preview h5 { font-size: 1em; }
 #preview h6 { font-size: 0.9em; }
 
-
 #preview p {
     margin-bottom: 15px;
 }
 
 /* 自定义紫色样式 */
 #preview strong, #preview em, #preview u {
-    color: #8a2be2; /* 紫色 */
+    color: #8a2be2;
 }
 
 #preview strong {
-    font-weight: 600; /* 比默认稍轻的粗体 */
+    font-weight: 600;
 }
 
 #preview em {
     font-style: italic;
-    font-weight: 500; /* 适中的倾斜 */
+    font-weight: 500;
 }
 
 #preview u {
     text-decoration: underline;
-    text-decoration-color: #8a2be2; /* 紫色下划线 */
-    font-weight: 400; /* 常规粗细 */
+    text-decoration-color: #8a2be2;
+    font-weight: 400;
     text-underline-offset: 0.15em;
-    text-decoration-thickness: 2px; /* 下划线粗细 */
+    text-decoration-thickness: 2px;
 }
 
 #preview del {
@@ -95,7 +87,6 @@ body {
 #preview li {
     margin-bottom: 8px;
 }
-
 
 pre {
     background-color: #f8f9fa;

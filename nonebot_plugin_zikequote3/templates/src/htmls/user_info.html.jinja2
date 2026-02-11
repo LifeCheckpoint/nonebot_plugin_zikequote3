@@ -13,15 +13,13 @@
     - history_group_cards: 曾用群名片列表
     - guide_text: 引导文本
 #}
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <style>
-    {{ inline_css | safe }}
-    </style>
-</head>
-<body>
+
+{% extends "htmls/base.html.jinja2" %}
+{% block title %}用户信息{% endblock %}
+{% block head_extra %}
+<style>{{ inline_css | safe }}</style>
+{% endblock %}
+{% block body %}
 
     <div class="user-profile-card">
         <!-- 左侧黑色侧边栏 -->
@@ -90,5 +88,4 @@
         </div>
     </div>
 
-</body>
-</html>
+{% endblock %}

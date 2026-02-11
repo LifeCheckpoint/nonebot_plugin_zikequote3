@@ -14,17 +14,12 @@
         - quote_comment: 可选，一条评论
 #}
 
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=1200">
-  <title>列表</title>
-  <style>
-    {{ inline_css | safe }}
-  </style>
-</head>
-<body>
+{% extends "htmls/base.html.jinja2" %}
+{% block title %}列表{% endblock %}
+{% block head_extra %}
+<style>{{ inline_css | safe }}</style>
+{% endblock %}
+{% block body %}
   <div class="top-info">
     <div class="top-info-title">{{ title }}</div>
     {% if desc %}<div class="top-info-desc">{{ desc }}</div> {% endif %}
@@ -41,5 +36,4 @@
     </div>
     {% endfor %}
   </div>
-</body>
-</html>
+{% endblock %}

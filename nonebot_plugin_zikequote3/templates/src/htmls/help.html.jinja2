@@ -19,17 +19,12 @@
     - query_note: 可选，统一查询方式说明
 #}
 
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width">
-  <title>{{ title }}</title>
-  <style>
-    {{ inline_css | safe }}
-  </style>
-</head>
-<body>
+{% extends "htmls/base.html.jinja2" %}
+{% block title %}{{ title }}{% endblock %}
+{% block head_extra %}
+<style>{{ inline_css | safe }}</style>
+{% endblock %}
+{% block body %}
   <div class="help-container">
     <div class="help-header">
       <div class="help-title">{{ title }}{% if version %}<span class="help-version">v{{ version }}</span>{% endif %}</div>
@@ -66,5 +61,4 @@
     </div>
     {% endfor %}
   </div>
-</body>
-</html>
+{% endblock %}

@@ -6,7 +6,7 @@
 from typing import List, Optional
 from pydantic import BaseModel
 
-from .. import render_template, read_resource_file
+from ..registry import LISTING, render_with_spec
 
 
 class TemplateQuoteBoxData(BaseModel):
@@ -61,13 +61,7 @@ def render_list(data: TemplateQuoteListData) -> str:
     :returns: 渲染后的 HTML 字符串
     :rtype: str
     """
-    inline_css = read_resource_file("css/listing.css")
-
-    return render_template(
-        "htmls/listing.html.jinja2",
-        inline_css=inline_css,
-        **data.model_dump()
-    )
+    return render_with_spec(LISTING, **data.model_dump())
 
 
 __all__ = [

@@ -6,7 +6,7 @@
 
 from typing import List, Optional
 from pydantic import BaseModel
-from .. import render_template, read_resource_file
+from ..registry import MIGRATION, render_with_spec
 
 
 class TemplateDiffItemData(BaseModel):
@@ -61,13 +61,7 @@ def render_migration_diff(data: TemplateMigrationData) -> str:
     :rtype: str
     """
 
-    migration_css = read_resource_file("css/migration.css")
-
-    return render_template(
-        "htmls/migration.html.jinja2",
-        inline_css=migration_css,
-        **data.model_dump()
-    )
+    return render_with_spec(MIGRATION, **data.model_dump())
 
 __all__ = [
     "TemplateDiffItemData",

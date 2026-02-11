@@ -1,26 +1,16 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
 body {
-    width: 100vw;
-    min-height: 100vh;
-    font-family: 'SF Pro Display', 'Helvetica Neue', '句读黑体 Hans Medium', Arial, sans-serif;
-    background: #F6F7F9;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px 15px;
-    color: #212121;
+    color: var(--text-primary);
 }
 
 /* 迁移卡片容器 - 参考 .quote-card */
 .migration-card {
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
     max-width: 500px;
     width: 100%;
     padding: 29px 24px 21px 24px;
@@ -41,13 +31,13 @@ body {
     font-size: 1.8rem;
     font-weight: 600;
     line-height: 1.3;
-    color: #212121;
+    color: var(--text-primary);
     margin-bottom: 8px;
 }
 
 .description {
     font-size: 1rem;
-    color: #666;
+    color: var(--text-secondary);
     margin-bottom: 24px;
     line-height: 1.5;
 }
@@ -62,7 +52,7 @@ body {
 /* 单个对比项 - 参考 .comment-item */
 .diff-item {
     margin-bottom: 18px;
-    border-left: 3px solid #212121; 
+    border-left: 3px solid var(--text-primary);
     padding-left: 15px;
 }
 
@@ -89,11 +79,11 @@ body {
 
 .arrow {
     margin: 0 10px;
-    color: #212121;
+    color: var(--text-primary);
 }
 
 .new-val {
-    color: #212121;
+    color: var(--text-primary);
 }
 
 /* 按钮组样式 */
@@ -117,7 +107,7 @@ button {
 
 .btn-secondary {
     background: #f0f0f0;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 .btn-secondary:hover {
@@ -125,7 +115,7 @@ button {
 }
 
 .btn-primary {
-    background: #212121;
+    background: var(--text-primary);
     color: #fff;
 }
 

@@ -14,17 +14,12 @@
     - right_button: 可选，右按钮（主按钮）提示信息
 #}
 
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }}</title>
-    <style>
-        {{ inline_css | safe }}
-    </style>
-</head>
-<body>
+{% extends "htmls/base.html.jinja2" %}
+{% block title %}{{ title }}{% endblock %}
+{% block head_extra %}
+<style>{{ inline_css | safe }}</style>
+{% endblock %}
+{% block body %}
 
     <div class="migration-card">
         {% if status_title %}
@@ -63,5 +58,4 @@
         </div>
     </div>
 
-</body>
-</html>
+{% endblock %}
