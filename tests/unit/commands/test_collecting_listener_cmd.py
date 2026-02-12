@@ -53,9 +53,11 @@ def _make_parsed_cfg(
     msg_max_length: int = 200,
     update_prob: float = 0.0,
     pickup_interval: int = 50,
+    enable_auto_collect: bool = True,
 ) -> MagicMock:
     """创建模拟的 parsed config 对象。"""
     cfg = MagicMock()
+    cfg.collecting.enable_auto_collect = enable_auto_collect
     cfg.collecting.msg_max_length = msg_max_length
     cfg.collecting.update_personal_info_probability = update_prob
     cfg.collecting.pickup_interval = pickup_interval
@@ -114,6 +116,38 @@ def _build_services(parsed_cfg=None):
 
 class TestHandleCollectingListenerEarlyReturn:
     """收集监听器 —— 消息验证阶段（提前返回）。"""
+
+    async def test_auto_collect_disabled(
+        self,
+        patch_container,
+        mock_bot: MagicMock,
+    ) -> None:
+        """enable_auto_collect=False：直接返回，不入队。"""
+        svcs = _build_services(
+            parsed_cfg=_make_parsed_cfg(enable_auto_collect=False)
+        )
+        patch_container({
+            ConfigService: svcs["config_svc"],
+            QuoteCollectionService: svcs["collection_svc"],
+            GroupService: svcs["group_svc"],
+            ReviewService: svcs["review_svc"],
+            UserService: svcs["user_svc"],
+        })
+
+        event = _make_event(plaintext="正常消息")
+
+        await handle_collecting_listener(
+            event=event,
+            bot=mock_bot,
+            config_svc=svcs["config_svc"],
+            collection_svc=svcs["collection_svc"],
+            group_svc=svcs["group_svc"],
+            review_svc=svcs["review_svc"],
+            user_svc=svcs["user_svc"],
+        )
+
+        # 验证 enqueue_message 未被调用
+        svcs["collection_svc"].enqueue_message.assert_not_awaited()
 
     async def test_empty_message(
         self,

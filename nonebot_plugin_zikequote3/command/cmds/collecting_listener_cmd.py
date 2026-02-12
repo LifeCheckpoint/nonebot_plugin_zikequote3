@@ -66,6 +66,11 @@ async def handle_collecting_listener(
 
     # 通过 ConfigService 加载收集配置
     parsed_cfg = await config_svc.get_parsed_config(group_id)
+
+    # 检查自动收集开关
+    if not parsed_cfg.collecting.enable_auto_collect:
+        return
+
     max_length: int = parsed_cfg.collecting.msg_max_length
     update_prob: float = parsed_cfg.collecting.update_personal_info_probability
     pickup_interval: int = parsed_cfg.collecting.pickup_interval

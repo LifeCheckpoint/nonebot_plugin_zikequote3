@@ -24,7 +24,8 @@ from ...database.repositories.user_repository import UserRepository
 from ...services.config_service import ConfigService
 from ...services.group_service import GroupService
 from ...services.migration_service import MigrationService
-from ...services.quote_collection_service import QuoteCollectionService
+from ...services.quote_collection_service import QuoteCollectionService, MessageFilter
+from ...llm_services.llm_message_filter import LLMMessageFilter
 from ...services.quote_read_service import QuoteReadService
 from ...services.quote_write_service import QuoteWriteService
 from ...services.review_service import ReviewService
@@ -259,12 +260,28 @@ class ServiceProvider(Provider):
         )
 
     @provide
+    def provide_llm_message_filter(
+        self,
+        config_service: ConfigService,
+    ) -> LLMMessageFilter:
+        """
+        提供 LLM 消息筛选器实例。
+
+        :param config_service: 配置服务
+        :type config_service: ConfigService
+        :returns: LLM 消息筛选器实例
+        :rtype: LlmMessageFilter
+        """
+        return LLMMessageFilter(config_service=config_service)
+
+    @provide
     def provide_quote_collection_service(
         self,
         msg_queue_repo: MsgQueueRepository,
         quote_write_service: QuoteWriteService,
         user_service: UserService,
         group_service: GroupService,
+        message_filter: LLMMessageFilter,
     ) -> QuoteCollectionService:
         """
         提供语录收集服务实例。
@@ -277,6 +294,8 @@ class ServiceProvider(Provider):
         :type user_service: UserService
         :param group_service: 群组服务
         :type group_service: GroupService
+        :param message_filter: LLM 消息筛选器
+        :type message_filter: LlmMessageFilter
         :returns: 语录收集服务实例
         :rtype: QuoteCollectionService
         """
@@ -285,5 +304,5 @@ class ServiceProvider(Provider):
             quote_write_service=quote_write_service,
             user_service=user_service,
             group_service=group_service,
-            # message_filter 为可选依赖，此处不注入
+            message_filter=message_filter,
         )
