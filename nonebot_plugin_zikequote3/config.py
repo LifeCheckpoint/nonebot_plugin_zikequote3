@@ -138,7 +138,8 @@ class ConfigureConfig(BaseModel):
             "configure.nonreloadable_items",
         ]
     )
-    cfg_version: int = 5
+    cfg_version: int = 6
+    """配置版本号，配置变更需要递增以触发自动更新"""
 
 class ConfigSchema(BaseModel):
     """
