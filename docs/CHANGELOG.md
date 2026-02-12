@@ -25,7 +25,7 @@ All notable changes to this project will be documented in this file.
 ## Fixed
 
 - 修复添加语录无法添加图片的问题
-- 修复语录收集未正确筛选的问题
+- 修复语录收集未正确筛选、添加的问题
 - 修复语录排行榜数据占位未正确替换的问题
 
 ## \[0.5.0alpha1\] - 2026-02-10 \[BREAKING CHANGES\]
