@@ -43,7 +43,7 @@ HELP = TemplateSpec(
     name="help",
     template="htmls/help.html.jinja2",
     css_files=("css/help.css",),
-    width=1400,
+    width=720,
     height=800,
 )
 
