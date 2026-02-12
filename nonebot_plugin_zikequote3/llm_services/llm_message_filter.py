@@ -98,6 +98,13 @@ class LLMMessageFilter:
             )
             return []
 
+        # 检查空响应
+        if not response_text or not response_text.strip():
+            logger.warning(
+                "LLM 返回空响应 (group=%s)，本轮不产出语录", group_id,
+            )
+            return []
+
         # 解析响应
         try:
             from ..utils.json_parser import llm_json_parse_model
@@ -114,8 +121,9 @@ class LLMMessageFilter:
         msg_id_set = {m[0] for m in messages}
         for item in parsed.quotes:
             if item.msg_id not in msg_id_set:
-                logger.debug(
-                    "LLM 返回的 msg_id=%s 不在队列中，跳过", item.msg_id,
+                logger.warning(
+                    "LLM 返回的 msg_id=%s 不在队列中，跳过 (group=%s)",
+                    item.msg_id, group_id,
                 )
                 continue
             result.append(SelectedQuote(

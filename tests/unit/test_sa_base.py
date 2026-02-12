@@ -100,11 +100,11 @@ class TestPragmaConfiguration:
             assert value == 1, f"Expected 1, got {value}"
 
     async def test_pragma_busy_timeout(self, async_engine):
-        """PRAGMA busy_timeout 应为 5000。"""
+        """PRAGMA busy_timeout 应为 30000。"""
         async with async_engine.connect() as conn:
             result = await conn.exec_driver_sql("PRAGMA busy_timeout")
             value = result.scalar()
-            assert value == 5000, f"Expected 5000, got {value}"
+            assert value == 30000, f"Expected 30000, got {value}"
 
 
 class TestMetadataCreateAll:

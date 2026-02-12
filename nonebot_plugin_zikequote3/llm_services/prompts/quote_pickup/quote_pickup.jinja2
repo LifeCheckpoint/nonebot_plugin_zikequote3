@@ -28,15 +28,15 @@
 
 # Example1 (No quote):
 {
-    "num_quotes": 0, # The number of golden sentences in message record, 0~3
-    "quotes": [] # golden sentences
+    "num_quotes": 0,
+    "quotes": []
 }
 
 # Example2 (One quote):
 {
     "num_quotes": 1,
     "quotes": [
-        {"msg_id": "1949657239", "quote": "宝宝你是一个香香软软的猪肉绦虫", "comment": "讽刺与网络幽默定型文的结合"} # comment should be brief
+        {"msg_id": "1949657239", "quote": "宝宝你是一个香香软软的猪肉绦虫", "comment": "讽刺与网络幽默定型文的结合"}
     ]
 }
 
@@ -55,7 +55,7 @@
 # 以下为聊天记录，格式为 (id) [name]: content
 
 {% for msg in message_history %}
-({{ msg.user_id }}) [{{ msg.user_name }}]: {{ msg.content }}
+({{ msg.msg_id }}) [{{ msg.user_name }}]: {{ msg.content }}
 {% endfor %}
 
 </group_msgs>

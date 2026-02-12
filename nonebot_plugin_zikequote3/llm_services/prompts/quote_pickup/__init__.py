@@ -16,7 +16,7 @@ def quote_pickup(
     """
     语录筛选提示词模板渲染。
 
-    :param message_history: 消息记录列表，格式为 ``(user_id, user_name, content)``
+    :param message_history: 消息记录列表，格式为 ``(msg_id, user_name, content)``
     :type message_history: List[Tuple[str, str, str]]
     :param at_least_selections: 最少筛选条数，默认 ``0``
     :type at_least_selections: int
@@ -27,11 +27,11 @@ def quote_pickup(
     """
     msg_dictlist = [
         {
-            "user_id": user_id,
+            "msg_id": msg_id,
             "user_name": user_name,
             "content": content,
         }
-        for user_id, user_name, content in message_history
+        for msg_id, user_name, content in message_history
     ]
     return render_template(
         "quote_pickup/quote_pickup.jinja2",
