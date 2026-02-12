@@ -69,6 +69,11 @@ class LLMMessageFilter:
         if not messages:
             return []
 
+        logger.info(
+            "开始 LLM 筛选 (group=%s): 队列中 %d 条消息",
+            group_id, len(messages),
+        )
+
         cfg = await self._config_service.get_parsed_config(group_id)
         llm_cfg: LLMConfig = cfg.llm
         at_least: int = cfg.collecting.at_least_selections

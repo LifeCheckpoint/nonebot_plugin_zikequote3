@@ -393,6 +393,11 @@ class QuoteCollectionService:
         if not messages:
             raise ValidationException("消息队列为空，无法执行收集")
 
+        logger.info(
+            "开始收集 (group=%s): 队列中 %d 条消息",
+            group_id, len(messages),
+        )
+
         # 2. 筛选
         selected = await self._select_quotes(messages, group_id)
         if not selected:
@@ -401,6 +406,7 @@ class QuoteCollectionService:
 
         # 3. 保存
         collected: list[CollectedQuote] = []
+        saved_details: list[tuple[str, str, str]] = []  # (quote_id, author_id, content)
         for item in selected:
             # 查找原始消息获取作者信息
             source_msg = await self._msg_queue_repo.get_msg_by_id(item.msg_id)
@@ -434,15 +440,26 @@ class QuoteCollectionService:
                     quote_id=quote_id,
                     comment=comment,
                 ))
+                saved_details.append((quote_id, author_id, content))
             except Exception:
                 logger.warning(
                     "保存语录失败: msg_id=%s", item.msg_id, exc_info=True
                 )
 
-        logger.info(
-            "收集完成: group=%s, saved=%d/%d",
-            group_id, len(collected), len(selected),
-        )
+        if collected:
+            detail_lines = "; ".join(
+                f"[{qid}] user={aid} \"{ct[:50]}\""
+                for qid, aid, ct in saved_details
+            )
+            logger.info(
+                "收集完成 (group=%s): 保存 %d/%d 条 — %s",
+                group_id, len(collected), len(selected), detail_lines,
+            )
+        else:
+            logger.info(
+                "收集完成 (group=%s): 筛选 %d 条但最终保存 0 条",
+                group_id, len(selected),
+            )
         return collected
 
     async def _select_quotes(
