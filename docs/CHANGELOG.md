@@ -14,9 +14,17 @@ All notable changes to this project will be documented in this file.
 
 ## \[0.5.0alpha2\] - 2026-02-??
 
+## Added
+
+- 新增了模糊搜索功能
+
 ## Changed
 
 - 重构了更加健壮的渲染模板架构
+
+## Fixed
+
+- 修复添加语录无法添加图片的问题
 
 ## \[0.5.0alpha1\] - 2026-02-10 \[BREAKING CHANGES\]
 
