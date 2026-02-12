@@ -28,9 +28,18 @@
         {
           "name": "/查语录",
           "aliases": ["搜索语录", "搜语录"],
-          "description": "按关键词搜索语录，支持正则、排除图片等高级选项",
-          "usage": "/查语录 [关键词] [@某人] [-m 数量]",
-          "examples": ["/查语录 摸鱼", "/查语录 摸鱼 @某人"],
+          "description": "按关键词搜索语录，支持正则、模糊语义搜索等高级选项",
+          "usage": "/查语录 [关键词] [@某人] [-qq QQ号] [-m 数量] [-ni] [-r] [-f] [-s 相似度] [-n 数量]",
+          "examples": ["/查语录 摸鱼", "/查语录 摸鱼 @某人", "/查语录 -f 开心的事", "/查语录 -f 开心的事 -s 0.5 -n 3"],
+          "permission": "所有人",
+          "query_support": true
+        },
+        {
+          "name": "/模糊查语录",
+          "aliases": ["查模糊语录"],
+          "description": "基于语义相似度的模糊搜索，需配置 Embedding 服务",
+          "usage": "/模糊查语录 [关键词] [@某人] [-qq QQ号] [-ni] [-s 相似度] [-n 数量]",
+          "examples": ["/模糊查语录 开心的事", "/模糊查语录 想吃火锅 -s 0.5", "/模糊查语录 3 周末去哪玩"],
           "permission": "所有人",
           "query_support": true
         }
@@ -80,6 +89,21 @@
           "usage": "/语录排行 [显示人数]",
           "examples": ["/语录排行", "/语录排行 10"],
           "permission": "所有人",
+          "query_support": false
+        }
+      ]
+    },
+    {
+      "name": "其他",
+      "icon": "📌",
+      "commands": [
+        {
+          "name": "/重建语录索引",
+          "aliases": ["语录重建索引", "重建索引"],
+          "description": "重建当前群的模糊搜索向量索引，模型切换后需执行",
+          "usage": "/重建语录索引 [--all]",
+          "examples": ["/重建语录索引", "/重建语录索引 --all"],
+          "permission": "权限节点控制",
           "query_support": false
         }
       ]
