@@ -28,7 +28,7 @@
 
 - **🤖 智能收集** — 持续监听群聊消息，达到阈值后由 LLM 自动分析并提取语录，附带简短评论
 - **✏️ 手动管理** — 通过命令增删语录、添加/删除评论、附加/移除图片
-- **🎨 多样展示** — 随机语录（文字/卡片/图片）、关键词搜索、用户语录列表
+- **🎨 多样展示** — 随机语录（文字/卡片/图片）、关键词搜索、语义模糊搜索、用户语录列表
 - **📊 统计排行** — 语录排行榜、用户语录统计信息、近 15 天走势
 - **⚙️ 灵活配置** — 群粒度配置、热更新、基于 `nonebot-plugin-access-control` 的权限控制
 - **🔒 隐私保护** — 内置隐私政策查看、个人停用功能（即将启用）
@@ -91,60 +91,7 @@ poetry add nonebot-plugin-zikequote3
 
 插件的主要配置位于 `config.toml` 文件中，支持群粒度覆盖。可通过 `/修改语录配置` 命令在线修改群组配置。
 
-#### `[collecting]` 语录收集
-
-| 配置项 | 类型 | 默认值 | 说明 |
-|--------|------|--------|------|
-| `enable_auto_collect` | `bool` | `true` | 启用自动收集（需配置 LLM） |
-| `pickup_interval` | `int` | `80` | 自动收集触发的消息数量阈值 |
-| `msg_max_length` | `int` | `35` | 最大可被处理的消息长度 |
-| `at_least_selections` | `int` | `0` | LLM 筛选结果个数下限 |
-| `at_most_selections` | `int` | `3` | LLM 筛选结果个数上限 |
-| `enable_duplicate` | `bool` | `false` | 允许群内个人重复语录 |
-| `enable_image_collection` | `bool` | `true` | 允许图片语录收集 |
-| `img_max_sidelength` | `int` | `3840` | 图片最大边长（px），超出裁剪 |
-| `img_max_size_mb` | `float` | `5` | 图片最大体积（MB） |
-| `update_personal_info_probability` | `float` | `0.05` | 收到消息时更新个人信息的概率 |
-
-#### `[fetching]` 语录抽取
-
-| 配置项 | 类型 | 默认值 | 说明 |
-|--------|------|--------|------|
-| `algorithm` | `str` | `"IFW --lambda 1.0"` | 语录推荐算法命令（IFW / LogIFW 等） |
-
-#### `[showcase]` 语录展示
-
-| 配置项 | 类型 | 默认值 | 说明 |
-|--------|------|--------|------|
-| `max_rank_user_num` | `int` | `40` | 排行榜最大用户数 |
-| `quote_num_per_page` | `int` | `20` | 每页展示语录数 |
-| `max_quotes_in_list` | `int` | `50` | 语录列表最大条数 |
-| `comment_show_method` | `str` | `"noai"` | 评论展示方式：`no` / `noai` / `all` |
-| `hitokoto_url` | `str` | `"https://v1.hitokoto.cn"` | Hitokoto API 地址 |
-| `render_device_factor` | `float` | `2.0` | 图片渲染设备像素比 |
-| `quote_content_max_length` | `int` | `500` | 列表中单条语录最大显示字符数，`0` 不限制 |
-
-#### `[comment]` 评论
-
-| 配置项 | 类型 | 默认值 | 说明 |
-|--------|------|--------|------|
-| `enable_comment_without_prefix` | `bool` | `true` | 允许直接回复语录消息进行评论（无需 `/评语录` 前缀） |
-
-#### `[llm]` LLM 服务
-
-| 配置项 | 类型 | 默认值 | 说明 |
-|--------|------|--------|------|
-| `base_url` | `str` | `"https://openrouter.ai/api/v1"` | LLM API 端点 |
-| `api_key_path` | `str` | `"llm_services/api_key"` | API Key 文件路径 |
-| `model` | `str` | `"deepseek/deepseek-v3.2-exp"` | 使用的模型 |
-| `temperature` | `float` | `0.2` | 生成温度 |
-| `max_retries` | `int` | `3` | 请求失败重试次数 |
-
-#### `[sentry]` 错误追踪
-
-| 配置项 | 类型 | 默认值 | 说明 |
-|--------|------|--------|------|
-| `dsn_path` | `str` | `"utils/sentry_dsn"` | Sentry DSN 文件路径，留空不启用 |
+具体配置可以参考对应 toml 文件。
 
 ## 📖 命令列表
 
@@ -157,7 +104,8 @@ poetry add nonebot-plugin-zikequote3
 | `/语录` | `随机语录` `名人名言` `群友语录` | `/语录 [查询内容]` | 随机抽取一条语录 🔍 |
 | `/语录卡` | `语录卡片` `语录card` | `/语录卡 [查询内容]` | 以卡片形式展示随机语录 🔍 |
 | `/语录图` | `语录原图` `语录图片` | `/语录图 [查询内容]` | 随机获取含图片的语录原图 🔍 |
-| `/查语录` | `搜索语录` `搜语录` `找语录` | `/查语录 [关键词] [@某人] [-r] [-ni] [-m 数量]` | 按关键词搜索语录，支持正则 🔍 |
+| `/查语录` | `搜索语录` `搜语录` `找语录` | `/查语录 [关键词] [@某人] [-r] [-ni] [-m 数量] [-f] [-s 相似度] [-n 条数]` | 按关键词搜索语录，支持正则和模糊语义搜索 🔍 |
+| `/模糊查语录` | `查模糊语录` | `/模糊查语录 [关键词] [@某人] [-s 相似度] [-n 条数] [-ni]` | 基于语义相似度的模糊搜索（需配置 Embedding） 🔍 |
 | `/语录列表` | `语录list` `列语录` `个人语录` | `/语录列表 [页码/范围] [用户]` | 查看用户的语录列表 🔍 |
 
 ### ✏️ 语录收集与管理
@@ -198,20 +146,18 @@ poetry add nonebot-plugin-zikequote3
 | `/语录隐私政策` | `语录隐私` `语录政策` | `/语录隐私政策` | 查看隐私政策 |
 | `/迁移群语录` | `迁移所有群语录` `移动群语录` | `/迁移群语录 源群号 目标群号 [选项]` | 将语录从一个群迁移到另一个群 |
 | `/停用语录` | `停用zikequote3` | `/停用语录` | 停用个人语录功能（即将启用） |
+| `/重建语录索引` | `语录重建索引` `重建索引` | `/重建语录索引 [--all]` | 重建模糊搜索向量索引，切换 Embedding 模型后需执行 |
 
 ## 🏗️ 架构概览
 
 ```
-Command 层（命令解析与交互）
-    ↓
-Service 层（业务逻辑）
-    ↓
-Repository 层（数据访问抽象）
-    ↓
-ORM 层（SQLAlchemy 2.0 async + aiosqlite）
+Command（命令解析与交互）
+Service（业务逻辑）
+Repository（数据访问抽象）
+ORM（SQLAlchemy 2.0 async + aiosqlite）
 ```
 
-核心技术栈：
+技术栈：
 
 | 组件 | 技术 | 说明 |
 |------|------|------|
@@ -252,58 +198,6 @@ nonebot_plugin_zikequote3
 ├── group_migration       # 群迁移
 └── others                # 其他
 ```
-
-## 🛠️ 开发
-
-### 开发环境搭建
-
-```bash
-git clone https://github.com/LifeCheckpoint/nonebot_plugin_zikequote3.git
-cd nonebot_plugin_zikequote3
-pip install -e ".[dev]"
-```
-
-### 项目结构
-
-```
-nonebot_plugin_zikequote3/
-├── __init__.py              # 插件入口，生命周期管理
-├── config.py                # 配置模型定义
-├── config.toml              # 默认配置文件
-├── paths.py                 # 路径常量
-├── command/                 # 命令层：命令定义与处理
-│   ├── cmds/                # 各命令实现
-│   └── parse_helper/        # 参数解析工具
-├── services/                # 服务层：业务逻辑
-│   └── permission_management/  # 权限节点定义
-├── database/                # 数据层
-│   ├── models/              # 领域模型
-│   ├── repositories/        # 仓储层
-│   └── sa/                  # SQLAlchemy ORM 模型与引擎
-├── di/                      # 依赖注入
-│   └── providers/           # dishka Provider 定义
-├── templates/               # Jinja2 模板与数据模型
-├── html_capture/            # Playwright 截图
-├── llm_services/            # LLM 客户端
-├── exceptions/              # 异常定义
-├── msgtexts/                # 消息文本模板
-└── utils/                   # 工具函数
-```
-
-### 测试
-
-```bash
-pytest
-```
-
-测试配置已在 `pyproject.toml` 中定义，默认启用覆盖率报告：
-
-```bash
-# 等价于
-pytest --cov=nonebot_plugin_zikequote3 --cov-report=term-missing --cov-report=html
-```
-
-测试目录结构：`tests/unit/`（单元测试）和 `tests/integration/`（集成测试），覆盖命令、仓储、服务三层。
 
 ## 🤺 隐私告知
 
