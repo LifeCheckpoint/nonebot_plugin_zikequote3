@@ -115,7 +115,7 @@ class VectorStore:
         :type dimensions: int
         """
         db = self._get_db()
-        existing = await db.table_names()
+        existing = list(await db.list_tables())
         if self.QUOTE_TABLE not in existing:
             schema = pa.schema(
                 [
@@ -130,7 +130,7 @@ class VectorStore:
     async def _ensure_meta_table(self) -> None:
         """确保 vector_meta 表存在。"""
         db = self._get_db()
-        existing = await db.table_names()
+        existing = list(await db.list_tables())
         if self.META_TABLE not in existing:
             schema = pa.schema(
                 [
@@ -181,7 +181,7 @@ class VectorStore:
         :type group_id: str
         """
         db = self._get_db()
-        existing = await db.table_names()
+        existing = list(await db.list_tables())
         if self.QUOTE_TABLE not in existing:
             return
         table = await db.open_table(self.QUOTE_TABLE)
@@ -242,7 +242,7 @@ class VectorStore:
     async def drop_all(self) -> None:
         """删除所有向量数据表（重建前调用）。"""
         db = self._get_db()
-        existing = await db.table_names()
+        existing = list(await db.list_tables())
         if self.QUOTE_TABLE in existing:
             await db.drop_table(self.QUOTE_TABLE)
         if self.META_TABLE in existing:
@@ -255,7 +255,7 @@ class VectorStore:
         :rtype: Dict[str, str]
         """
         db = self._get_db()
-        existing = await db.table_names()
+        existing = list(await db.list_tables())
         if self.META_TABLE not in existing:
             return {}
         table = await db.open_table(self.META_TABLE)
@@ -299,7 +299,7 @@ class VectorStore:
         :rtype: int
         """
         db = self._get_db()
-        existing = await db.table_names()
+        existing = list(await db.list_tables())
         if self.QUOTE_TABLE not in existing:
             return 0
         table = await db.open_table(self.QUOTE_TABLE)
