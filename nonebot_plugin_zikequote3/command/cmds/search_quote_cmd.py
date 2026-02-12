@@ -249,7 +249,29 @@ async def _do_fuzzy_search(
     html_render_svc: HtmlRenderServiceBase,
     config_svc: ConfigService,
 ) -> None:
-    """模糊语义搜索逻辑。"""
+    """模糊语义搜索逻辑，从 :func:`handle_search_quote` 提取的公共实现。
+
+    执行向量语义搜索并渲染结果为列表图片发送。支持按 QQ 号和图片过滤结果。
+
+    :param matcher: 命令匹配器实例。
+    :type matcher: Any
+    :param group_id: 群组 ID。
+    :type group_id: str
+    :param params: 搜索参数校验模型。
+    :type params: _ArgsValidater
+    :param vector_search_svc: 向量搜索服务，未启用时为 ``None``。
+    :type vector_search_svc: Optional[VectorSearchService]
+    :param quote_read_svc: 语录读取服务。
+    :type quote_read_svc: QuoteReadService
+    :param user_svc: 用户服务。
+    :type user_svc: UserService
+    :param image_store: 图片存储。
+    :type image_store: ImageStore
+    :param html_render_svc: HTML 渲染服务。
+    :type html_render_svc: HtmlRenderServiceBase
+    :param config_svc: 配置服务。
+    :type config_svc: ConfigService
+    """
     async with command_error_handler(matcher, "模糊语义搜索"):
         if not params.pattern:
             await matcher.finish("模糊搜索需要提供关键词哦~")

@@ -78,7 +78,29 @@ class LLMConfig(BaseModel):
 
 
 class EmbeddingConfig(BaseModel):
-    """Embedding 服务配置。"""
+    """Embedding 服务配置。
+
+    控制模糊语义搜索功能的模型、API 连接和搜索行为参数。
+
+    :param enabled: 是否启用模糊语义搜索功能，默认为 ``False``。
+    :type enabled: bool
+    :param model: Embedding 模型名称。
+    :type model: str
+    :param dimensions: 模型输出向量维度。
+    :type dimensions: int
+    :param base_url: Embedding API 地址，为 ``None`` 时复用 ``llm.base_url``。
+    :type base_url: str | None
+    :param api_key_path: Embedding API Key 文件路径，为 ``None`` 时复用 ``llm.api_key_path``。
+    :type api_key_path: str | None
+    :param batch_size: 批量向量化时每批的文本数量。
+    :type batch_size: int
+    :param max_retries: 请求失败重试次数。
+    :type max_retries: int
+    :param default_top_n: 默认返回的搜索结果数量。
+    :type default_top_n: int
+    :param default_threshold: 默认相似度阈值，``0`` 表示不过滤。
+    :type default_threshold: float
+    """
 
     enabled: bool = False
     """是否启用模糊语义搜索功能。"""

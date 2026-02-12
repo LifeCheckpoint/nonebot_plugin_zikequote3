@@ -1,4 +1,8 @@
-"""LanceDB 异步封装，管理向量存储的连接和表生命周期。"""
+"""LanceDB 异步封装，管理向量存储的连接和表生命周期。
+
+提供对 LanceDB 的异步连接管理、表创建、向量记录的增删查，
+以及元信息（模型名称、维度、重建时间）的读写功能。
+"""
 
 from __future__ import annotations
 
@@ -15,7 +19,11 @@ _SAFE_ID_RE = re.compile(r"^[\w-]+$")
 
 
 class VectorStore:
-    """LanceDB 向量存储封装。"""
+    """LanceDB 向量存储封装。
+
+    管理向量数据库的连接、表生命周期和向量记录的 CRUD 操作，
+    同时维护模型元信息以支持一致性检查。
+    """
 
     QUOTE_TABLE = "quote_vectors"
     META_TABLE = "vector_meta"
@@ -28,42 +36,84 @@ class VectorStore:
 
     @staticmethod
     def _sanitize_quote_id(quote_id: str) -> str:
-        """校验 quote_id 只含安全字符（字母、数字、下划线、连字符）。"""
+        """校验 quote_id 只含安全字符（字母、数字、下划线、连字符）。
+
+        :param quote_id: 待校验的语录 ID。
+        :type quote_id: str
+        :returns: 校验通过的语录 ID。
+        :rtype: str
+        :raises ValueError: 当 quote_id 包含非法字符时抛出。
+        """
         if not isinstance(quote_id, str) or not _SAFE_ID_RE.match(quote_id):
             raise ValueError(f"非法 quote_id: {quote_id!r}")
         return quote_id
 
     @staticmethod
     def _sanitize_group_id(group_id: str) -> str:
-        """校验 group_id 只含数字字符。"""
+        """校验 group_id 只含数字字符。
+
+        :param group_id: 待校验的群组 ID。
+        :type group_id: str
+        :returns: 校验通过的群组 ID。
+        :rtype: str
+        :raises ValueError: 当 group_id 包含非数字字符时抛出。
+        """
         if not isinstance(group_id, str) or not group_id.isdigit():
             raise ValueError(f"非法 group_id: {group_id!r}")
         return group_id
 
     @classmethod
     def _safe_quote_filter(cls, quote_ids: List[str]) -> str:
-        """构建安全的 quote_id IN (...) 过滤子句。"""
+        """构建安全的 quote_id IN (...) 过滤子句。
+
+        :param quote_ids: 语录 ID 列表。
+        :type quote_ids: List[str]
+        :returns: SQL 过滤子句字符串。
+        :rtype: str
+        :raises ValueError: 当任一 quote_id 包含非法字符时抛出。
+        """
         safe_ids = [cls._sanitize_quote_id(qid) for qid in quote_ids]
         id_list = ", ".join(f"'{qid}'" for qid in safe_ids)
         return f"quote_id IN ({id_list})"
 
     @classmethod
     def _safe_group_filter(cls, group_id: str) -> str:
-        """构建安全的 group_id = '...' 过滤子句。"""
+        """构建安全的 group_id = '...' 过滤子句。
+
+        :param group_id: 群组 ID。
+        :type group_id: str
+        :returns: SQL 过滤子句字符串。
+        :rtype: str
+        :raises ValueError: 当 group_id 包含非数字字符时抛出。
+        """
         safe_id = cls._sanitize_group_id(group_id)
         return f"group_id = '{safe_id}'"
 
     async def connect(self, db_path: str) -> None:
-        """连接到 LanceDB 数据库。"""
+        """连接到 LanceDB 数据库。
+
+        :param db_path: 数据库文件路径。
+        :type db_path: str
+        """
         self._db = await lancedb.connect_async(db_path)
 
     def _get_db(self) -> lancedb.AsyncConnection:
+        """获取数据库连接，未连接时抛出异常。
+
+        :returns: 异步数据库连接对象。
+        :rtype: lancedb.AsyncConnection
+        :raises RuntimeError: 当未调用 :meth:`connect` 时抛出。
+        """
         if self._db is None:
             raise RuntimeError("VectorStore 未连接，请先调用 connect()")
         return self._db
 
     async def ensure_table(self, dimensions: int) -> None:
-        """确保 quote_vectors 表存在，不存在则创建。"""
+        """确保 quote_vectors 表存在，不存在则创建。
+
+        :param dimensions: 向量维度。
+        :type dimensions: int
+        """
         db = self._get_db()
         existing = await db.table_names()
         if self.QUOTE_TABLE not in existing:
@@ -95,6 +145,9 @@ class VectorStore:
 
         每条记录需包含 quote_id, group_id, content, vector。
         使用 delete + add 模拟 upsert（LanceDB 无原生 upsert）。
+
+        :param records: 向量记录列表，每条包含 quote_id、group_id、content、vector。
+        :type records: List[Dict[str, Any]]
         """
         if not records:
             return
@@ -110,7 +163,11 @@ class VectorStore:
         await table.add(records)
 
     async def delete(self, quote_ids: List[str]) -> None:
-        """删除指定语录的向量记录。"""
+        """删除指定语录的向量记录。
+
+        :param quote_ids: 待删除的语录 ID 列表。
+        :type quote_ids: List[str]
+        """
         if not quote_ids:
             return
         db = self._get_db()
@@ -118,7 +175,11 @@ class VectorStore:
         await table.delete(self._safe_quote_filter(quote_ids))
 
     async def delete_by_group(self, group_id: str) -> None:
-        """删除指定群组的所有向量记录。"""
+        """删除指定群组的所有向量记录。
+
+        :param group_id: 群组 ID。
+        :type group_id: str
+        """
         db = self._get_db()
         existing = await db.table_names()
         if self.QUOTE_TABLE not in existing:
@@ -134,10 +195,21 @@ class VectorStore:
         limit: int = 10,
         threshold: float = 0.0,
     ) -> List[Dict[str, Any]]:
-        """向量检索，返回 [{quote_id, group_id, content, similarity}, ...]。
+        """向量检索，返回相似语录列表。
 
         使用余弦距离（cosine distance），_distance 范围 [0, 2]，
         相似度 = 1 - distance。
+
+        :param query_vector: 查询向量。
+        :type query_vector: List[float]
+        :param group_id: 群组 ID，用于过滤结果。
+        :type group_id: str
+        :param limit: 最大返回结果数量，默认为 10。
+        :type limit: int
+        :param threshold: 相似度阈值，低于此值的结果将被过滤，默认为 0.0。
+        :type threshold: float
+        :returns: 结果列表，每项包含 quote_id、group_id、content、similarity。
+        :rtype: List[Dict[str, Any]]
         """
         db = self._get_db()
         table = await db.open_table(self.QUOTE_TABLE)
@@ -177,7 +249,11 @@ class VectorStore:
             await db.drop_table(self.META_TABLE)
 
     async def get_meta(self) -> Dict[str, str]:
-        """获取元信息，返回 {key: value} 字典。"""
+        """获取元信息。
+
+        :returns: 元信息字典，键值对形式。
+        :rtype: Dict[str, str]
+        """
         db = self._get_db()
         existing = await db.table_names()
         if self.META_TABLE not in existing:
@@ -192,7 +268,13 @@ class VectorStore:
         return result
 
     async def set_meta(self, model_name: str, dimensions: int) -> None:
-        """更新元信息（model_name / dimensions / last_reindex_time）。"""
+        """更新元信息（model_name / dimensions / last_reindex_time）。
+
+        :param model_name: 模型名称。
+        :type model_name: str
+        :param dimensions: 向量维度。
+        :type dimensions: int
+        """
         await self._ensure_meta_table()
         db = self._get_db()
         table = await db.open_table(self.META_TABLE)
@@ -211,7 +293,11 @@ class VectorStore:
         )
 
     async def count(self) -> int:
-        """返回 quote_vectors 表的记录总数。"""
+        """返回 quote_vectors 表的记录总数。
+
+        :returns: 记录总数。
+        :rtype: int
+        """
         db = self._get_db()
         existing = await db.table_names()
         if self.QUOTE_TABLE not in existing:

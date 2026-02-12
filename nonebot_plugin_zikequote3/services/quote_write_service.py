@@ -290,7 +290,13 @@ class QuoteWriteService:
     # ------------------------------------------------------------------ #
 
     async def _try_index_quote(self, quote: Quote) -> None:
-        """尝试为语录建立向量索引，失败仅记录日志。"""
+        """尝试为语录建立向量索引，失败仅记录日志。
+
+        当向量搜索服务未注入时静默跳过。
+
+        :param quote: 待索引的语录对象。
+        :type quote: Quote
+        """
         if self._vector_search_svc is None:
             return
         try:
@@ -299,7 +305,13 @@ class QuoteWriteService:
             logger.warning("向量索引更新失败 (quote_id=%s): %s", quote.quote_id, e)
 
     async def _try_remove_quote(self, quote_id: str) -> None:
-        """尝试删除语录的向量索引，失败仅记录日志。"""
+        """尝试删除语录的向量索引，失败仅记录日志。
+
+        当向量搜索服务未注入时静默跳过。
+
+        :param quote_id: 待删除索引的语录 ID。
+        :type quote_id: str
+        """
         if self._vector_search_svc is None:
             return
         try:

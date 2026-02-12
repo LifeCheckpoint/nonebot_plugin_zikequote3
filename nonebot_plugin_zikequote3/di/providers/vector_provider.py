@@ -1,4 +1,9 @@
-"""向量搜索相关的 dishka Provider。"""
+"""向量搜索相关的 dishka Provider。
+
+注册 :class:`EmbeddingClient`、:class:`VectorStore` 和
+:class:`VectorSearchService` 到 dishka 依赖注入容器中。
+当 embedding 未启用时，各 provide 方法返回 ``None``。
+"""
 from __future__ import annotations
 
 from pathlib import Path
@@ -17,6 +22,13 @@ class VectorProvider(Provider):
     """向量搜索 DI Provider。
 
     始终注册到容器中。当 embedding 未启用时，各 provide 方法返回 ``None``。
+
+    :param embedding_config: Embedding 服务配置，默认为 ``None``。
+    :type embedding_config: Optional[EmbeddingConfig]
+    :param llm_config: LLM 服务配置，默认为 ``None``。
+    :type llm_config: Optional[LLMConfig]
+    :param vector_db_path: 向量数据库路径，默认为 ``None``。
+    :type vector_db_path: Optional[Union[str, Path]]
     """
 
     def __init__(
@@ -38,12 +50,22 @@ class VectorProvider(Provider):
 
     @provide(scope=Scope.APP)
     async def provide_embedding_client(self) -> EmbeddingClient:  # type: ignore[return-value]
+        """提供 EmbeddingClient 实例。
+
+        :returns: Embedding 客户端实例，未启用时返回 ``None``。
+        :rtype: EmbeddingClient
+        """
         if not self._enabled:
             return None  # type: ignore[return-value]
         return EmbeddingClient(self._embedding_config, self._llm_config)  # type: ignore[arg-type]
 
     @provide(scope=Scope.APP)
     async def provide_vector_store(self) -> VectorStore:  # type: ignore[return-value]
+        """提供 VectorStore 实例，自动完成连接和表初始化。
+
+        :returns: 向量存储实例，未启用时返回 ``None``。
+        :rtype: VectorStore
+        """
         if not self._enabled:
             return None  # type: ignore[return-value]
         store = VectorStore()
@@ -58,6 +80,17 @@ class VectorProvider(Provider):
         vector_store: VectorStore,
         quote_repo: QuoteRepository,
     ) -> VectorSearchService:  # type: ignore[return-value]
+        """提供 VectorSearchService 实例。
+
+        :param embedding_client: Embedding 客户端实例。
+        :type embedding_client: EmbeddingClient
+        :param vector_store: 向量存储实例。
+        :type vector_store: VectorStore
+        :param quote_repo: 语录仓储实例。
+        :type quote_repo: QuoteRepository
+        :returns: 向量搜索服务实例，未启用时返回 ``None``。
+        :rtype: VectorSearchService
+        """
         if not self._enabled or embedding_client is None or vector_store is None:
             return None  # type: ignore[return-value]
         return VectorSearchService(embedding_client, vector_store, quote_repo)

@@ -1,7 +1,6 @@
-"""
-重建语录向量索引命令处理器。
+"""重建语录向量索引命令处理器。
 
-通过 @inject 装饰器自动从 dishka 容器获取服务依赖。
+通过 ``@inject`` 装饰器自动从 dishka 容器获取服务依赖。
 支持 ``--all`` 选项重建所有群的索引（需要管理员权限）。
 使用 ``asyncio.create_task`` 后台执行重建，避免阻塞用户交互。
 """
@@ -31,8 +30,19 @@ async def _do_rebuild(
 ) -> None:
     """后台执行重建索引，完成后通过 bot.send 发送结果。
 
-    在内部创建独立的 REQUEST 作用域来获取 VectorSearchService，
+    在内部创建独立的 REQUEST 作用域来获取 :class:`VectorSearchService`，
     避免使用 handler 中已关闭的 REQUEST 作用域。
+
+    :param container: dishka 异步容器。
+    :type container: AsyncContainer
+    :param bot: Bot 实例，用于发送消息。
+    :type bot: Bot
+    :param event: 群消息事件，用于确定发送目标。
+    :type event: GroupMessageEvent
+    :param group_id: 群组 ID，为 ``None`` 时重建全部群。
+    :type group_id: str | None
+    :param scope_desc: 重建范围描述文本，用于消息提示。
+    :type scope_desc: str
     """
     try:
         async with container() as request_container:
@@ -52,16 +62,15 @@ async def handle_rebuild_index(
     rebuild_all: Query[bool] = Query("rebuild_all.value", False),
     vector_search_svc: VectorSearchService = Inject(VectorSearchService),
 ) -> None:
-    """
-    处理重建语录向量索引命令。
+    """处理重建语录向量索引命令。
 
-    :param bot: Bot 实例，用于后台任务发送消息
+    :param bot: Bot 实例，用于后台任务发送消息。
     :type bot: Bot
-    :param event: 群消息事件
+    :param event: 群消息事件。
     :type event: GroupMessageEvent
-    :param rebuild_all: 是否重建所有群的索引
+    :param rebuild_all: 是否重建所有群的索引。
     :type rebuild_all: Query[bool]
-    :param vector_search_svc: 向量搜索服务（DI 注入，仅用于检查是否启用）
+    :param vector_search_svc: 向量搜索服务（DI 注入，仅用于检查是否启用）。
     :type vector_search_svc: VectorSearchService
     """
     if vector_search_svc is None:

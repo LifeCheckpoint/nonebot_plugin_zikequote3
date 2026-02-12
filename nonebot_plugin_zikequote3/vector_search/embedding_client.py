@@ -1,4 +1,8 @@
-"""Embedding API 客户端，基于 AsyncOpenAI。"""
+"""Embedding API 客户端，基于 AsyncOpenAI。
+
+提供对 OpenAI 兼容 Embedding API 的异步调用封装，
+支持批量文本向量化和指数退避重试机制。
+"""
 
 from __future__ import annotations
 
@@ -18,7 +22,18 @@ _RETRY_BASE_DELAY = 1.0  # 秒
 
 
 class EmbeddingClient:
-    """封装 OpenAI 兼容的 Embedding API 调用。"""
+    """封装 OpenAI 兼容的 Embedding API 调用。
+
+    负责管理 API 连接配置、模型参数，并提供带重试机制的
+    文本向量化接口。
+
+    :param embedding_config: Embedding 服务配置。
+    :type embedding_config: EmbeddingConfig
+    :param llm_config: LLM 服务配置，用于回退 base_url 和 api_key。
+    :type llm_config: LLMConfig
+    :param plugin_root: 插件根目录路径，默认使用 :attr:`PluginPath.plugin_root`。
+    :type plugin_root: Path | None
+    """
 
     def __init__(
         self,
@@ -49,18 +64,42 @@ class EmbeddingClient:
 
     @property
     def model_name(self) -> str:
+        """获取当前配置的 Embedding 模型名称。
+
+        :returns: 模型名称字符串。
+        :rtype: str
+        """
         return self._config.model
 
     @property
     def dimensions(self) -> int:
+        """获取模型输出向量的维度。
+
+        :returns: 向量维度。
+        :rtype: int
+        """
         return self._config.dimensions
 
     @property
     def batch_size(self) -> int:
+        """获取批量向量化时每批的文本数量。
+
+        :returns: 批大小。
+        :rtype: int
+        """
         return self._config.batch_size
 
     async def embed_texts(self, texts: List[str]) -> List[List[float]]:
-        """批量生成 embedding 向量。含重试机制（指数退避，重试次数由配置决定）。"""
+        """批量生成 embedding 向量。
+
+        使用指数退避重试机制，重试次数由配置决定。
+
+        :param texts: 待向量化的文本列表。
+        :type texts: List[str]
+        :returns: 与输入文本一一对应的向量列表。
+        :rtype: List[List[float]]
+        :raises Exception: 所有重试均失败时抛出最后一次异常。
+        """
         if not texts:
             return []
 
@@ -92,6 +131,12 @@ class EmbeddingClient:
         raise last_exc  # type: ignore[misc]
 
     async def embed_query(self, text: str) -> List[float]:
-        """单条文本生成 embedding 向量。"""
+        """单条文本生成 embedding 向量。
+
+        :param text: 待向量化的文本。
+        :type text: str
+        :returns: 文本对应的向量。
+        :rtype: List[float]
+        """
         vectors = await self.embed_texts([text])
         return vectors[0]

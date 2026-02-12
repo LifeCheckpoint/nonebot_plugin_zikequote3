@@ -1,8 +1,7 @@
-"""
-模糊语义搜索命令处理器（/模糊查语录）。
+"""模糊语义搜索命令处理器（/模糊查语录）。
 
-通过 @inject 装饰器自动从 dishka 容器获取服务依赖。
-支持简写位置参数和显式 -s / -n 选项。
+通过 ``@inject`` 装饰器自动从 dishka 容器获取服务依赖。
+支持简写位置参数和显式 ``-s`` / ``-n`` 选项。
 """
 
 from __future__ import annotations
@@ -31,12 +30,15 @@ logger = logging.getLogger(__name__)
 def _parse_fuzzy_shorthand(
     tokens: list[str],
 ) -> tuple[Optional[int], Optional[float], str]:
-    """
-    解析模糊搜索命令的简写位置参数。
+    """解析模糊搜索命令的简写位置参数。
 
-    首个 token 若为整数 → top_n，若为小数 → similarity，其余为 keyword。
+    首个 token 若为整数则解析为 top_n，若为小数则解析为 similarity，
+    其余 token 拼接为 keyword。
 
-    :returns: (top_n, similarity, keyword)
+    :param tokens: 命令参数 token 列表。
+    :type tokens: list[str]
+    :returns: ``(top_n, similarity, keyword)`` 三元组。
+    :rtype: tuple[Optional[int], Optional[float], str]
     """
     if not tokens:
         return None, None, ""
@@ -77,12 +79,40 @@ async def handle_fuzzy_search_quote(
     html_render_svc: HtmlRenderServiceBase = Inject(HtmlRenderServiceBase),
     config_svc: ConfigService = Inject(ConfigService),
 ) -> None:
-    """
-    处理专用模糊搜索命令（/模糊查语录）。
+    """处理专用模糊搜索命令（/模糊查语录）。
 
     支持简写位置参数：首个 token 若为整数 → top_n，若为小数 → similarity。
-    例如：``/模糊查语录 15 xxxx`` → top_n=15, keyword="xxxx"
-    例如：``/模糊查语录 0.7 xxxx`` → similarity=0.7, keyword="xxxx"
+
+    :param event: 群消息事件。
+    :type event: GroupMessageEvent
+    :param at_user: @提及 的用户。
+    :type at_user: Match[At]
+    :param qq: QQ 号参数。
+    :type qq: Match[int]
+    :param keyword: 搜索关键词。
+    :type keyword: Match[UniMessage]
+    :param similarity: 相似度阈值选项。
+    :type similarity: Match[float]
+    :param top_n: 返回结果数量选项。
+    :type top_n: Match[int]
+    :param no_image: 是否排除图片语录。
+    :type no_image: Query[bool]
+    :param vector_search_svc: 向量搜索服务（DI 注入）。
+    :type vector_search_svc: VectorSearchService
+    :param quote_read_svc: 语录读取服务（DI 注入）。
+    :type quote_read_svc: QuoteReadService
+    :param user_svc: 用户服务（DI 注入）。
+    :type user_svc: UserService
+    :param image_store: 图片存储（DI 注入）。
+    :type image_store: ImageStore
+    :param html_render_svc: HTML 渲染服务（DI 注入）。
+    :type html_render_svc: HtmlRenderServiceBase
+    :param config_svc: 配置服务（DI 注入）。
+    :type config_svc: ConfigService
+
+    .. note::
+        示例：``/模糊查语录 15 xxxx`` → top_n=15, keyword="xxxx"；
+        ``/模糊查语录 0.7 xxxx`` → similarity=0.7, keyword="xxxx"。
     """
     group_id = str(event.group_id)
 
