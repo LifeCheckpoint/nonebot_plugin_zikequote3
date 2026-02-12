@@ -1,0 +1,43 @@
+name: Test
+
+"on":
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          uv venv
+          uv pip install -e ".[dev]"
+          uv pip install "pytest-cov>=7.0.0"
+
+      - name: Run tests
+        run: uv run pytest --tb=short
+
+      - name: Upload coverage report
+        if: matrix.python-version == '3.12' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            htmlcov/
+            .coverage
+          retention-days: 7
