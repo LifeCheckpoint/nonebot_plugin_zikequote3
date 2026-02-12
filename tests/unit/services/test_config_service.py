@@ -134,6 +134,23 @@ class TestParseConfigParam:
         with pytest.raises(ValidationException):
             ConfigService.parse_config_param(["only_one"])
 
+    def test_bool_true_lowercase(self) -> None:
+        _, value = ConfigService.parse_config_param(["embedding.enabled", "true"])
+        assert value is True
+
+    def test_bool_false_lowercase(self) -> None:
+        _, value = ConfigService.parse_config_param(["embedding.enabled", "false"])
+        assert value is False
+
+    def test_bool_mixed_case(self) -> None:
+        _, value = ConfigService.parse_config_param(["key", "TRUE"])
+        assert value is True
+
+    def test_bool_python_style(self) -> None:
+        """Python 风格的 True/False 仍然正常工作。"""
+        _, value = ConfigService.parse_config_param(["key", "True"])
+        assert value is True
+
     def test_invalid_literal_raises(self) -> None:
         with pytest.raises(ValidationException):
             ConfigService.parse_config_param(["key", "not_a_literal"])

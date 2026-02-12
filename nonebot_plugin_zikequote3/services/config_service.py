@@ -272,7 +272,11 @@ class ConfigService:
             raise ValidationException("配置参数需要至少 2 个值: schema_path 和 value")
         try:
             schema_str = args[0].strip()
-            new_value = literal_eval(args[1].strip())
+            raw_value = args[1].strip()
+            # 预处理布尔值：用户习惯输入小写 true/false
+            _bool_map = {"true": "True", "false": "False"}
+            raw_value = _bool_map.get(raw_value.lower(), raw_value)
+            new_value = literal_eval(raw_value)
             return schema_str, new_value
         except (ValueError, SyntaxError) as e:
             raise ValidationException(f"配置参数解析失败: {e}") from e
