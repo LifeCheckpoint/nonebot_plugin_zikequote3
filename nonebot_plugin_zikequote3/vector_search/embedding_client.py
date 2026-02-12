@@ -46,9 +46,9 @@ class EmbeddingClient:
         self._max_retries = embedding_config.max_retries
         resolved_root = plugin_root or PluginPath.plugin_root
 
-        # base_url / api_key 为 None 时回退使用 LLM 配置
-        base_url = embedding_config.base_url if embedding_config.base_url is not None else llm_config.base_url
-        api_key_path_str = embedding_config.api_key_path if embedding_config.api_key_path is not None else llm_config.api_key_path
+        # base_url / api_key 为空字符串时回退使用 LLM 配置
+        base_url = embedding_config.base_url or llm_config.base_url
+        api_key_path_str = embedding_config.api_key_path or llm_config.api_key_path
         api_key_path = Path(api_key_path_str)
         if not api_key_path.is_absolute():
             api_key_path = resolved_root / api_key_path

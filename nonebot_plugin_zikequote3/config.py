@@ -88,10 +88,10 @@ class EmbeddingConfig(BaseModel):
     :type model: str
     :param dimensions: 模型输出向量维度。
     :type dimensions: int
-    :param base_url: Embedding API 地址，为 ``None`` 时复用 ``llm.base_url``。
-    :type base_url: str | None
-    :param api_key_path: Embedding API Key 文件路径，为 ``None`` 时复用 ``llm.api_key_path``。
-    :type api_key_path: str | None
+    :param base_url: Embedding API 地址，为空字符串时复用 ``llm.base_url``。
+    :type base_url: str
+    :param api_key_path: Embedding API Key 文件路径，为空字符串时复用 ``llm.api_key_path``。
+    :type api_key_path: str
     :param batch_size: 批量向量化时每批的文本数量。
     :type batch_size: int
     :param max_retries: 请求失败重试次数。
@@ -108,17 +108,17 @@ class EmbeddingConfig(BaseModel):
     """Embedding 模型名称。"""
     dimensions: int = 4096
     """模型输出向量维度。"""
-    base_url: str | None = None
-    """Embedding API 地址，为 None 时复用 llm.base_url。"""
-    api_key_path: str | None = None
-    """Embedding API Key 文件路径，为 None 时复用 llm.api_key_path。"""
-    batch_size: int = 64
+    base_url: str = ""
+    """Embedding API 地址，为空字符串时复用 llm.base_url。"""
+    api_key_path: str = ""
+    """Embedding API Key 文件路径，为空字符串时复用 llm.api_key_path。"""
+    batch_size: int = 32
     """批量向量化时每批的文本数量。"""
     max_retries: int = 2
     """请求失败重试次数。"""
-    default_top_n: int = 10
+    default_top_n: int = 5
     """默认返回的搜索结果数量。"""
-    default_threshold: float = 0.0
+    default_threshold: float = 0.5
     """默认相似度阈值，0 表示不过滤。"""
 
 
