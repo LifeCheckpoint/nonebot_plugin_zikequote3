@@ -65,7 +65,7 @@ def build_default_help_data() -> TemplateHelpData:
                         name="/查语录",
                         aliases=["搜索语录", "搜语录", "找语录"],
                         description="按关键词搜索语录，支持正则、模糊语义搜索等高级选项",
-                        usage="/查语录 [关键词] [@某人] [-qq QQ号] [-m 数量] [-ni] [-r] [-f] [-s 相似度] [-n 数量]",
+                        usage="/查语录 [关键词] [@某人] [-qq QQ号] [-m 最大条数] [-ni 不含图片] [-r 正则模式] [-f 模糊搜索] [-s 相似度] [-n 返回条数]",
                         examples=[
                             "/查语录 摸鱼 → 搜索含「摸鱼」的语录",
                             "/查语录 摸鱼 @某人 → 筛选该用户",
@@ -80,7 +80,7 @@ def build_default_help_data() -> TemplateHelpData:
                         name="/模糊查语录",
                         aliases=["查模糊语录"],
                         description="基于语义相似度的模糊搜索，需配置 Embedding 服务",
-                        usage="/模糊查语录 [关键词] [@某人] [-qq QQ号] [-ni] [-s 相似度] [-n 数量]",
+                        usage="/模糊查语录 [关键词] [@某人] [-qq QQ号] [-ni 不含图片] [-s 相似度] [-n 返回条数]",
                         examples=[
                             "/模糊查语录 开心的事 → 语义搜索相关语录",
                             "/模糊查语录 想吃火锅 -s 0.5 → 相似度≥0.5",
@@ -246,7 +246,7 @@ def build_default_help_data() -> TemplateHelpData:
                         name="/重建语录索引",
                         aliases=["语录重建索引", "重建索引"],
                         description="重建当前群的模糊搜索向量索引，模型切换后需执行",
-                        usage="/重建语录索引 [--all]",
+                        usage="/重建语录索引 [--all 所有群]",
                         examples=[
                             "/重建语录索引 → 重建当前群的索引",
                             "/重建语录索引 --all → 重建所有群的索引",

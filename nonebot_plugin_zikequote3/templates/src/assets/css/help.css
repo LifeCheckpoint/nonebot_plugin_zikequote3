@@ -1,10 +1,10 @@
 /* 页面容器 — 两列瀑布流 */
 .help-container {
-    max-width: 1400px;
+    max-width: 720px;
     margin: 0 auto;
     padding: 24px 20px 32px 20px;
     column-count: 2;
-    column-gap: 28px;
+    column-gap: 20px;
 }
 
 /* 顶部标题区 */
@@ -78,9 +78,9 @@
     margin-bottom: 4px;
 }
 .cmd-name {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--text-primary);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #1a5276;
 }
 .cmd-alias {
     font-size: 0.72rem;
