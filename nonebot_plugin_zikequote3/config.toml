@@ -39,6 +39,18 @@ model = "deepseek/deepseek-v3.2-exp"
 temperature = 0.2
 max_retries = 3 # 请求失败重试次数
 
+[embedding]
+# Embedding 语义搜索配置
+# enabled = false # 是否启用模糊语义搜索功能
+# model = "qwen/qwen3-embedding-8b" # Embedding 模型名称
+# dimensions = 4096 # 模型输出向量维度
+# base_url = # Embedding API 地址，不设置时复用 llm.base_url
+# api_key_path = # Embedding API Key 文件路径，不设置时复用 llm.api_key_path
+# batch_size = 64 # 批量向量化时每批的文本数量
+# max_retries = 2 # 请求失败重试次数
+# default_top_n = 10 # 默认返回的搜索结果数量
+# default_threshold = 0.0 # 默认相似度阈值，0 表示不过滤
+
 [sentry]
 dsn_path = "utils/sentry_dsn" # Sentry DSN 文件路径，相对插件根目录或绝对路径，可留空表示不启用
 

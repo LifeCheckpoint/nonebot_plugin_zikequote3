@@ -167,7 +167,7 @@ class ConfigService:
         else:
             # 基于默认值创建完整 TOML 文档
             doc = tomlkit.parse(
-                tomlkit.dumps(default_cfg.model_dump())  # type: ignore[arg-type]
+                tomlkit.dumps(default_cfg.model_dump(exclude_none=True))  # type: ignore[arg-type]
             )
 
         # 确保 section 存在
@@ -290,7 +290,7 @@ class ConfigService:
         """
         default_cfg = ConfigSchema()
         default_doc = tomlkit.parse(
-            tomlkit.dumps(default_cfg.model_dump())  # type: ignore[arg-type]
+            tomlkit.dumps(default_cfg.model_dump(exclude_none=True))  # type: ignore[arg-type]
         )
         default_version = default_cfg.configure.cfg_version
 

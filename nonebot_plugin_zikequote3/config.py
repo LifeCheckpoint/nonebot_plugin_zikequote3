@@ -2,6 +2,8 @@
 插件配置模型定义。
 
 基于 Pydantic 定义插件的全部配置项，支持从 TOML 文件解析。
+
+如有修改，注意同步 `config.toml` 中的配置模型
 """
 
 from pathlib import Path
@@ -84,12 +86,14 @@ class EmbeddingConfig(BaseModel):
     """Embedding 模型名称。"""
     dimensions: int = 4096
     """模型输出向量维度。"""
-    base_url: str = ""
-    """Embedding API 地址，为空时复用 llm.base_url。"""
-    api_key_path: str = ""
-    """Embedding API Key 文件路径，为空时复用 llm.api_key_path。"""
+    base_url: str | None = None
+    """Embedding API 地址，为 None 时复用 llm.base_url。"""
+    api_key_path: str | None = None
+    """Embedding API Key 文件路径，为 None 时复用 llm.api_key_path。"""
     batch_size: int = 64
     """批量向量化时每批的文本数量。"""
+    max_retries: int = 2
+    """请求失败重试次数。"""
     default_top_n: int = 10
     """默认返回的搜索结果数量。"""
     default_threshold: float = 0.0
