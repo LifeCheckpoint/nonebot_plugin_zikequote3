@@ -89,13 +89,17 @@ async def _startup() -> None:
         tomlkit.parse(Path(cfg_file).read_text(encoding="utf-8"))
     )
 
-    # 1) 创建引擎并初始化数据库表
+    # 初始化 Sentry 错误追踪
+    from .utils.sentry_init import init_sentry
+    init_sentry(default_cfg.sentry.dsn_path)
+
+    # 创建引擎并初始化数据库表
     engine = create_async_engine_factory(PluginPath.data_db_path)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     await engine.dispose()  # 临时引擎，建表后释放
 
-    # 2) 创建 DI 容器（容器内部会创建自己的 APP 级 Engine）
+    # 创建 DI 容器
     vector_db_path = PluginPath.data_cache_path / "vector_db"
     container = create_container(
         db_path=PluginPath.data_db_path,
@@ -106,17 +110,17 @@ async def _startup() -> None:
         vector_db_path=vector_db_path,
     )
 
-    # 3) 配置完整性修复（版本迁移）
+    # 配置完整性修复
     from .services.config_service import ConfigService
 
     async with container() as request_ctx:
         config_svc = await request_ctx.get(ConfigService)
         await config_svc.fix_config_integrity()
 
-    # 4) 绑定到 NoneBot Driver（shutdown 时自动关闭容器）
+    # 绑定到 NoneBot Driver
     setup_dishka(container, driver)
 
-    # 5) 启动时检查向量索引模型一致性
+    # 启动时检查向量索引模型一致性
     if default_cfg.embedding.enabled:
         await _check_vector_index_consistency(container)
 

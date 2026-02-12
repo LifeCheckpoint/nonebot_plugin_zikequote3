@@ -71,7 +71,7 @@ class LLMConfig(BaseModel):
     """LLM 服务相关配置。"""
 
     base_url: str = "https://openrouter.ai/api/v1"
-    api_key_path: str = "utils/api_key"
+    api_key_path: str = "llm_services/api_key"
     model: str = "deepseek/deepseek-v3.2-exp"
     temperature: float = 0.2
     max_retries: int = 3
