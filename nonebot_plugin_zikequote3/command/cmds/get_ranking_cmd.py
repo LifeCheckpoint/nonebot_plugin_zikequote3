@@ -21,6 +21,7 @@ from ..command_definition import matcher_get_ranking, default_cfg
 from ...di import Inject, inject
 from ...services import (
     GroupService,
+    QuoteCollectionService,
     QuoteReadService,
     StatisticsService,
     UserService,
@@ -70,6 +71,7 @@ async def handle_get_ranking(
     user_svc: UserService = Inject(UserService),
     group_svc: GroupService = Inject(GroupService),
     quote_read_svc: QuoteReadService = Inject(QuoteReadService),
+    collection_svc: QuoteCollectionService = Inject(QuoteCollectionService),
     html_render_svc: HtmlRenderServiceBase = Inject(HtmlRenderServiceBase),
 ) -> None:
     """
@@ -112,8 +114,8 @@ async def handle_get_ranking(
         if total_count == 0:
             raise ValueError("当前群组语录数为 0")
 
-        # pending_count 暂时设为 0（旧版依赖 queue_service）
-        pending_count = 0
+        # 从消息队列获取待收集语录数
+        pending_count = await collection_svc.get_queue_count(group_id)
 
         stats_data = TemplateRankingStatsData(
             total_quotes=total_count,

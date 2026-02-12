@@ -15,6 +15,7 @@ from nonebot.exception import FinishedException
 
 from nonebot_plugin_zikequote3.services.group_service import GroupService
 from nonebot_plugin_zikequote3.services.html_render_service import HtmlRenderServiceBase
+from nonebot_plugin_zikequote3.services.quote_collection_service import QuoteCollectionService
 from nonebot_plugin_zikequote3.services.quote_read_service import QuoteReadService
 from nonebot_plugin_zikequote3.services.statistics_service import StatisticsService
 from nonebot_plugin_zikequote3.services.user_service import UserService
@@ -91,11 +92,15 @@ class TestHandleGetRanking:
         mock_render_svc = AsyncMock(spec=HtmlRenderServiceBase)
         mock_render_svc.render = AsyncMock(return_value=b"\x89PNG_FAKE")
 
+        mock_collection_svc = AsyncMock(spec=QuoteCollectionService)
+        mock_collection_svc.get_queue_count = AsyncMock(return_value=3)
+
         patch_container({
             StatisticsService: mock_stats_svc,
             UserService: mock_user_svc,
             GroupService: mock_group_svc,
             QuoteReadService: mock_read_svc,
+            QuoteCollectionService: mock_collection_svc,
             HtmlRenderServiceBase: mock_render_svc,
         })
 
@@ -111,6 +116,7 @@ class TestHandleGetRanking:
                 user_svc=mock_user_svc,
                 group_svc=mock_group_svc,
                 quote_read_svc=mock_read_svc,
+                collection_svc=mock_collection_svc,
                 html_render_svc=mock_render_svc,
             )
 
@@ -136,12 +142,15 @@ class TestHandleGetRanking:
         mock_group_svc = AsyncMock(spec=GroupService)
         mock_read_svc = AsyncMock(spec=QuoteReadService)
         mock_render_svc = AsyncMock(spec=HtmlRenderServiceBase)
+        mock_collection_svc = AsyncMock(spec=QuoteCollectionService)
+        mock_collection_svc.get_queue_count = AsyncMock(return_value=0)
 
         patch_container({
             StatisticsService: mock_stats_svc,
             UserService: mock_user_svc,
             GroupService: mock_group_svc,
             QuoteReadService: mock_read_svc,
+            QuoteCollectionService: mock_collection_svc,
             HtmlRenderServiceBase: mock_render_svc,
         })
 
@@ -157,6 +166,7 @@ class TestHandleGetRanking:
                 user_svc=mock_user_svc,
                 group_svc=mock_group_svc,
                 quote_read_svc=mock_read_svc,
+                collection_svc=mock_collection_svc,
                 html_render_svc=mock_render_svc,
             )
 
@@ -205,11 +215,15 @@ class TestHandleGetRanking:
             side_effect=RuntimeError("playwright crashed"),
         )
 
+        mock_collection_svc = AsyncMock(spec=QuoteCollectionService)
+        mock_collection_svc.get_queue_count = AsyncMock(return_value=0)
+
         patch_container({
             StatisticsService: mock_stats_svc,
             UserService: mock_user_svc,
             GroupService: mock_group_svc,
             QuoteReadService: mock_read_svc,
+            QuoteCollectionService: mock_collection_svc,
             HtmlRenderServiceBase: mock_render_svc,
         })
 
@@ -225,6 +239,7 @@ class TestHandleGetRanking:
                 user_svc=mock_user_svc,
                 group_svc=mock_group_svc,
                 quote_read_svc=mock_read_svc,
+                collection_svc=mock_collection_svc,
                 html_render_svc=mock_render_svc,
             )
 
