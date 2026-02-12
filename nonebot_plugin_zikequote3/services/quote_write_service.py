@@ -25,6 +25,7 @@ from ..exceptions import (
     QuoteNotFoundError,
     ValidationException,
 )
+from .config_service import ConfigService
 from .user_service import UserService
 
 if TYPE_CHECKING:
@@ -63,12 +64,14 @@ class QuoteWriteService:
         image_repo: ImageRepository,
         mapping_repo: MappingRepository,
         user_service: UserService,
+        config_service: ConfigService,
         vector_search_svc: VectorSearchService | None = None,
     ) -> None:
         self._quote_repo = quote_repo
         self._image_repo = image_repo
         self._mapping_repo = mapping_repo
         self._user_service = user_service
+        self._config_service = config_service
         self._vector_search_svc = vector_search_svc
 
     # ------------------------------------------------------------------ #
@@ -255,7 +258,7 @@ class QuoteWriteService:
         logger.info("语录已删除: quote_id=%s", quote_id)
 
         # 异步删除向量索引（不影响主流程）
-        await self._try_remove_quote(quote_id)
+        await self._try_remove_quote(quote_id, existing.group_id)
 
     # ------------------------------------------------------------------ #
     #  消息ID → 语录ID 映射（原 mapping_service.py）
@@ -292,7 +295,7 @@ class QuoteWriteService:
     async def _try_index_quote(self, quote: Quote) -> None:
         """尝试为语录建立向量索引，失败仅记录日志。
 
-        当向量搜索服务未注入时静默跳过。
+        当向量搜索服务未注入或群组未启用 embedding 时静默跳过。
 
         :param quote: 待索引的语录对象。
         :type quote: Quote
@@ -300,21 +303,29 @@ class QuoteWriteService:
         if self._vector_search_svc is None:
             return
         try:
+            cfg = await self._config_service.get_parsed_config(quote.group_id)
+            if not cfg.embedding.enabled:
+                return
             await self._vector_search_svc.index_quote(quote)
         except Exception as e:
             logger.warning("向量索引更新失败 (quote_id=%s): %s", quote.quote_id, e)
 
-    async def _try_remove_quote(self, quote_id: str) -> None:
+    async def _try_remove_quote(self, quote_id: str, group_id: str) -> None:
         """尝试删除语录的向量索引，失败仅记录日志。
 
-        当向量搜索服务未注入时静默跳过。
+        当向量搜索服务未注入或群组未启用 embedding 时静默跳过。
 
         :param quote_id: 待删除索引的语录 ID。
         :type quote_id: str
+        :param group_id: 群组 ID。
+        :type group_id: str
         """
         if self._vector_search_svc is None:
             return
         try:
+            cfg = await self._config_service.get_parsed_config(group_id)
+            if not cfg.embedding.enabled:
+                return
             await self._vector_search_svc.remove_quote(quote_id)
         except Exception as e:
             logger.warning("向量索引删除失败 (quote_id=%s): %s", quote_id, e)

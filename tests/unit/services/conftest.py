@@ -151,12 +151,14 @@ def quote_write_service(
     mock_image_repo: AsyncMock,
     mock_mapping_repo: AsyncMock,
     user_service: UserService,
+    config_service: ConfigService,
 ) -> QuoteWriteService:
     return QuoteWriteService(
         quote_repo=mock_quote_repo,
         image_repo=mock_image_repo,
         mapping_repo=mock_mapping_repo,
         user_service=user_service,
+        config_service=config_service,
     )
 
 
@@ -186,6 +188,7 @@ def quote_collection_service(
     mock_group_nickname_repo: AsyncMock,
     mock_group_member_repo: AsyncMock,
     mock_group_repo: AsyncMock,
+    mock_group_config_repo: AsyncMock,
 ) -> QuoteCollectionService:
     us = UserService(
         user_repo=mock_user_repo,
@@ -193,11 +196,15 @@ def quote_collection_service(
         group_nickname_repo=mock_group_nickname_repo,
         group_member_repo=mock_group_member_repo,
     )
+    cs = ConfigService(
+        group_config_repo=mock_group_config_repo,
+    )
     qws = QuoteWriteService(
         quote_repo=mock_quote_repo,
         image_repo=mock_image_repo,
         mapping_repo=mock_mapping_repo,
         user_service=us,
+        config_service=cs,
     )
     gs = GroupService(
         group_repo=mock_group_repo,

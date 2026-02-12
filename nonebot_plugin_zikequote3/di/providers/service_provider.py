@@ -199,6 +199,7 @@ class ServiceProvider(Provider):
         image_repo: ImageRepository,
         mapping_repo: MappingRepository,
         user_service: UserService,
+        config_service: ConfigService,
         vector_search_svc: VectorSearchService,
     ) -> QuoteWriteService:
         """
@@ -212,7 +213,9 @@ class ServiceProvider(Provider):
         :type mapping_repo: MappingRepository
         :param user_service: 用户服务
         :type user_service: UserService
-        :param vector_search_svc: 向量搜索服务（embedding 未启用时为 None）
+        :param config_service: 配置服务
+        :type config_service: ConfigService
+        :param vector_search_svc: 向量搜索服务（基础设施不可用时为 None）
         :type vector_search_svc: VectorSearchService
         :returns: 语录写入服务实例
         :rtype: QuoteWriteService
@@ -222,6 +225,7 @@ class ServiceProvider(Provider):
             image_repo=image_repo,
             mapping_repo=mapping_repo,
             user_service=user_service,
+            config_service=config_service,
             vector_search_svc=vector_search_svc,
         )
 

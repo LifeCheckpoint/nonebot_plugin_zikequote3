@@ -276,10 +276,17 @@ async def _do_fuzzy_search(
         if not params.pattern:
             await matcher.finish("模糊搜索需要提供关键词哦~")
 
-        # 检查向量搜索服务是否存在（embedding 未启用时为 None）
+        # 两层检查：先检查群组配置，再检查基础设施
+        cfg = await config_svc.get_parsed_config(group_id)
+        if not cfg.embedding.enabled:
+            await matcher.finish(
+                "当前群组未启用向量搜索，请先执行 /修改语录配置 embedding.enabled True"
+            )
+            return
+
         if vector_search_svc is None:
             await matcher.finish(
-                "模糊搜索功能未启用，请在配置中启用 embedding。"
+                "向量搜索基础设施未就绪，请检查 Embedding 配置（model、base_url、api_key_path）"
             )
             return
 

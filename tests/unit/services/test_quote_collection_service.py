@@ -351,6 +351,7 @@ class TestCollectAndSaveWithComment:
         from nonebot_plugin_zikequote3.services.user_service import UserService
         from nonebot_plugin_zikequote3.services.quote_write_service import QuoteWriteService
         from nonebot_plugin_zikequote3.services.group_service import GroupService
+        from nonebot_plugin_zikequote3.services.config_service import ConfigService
 
         us = UserService(
             user_repo=mock_user_repo,
@@ -358,11 +359,13 @@ class TestCollectAndSaveWithComment:
             group_nickname_repo=mock_group_nickname_repo,
             group_member_repo=mock_group_member_repo,
         )
+        cs = AsyncMock(spec=ConfigService)
         qws = QuoteWriteService(
             quote_repo=mock_quote_repo,
             image_repo=mock_image_repo,
             mapping_repo=mock_mapping_repo,
             user_service=us,
+            config_service=cs,
         )
         gs = GroupService(
             group_repo=mock_group_repo,
@@ -425,6 +428,7 @@ class TestCollectAndSaveWithComment:
         from nonebot_plugin_zikequote3.services.user_service import UserService
         from nonebot_plugin_zikequote3.services.quote_write_service import QuoteWriteService
         from nonebot_plugin_zikequote3.services.group_service import GroupService
+        from nonebot_plugin_zikequote3.services.config_service import ConfigService
 
         us = UserService(
             user_repo=mock_user_repo,
@@ -432,11 +436,13 @@ class TestCollectAndSaveWithComment:
             group_nickname_repo=mock_group_nickname_repo,
             group_member_repo=mock_group_member_repo,
         )
+        cs = AsyncMock(spec=ConfigService)
         qws = QuoteWriteService(
             quote_repo=mock_quote_repo,
             image_repo=mock_image_repo,
             mapping_repo=mock_mapping_repo,
             user_service=us,
+            config_service=cs,
         )
         gs = GroupService(
             group_repo=mock_group_repo,

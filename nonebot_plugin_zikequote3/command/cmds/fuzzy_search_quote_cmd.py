@@ -162,9 +162,16 @@ async def handle_fuzzy_search_quote(
         if params.similarity is not None and not (0.0 <= params.similarity <= 1.0):
             await matcher_fuzzy_search_quote.finish("相似度阈值（-s）必须在 0.0 到 1.0 之间哦~")
 
+    # 两层检查：先检查群组配置，再检查基础设施
+    cfg = await config_svc.get_parsed_config(group_id)
+    if not cfg.embedding.enabled:
+        await matcher_fuzzy_search_quote.finish(
+            "当前群组未启用向量搜索，请先执行 /修改语录配置 embedding.enabled True"
+        )
+
     if vector_search_svc is None:
         await matcher_fuzzy_search_quote.finish(
-            "模糊搜索功能未启用，请在配置中启用 embedding。"
+            "向量搜索基础设施未就绪，请检查 Embedding 配置（model、base_url、api_key_path）"
         )
 
     await _do_fuzzy_search(

@@ -16,6 +16,7 @@ from nonebot_plugin_alconna import Query
 
 from ..command_definition import matcher_rebuild_index
 from ...di import Inject, get_container, inject
+from ...services.config_service import ConfigService
 from ...vector_search.search_service import VectorSearchService
 
 logger = logging.getLogger(__name__)
@@ -61,6 +62,7 @@ async def handle_rebuild_index(
     event: GroupMessageEvent,
     rebuild_all: Query[bool] = Query("rebuild_all.value", False),
     vector_search_svc: VectorSearchService = Inject(VectorSearchService),
+    config_svc: ConfigService = Inject(ConfigService),
 ) -> None:
     """处理重建语录向量索引命令。
 
@@ -70,15 +72,25 @@ async def handle_rebuild_index(
     :type event: GroupMessageEvent
     :param rebuild_all: 是否重建所有群的索引。
     :type rebuild_all: Query[bool]
-    :param vector_search_svc: 向量搜索服务（DI 注入，仅用于检查是否启用）。
+    :param vector_search_svc: 向量搜索服务（DI 注入）。
     :type vector_search_svc: VectorSearchService
+    :param config_svc: 配置服务（DI 注入）。
+    :type config_svc: ConfigService
     """
-    if vector_search_svc is None:
+    group_id = str(event.group_id)
+
+    # 两层检查：先检查群组配置，再检查基础设施
+    cfg = await config_svc.get_parsed_config(group_id)
+    if not cfg.embedding.enabled:
         await matcher_rebuild_index.finish(
-            "向量搜索功能未启用，请先在配置中启用 embedding。"
+            "当前群组未启用向量搜索，请先执行 /修改语录配置 embedding.enabled True"
         )
 
-    group_id = str(event.group_id)
+    if vector_search_svc is None:
+        await matcher_rebuild_index.finish(
+            "向量搜索基础设施未就绪，请检查 Embedding 配置（model、base_url、api_key_path）"
+        )
+
     do_all = rebuild_all.result if rebuild_all.available else False
 
     if do_all:
