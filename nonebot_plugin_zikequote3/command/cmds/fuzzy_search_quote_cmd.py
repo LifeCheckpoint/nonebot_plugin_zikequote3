@@ -126,6 +126,17 @@ async def handle_fuzzy_search_quote(
         )
         logger.debug("模糊搜索解析结果: %s", params)
 
+        # --- M3: 边界校验 top_n 和 similarity ---
+        if params.top_n is not None and params.top_n < 1:
+            await matcher_fuzzy_search_quote.finish("返回结果数量（-n）至少为 1 哦~")
+        if params.similarity is not None and not (0.0 <= params.similarity <= 1.0):
+            await matcher_fuzzy_search_quote.finish("相似度阈值（-s）必须在 0.0 到 1.0 之间哦~")
+
+    if vector_search_svc is None:
+        await matcher_fuzzy_search_quote.finish(
+            "模糊搜索功能未启用，请在配置中启用 embedding。"
+        )
+
     await _do_fuzzy_search(
         matcher_fuzzy_search_quote, group_id, params,
         vector_search_svc=vector_search_svc,

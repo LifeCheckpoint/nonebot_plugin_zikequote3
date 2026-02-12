@@ -242,7 +242,7 @@ async def _do_fuzzy_search(
     group_id: str,
     params: _ArgsValidater,
     *,
-    vector_search_svc: VectorSearchService,
+    vector_search_svc: Optional[VectorSearchService],
     quote_read_svc: QuoteReadService,
     user_svc: UserService,
     image_store: ImageStore,
@@ -254,12 +254,31 @@ async def _do_fuzzy_search(
         if not params.pattern:
             await matcher.finish("模糊搜索需要提供关键词哦~")
 
-        # 检查向量搜索服务是否可用
+        # 检查向量搜索服务是否存在（embedding 未启用时为 None）
+        if vector_search_svc is None:
+            await matcher.finish(
+                "模糊搜索功能未启用，请在配置中启用 embedding。"
+            )
+            return
+
+        # M4: 分别检查基础设施可用性和索引是否为空
         available = await vector_search_svc.is_available()
         if not available:
             await matcher.finish(
-                "模糊搜索服务当前不可用，请确认已启用 embedding 配置并完成索引构建。"
+                "模糊搜索服务当前不可用，请确认已启用 embedding 配置。"
             )
+
+        index_count = await vector_search_svc.get_index_count()
+        if index_count == 0:
+            await matcher.finish(
+                "向量索引为空，请先使用 /重建语录索引 构建索引。"
+            )
+
+        # --- M3: 边界校验 top_n 和 similarity ---
+        if params.top_n is not None and params.top_n < 1:
+            await matcher.finish("返回结果数量（-n）至少为 1 哦~")
+        if params.similarity is not None and not (0.0 <= params.similarity <= 1.0):
+            await matcher.finish("相似度阈值（-s）必须在 0.0 到 1.0 之间哦~")
 
         threshold = params.similarity if params.similarity is not None else 0.0
         limit = params.top_n if params.top_n is not None else 10
@@ -268,6 +287,13 @@ async def _do_fuzzy_search(
             params.pattern, group_id,
             limit=limit, threshold=threshold,
         )
+
+        # --- M2: 按 QQ 号和图片过滤结果 ---
+        if params.qq:
+            author_id = str(params.qq)
+            results = [(q, s) for q, s in results if q.author_id == author_id]
+        if not params.search_with_image:
+            results = [(q, s) for q, s in results if q.image_content_uuid is None]
 
         quotes = [q for q, _ in results]
         scores = [s for _, s in results]
@@ -281,6 +307,7 @@ async def _do_fuzzy_search(
             user_svc=user_svc,
             image_store=image_store,
             show_author=True,
+            show_image=params.search_with_image,
             max_content_length=max_content_length,
         )
 
@@ -294,6 +321,8 @@ async def _do_fuzzy_search(
         desc_parts = [
             f"{time_str}",
             "模糊语义搜索",
+            (f"筛选 QQ: {params.qq}" if params.qq else "不筛选 QQ"),
+            f"{'' if params.search_with_image else '不'} 包含图片",
         ]
         if params.similarity is not None:
             desc_parts.append(f"阈值: {params.similarity}")

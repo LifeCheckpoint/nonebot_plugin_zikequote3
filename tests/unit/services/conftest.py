@@ -6,7 +6,7 @@ Service 单元测试 conftest —— 为所有 Service 提供 mock Repository fi
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, PropertyMock
 
 import pytest
 
@@ -253,4 +253,43 @@ def migration_service(
         quote_repo=mock_quote_repo,
         group_member_repo=mock_group_member_repo,
         group_nickname_repo=mock_group_nickname_repo,
+    )
+
+
+# ---- Vector Search fixtures ---- #
+
+from nonebot_plugin_zikequote3.vector_search.embedding_client import EmbeddingClient
+from nonebot_plugin_zikequote3.vector_search.vector_store import VectorStore
+from nonebot_plugin_zikequote3.vector_search.search_service import VectorSearchService
+
+
+@pytest.fixture
+def mock_embedding_client() -> AsyncMock:
+    client = AsyncMock(spec=EmbeddingClient)
+    type(client).model_name = PropertyMock(return_value="test-model")
+    type(client).dimensions = PropertyMock(return_value=128)
+    type(client).batch_size = PropertyMock(return_value=2)
+    return client
+
+
+@pytest.fixture
+def mock_vector_store() -> AsyncMock:
+    import asyncio
+    store = AsyncMock(spec=VectorStore)
+    store.reindex_lock = asyncio.Lock()
+    return store
+
+
+@pytest.fixture
+def vector_search_service(
+    mock_embedding_client: AsyncMock,
+    mock_vector_store: AsyncMock,
+    mock_quote_repo: AsyncMock,
+) -> VectorSearchService:
+    # M5: 每个测试重置模块级缓存
+    VectorSearchService.reset_model_consistency_cache()
+    return VectorSearchService(
+        embedding_client=mock_embedding_client,
+        vector_store=mock_vector_store,
+        quote_repo=mock_quote_repo,
     )

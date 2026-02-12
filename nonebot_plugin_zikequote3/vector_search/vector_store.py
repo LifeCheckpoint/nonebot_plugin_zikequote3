@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+import asyncio
+import re
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 import lancedb
 import pyarrow as pa
+
+# quote_id 允许的字符：数字、字母、下划线、连字符
+_SAFE_ID_RE = re.compile(r"^[\w-]+$")
 
 
 class VectorStore:
@@ -17,6 +22,36 @@ class VectorStore:
 
     def __init__(self) -> None:
         self._db: Optional[lancedb.AsyncConnection] = None
+        self.reindex_lock: asyncio.Lock = asyncio.Lock()
+
+    # ---- 输入校验 / 安全过滤 ----
+
+    @staticmethod
+    def _sanitize_quote_id(quote_id: str) -> str:
+        """校验 quote_id 只含安全字符（字母、数字、下划线、连字符）。"""
+        if not isinstance(quote_id, str) or not _SAFE_ID_RE.match(quote_id):
+            raise ValueError(f"非法 quote_id: {quote_id!r}")
+        return quote_id
+
+    @staticmethod
+    def _sanitize_group_id(group_id: str) -> str:
+        """校验 group_id 只含数字字符。"""
+        if not isinstance(group_id, str) or not group_id.isdigit():
+            raise ValueError(f"非法 group_id: {group_id!r}")
+        return group_id
+
+    @classmethod
+    def _safe_quote_filter(cls, quote_ids: List[str]) -> str:
+        """构建安全的 quote_id IN (...) 过滤子句。"""
+        safe_ids = [cls._sanitize_quote_id(qid) for qid in quote_ids]
+        id_list = ", ".join(f"'{qid}'" for qid in safe_ids)
+        return f"quote_id IN ({id_list})"
+
+    @classmethod
+    def _safe_group_filter(cls, group_id: str) -> str:
+        """构建安全的 group_id = '...' 过滤子句。"""
+        safe_id = cls._sanitize_group_id(group_id)
+        return f"group_id = '{safe_id}'"
 
     async def connect(self, db_path: str) -> None:
         """连接到 LanceDB 数据库。"""
@@ -67,9 +102,8 @@ class VectorStore:
         table = await db.open_table(self.QUOTE_TABLE)
         # 先删除已存在的记录
         quote_ids = [r["quote_id"] for r in records]
-        id_list = ", ".join(f"'{qid}'" for qid in quote_ids)
         try:
-            await table.delete(f"quote_id IN ({id_list})")
+            await table.delete(self._safe_quote_filter(quote_ids))
         except Exception:
             # 表为空时 delete 可能抛异常，忽略即可
             pass
@@ -81,8 +115,16 @@ class VectorStore:
             return
         db = self._get_db()
         table = await db.open_table(self.QUOTE_TABLE)
-        id_list = ", ".join(f"'{qid}'" for qid in quote_ids)
-        await table.delete(f"quote_id IN ({id_list})")
+        await table.delete(self._safe_quote_filter(quote_ids))
+
+    async def delete_by_group(self, group_id: str) -> None:
+        """删除指定群组的所有向量记录。"""
+        db = self._get_db()
+        existing = await db.table_names()
+        if self.QUOTE_TABLE not in existing:
+            return
+        table = await db.open_table(self.QUOTE_TABLE)
+        await table.delete(self._safe_group_filter(group_id))
 
     async def search(
         self,
@@ -105,7 +147,7 @@ class VectorStore:
         results = await (
             table.vector_search(query_vector)
             .distance_type("cosine")
-            .where(f"group_id = '{group_id}'")
+            .where(self._safe_group_filter(group_id))
             .limit(limit)
             .to_list()
         )

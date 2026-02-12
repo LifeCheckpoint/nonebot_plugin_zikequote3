@@ -2,13 +2,20 @@
 
 from __future__ import annotations
 
+import asyncio
+import logging
 from pathlib import Path
-from typing import List
+from typing import Any, Dict, List
 
 from openai import AsyncOpenAI
 
 from ..config import EmbeddingConfig, LLMConfig
 from ..paths import PluginPath
+
+logger = logging.getLogger(__name__)
+
+_MAX_RETRIES = 2
+_RETRY_BASE_DELAY = 1.0  # 秒
 
 
 class EmbeddingClient:
@@ -30,6 +37,8 @@ class EmbeddingClient:
         api_key_path = Path(api_key_path_str)
         if not api_key_path.is_absolute():
             api_key_path = resolved_root / api_key_path
+        # L2: 同步读取文件是有意为之——此构造函数仅在 dishka APP scope 启动时
+        # 调用一次，且 dishka 的 provide 方法支持同步操作，无需异步化。
         api_key = api_key_path.read_text(encoding="utf-8").strip()
 
         self._client = AsyncOpenAI(base_url=base_url, api_key=api_key)
@@ -47,15 +56,36 @@ class EmbeddingClient:
         return self._config.batch_size
 
     async def embed_texts(self, texts: List[str]) -> List[List[float]]:
-        """批量生成 embedding 向量。"""
+        """批量生成 embedding 向量。含重试机制（最多重试 2 次，指数退避）。"""
         if not texts:
             return []
-        response = await self._client.embeddings.create(
-            model=self._config.model,
-            input=texts,
-            dimensions=self._config.dimensions,
-        )
-        return [item.embedding for item in response.data]
+
+        # L3: 仅在 dimensions 配置为有效正整数时才传递该参数，
+        # 避免不支持 dimensions 参数的 API 报错。
+        kwargs: Dict[str, Any] = {
+            "model": self._config.model,
+            "input": texts,
+        }
+        if self._config.dimensions:
+            kwargs["dimensions"] = self._config.dimensions
+
+        # L5: 简单重试机制，指数退避
+        last_exc: Exception | None = None
+        for attempt in range(_MAX_RETRIES + 1):
+            try:
+                response = await self._client.embeddings.create(**kwargs)
+                return [item.embedding for item in response.data]
+            except Exception as exc:
+                last_exc = exc
+                if attempt < _MAX_RETRIES:
+                    delay = _RETRY_BASE_DELAY * (2 ** attempt)
+                    logger.warning(
+                        "Embedding API 调用失败 (第 %d 次)，%.1f 秒后重试: %s",
+                        attempt + 1, delay, exc,
+                    )
+                    await asyncio.sleep(delay)
+        # 所有重试均失败，抛出最后一次异常
+        raise last_exc  # type: ignore[misc]
 
     async def embed_query(self, text: str) -> List[float]:
         """单条文本生成 embedding 向量。"""

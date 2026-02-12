@@ -11,26 +11,33 @@ from __future__ import annotations
 import asyncio
 import logging
 
+from dishka import AsyncContainer
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent
 from nonebot_plugin_alconna import Query
 
 from ..command_definition import matcher_rebuild_index
-from ...di import Inject, inject
+from ...di import Inject, get_container, inject
 from ...vector_search.search_service import VectorSearchService
 
 logger = logging.getLogger(__name__)
 
 
 async def _do_rebuild(
-    vector_search_svc: VectorSearchService,
+    container: AsyncContainer,
     bot: Bot,
     event: GroupMessageEvent,
     group_id: str | None,
     scope_desc: str,
 ) -> None:
-    """后台执行重建索引，完成后通过 bot.send 发送结果。"""
+    """后台执行重建索引，完成后通过 bot.send 发送结果。
+
+    在内部创建独立的 REQUEST 作用域来获取 VectorSearchService，
+    避免使用 handler 中已关闭的 REQUEST 作用域。
+    """
     try:
-        count = await vector_search_svc.reindex_all(group_id)
+        async with container() as request_container:
+            vector_search_svc = await request_container.get(VectorSearchService)
+            count = await vector_search_svc.reindex_all(group_id)
         await bot.send(event, f"✅ 索引重建完成！{scope_desc}共索引了 {count} 条语录。")
     except Exception as e:
         logger.error("后台重建索引失败: %s", e)
@@ -54,7 +61,7 @@ async def handle_rebuild_index(
     :type event: GroupMessageEvent
     :param rebuild_all: 是否重建所有群的索引
     :type rebuild_all: Query[bool]
-    :param vector_search_svc: 向量搜索服务（DI 注入）
+    :param vector_search_svc: 向量搜索服务（DI 注入，仅用于检查是否启用）
     :type vector_search_svc: VectorSearchService
     """
     if vector_search_svc is None:
@@ -77,5 +84,5 @@ async def handle_rebuild_index(
     )
 
     asyncio.create_task(
-        _do_rebuild(vector_search_svc, bot, event, target_group, scope_desc)
+        _do_rebuild(get_container(), bot, event, target_group, scope_desc)
     )

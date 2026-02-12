@@ -36,6 +36,19 @@ if "nonebot_plugin_zikequote3.services" not in sys.modules:
     _stub_svc.__path__ = [str(_services_root)]
     sys.modules["nonebot_plugin_zikequote3.services"] = _stub_svc
 
+_vector_search_root = _plugin_root / "vector_search"
+if "nonebot_plugin_zikequote3.vector_search" not in sys.modules:
+    _stub_vs = types.ModuleType("nonebot_plugin_zikequote3.vector_search")
+    _stub_vs.__path__ = [str(_vector_search_root)]
+    sys.modules["nonebot_plugin_zikequote3.vector_search"] = _stub_vs
+
+# stub nonebot_plugin_localstore 以避免 paths.py 触发 nonebot 初始化
+if "nonebot_plugin_localstore" not in sys.modules:
+    _stub_store = types.ModuleType("nonebot_plugin_localstore")
+    setattr(_stub_store, "get_data_dir", lambda name: Path(f"/tmp/{name}/data"))
+    setattr(_stub_store, "get_cache_dir", lambda name: Path(f"/tmp/{name}/cache"))
+    sys.modules["nonebot_plugin_localstore"] = _stub_store
+
 # ---------------------------------------------------------------------------
 # 现在可以安全导入 SA 基础设施模块
 # ---------------------------------------------------------------------------
