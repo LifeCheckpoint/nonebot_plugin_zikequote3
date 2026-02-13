@@ -95,14 +95,13 @@ async def _startup() -> None:
     await engine.dispose()  # 临时引擎，建表后释放
 
     # 创建 DI 容器
-    vector_db_path = PluginPath.data_cache_path / "vector_db"
     container = create_container(
         db_path=PluginPath.data_db_path,
         image_store_path=PluginPath.data_image_root,
         render_device_factor=default_cfg.showcase.render_device_factor,
         embedding_config=default_cfg.embedding,
         llm_config=default_cfg.llm,
-        vector_db_path=vector_db_path,
+        vector_db_path=PluginPath.data_vector_db_path,
     )
 
     # 配置完整性修复

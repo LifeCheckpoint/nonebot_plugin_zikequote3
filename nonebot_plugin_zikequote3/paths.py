@@ -32,4 +32,4 @@ class PluginPath:
 
     data_db_path = store.get_data_dir("ZikeQuote3") / "zikequote3.db"
     data_image_root = store.get_data_dir("ZikeQuote3") / "quote_images"
-    data_cache_path = store.get_cache_dir("ZikeQuote3")
+    data_vector_db_path = store.get_data_dir("ZikeQuote3") / "vector_db"
