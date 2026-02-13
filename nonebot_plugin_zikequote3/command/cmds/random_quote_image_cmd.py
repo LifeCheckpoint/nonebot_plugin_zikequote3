@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 import random
 from typing import TYPE_CHECKING
 
@@ -35,9 +35,6 @@ from ...di import Inject, inject
 from ...services import QuoteReadService, QuoteWriteService, UserService
 from ...database.image_store import ImageStore
 from ._error_handlers import command_error_handler, suppress_error
-
-logger = logging.getLogger(__name__)
-
 
 @matcher_random_quote_image.handle()
 @inject
@@ -119,7 +116,6 @@ async def handle_random_quote_image(
             await quote_write_svc.create_msg_quote_mapping(
                 str(event.message_id), q_result.quote_id,
             )
-
 
 async def _pick_random_image_quote(
     resolved: ResolvedQuery,

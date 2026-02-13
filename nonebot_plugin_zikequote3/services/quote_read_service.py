@@ -12,7 +12,7 @@ QuoteReadService —— 语录读取领域服务。
 
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 import math
 import random
 from typing import Optional, Sequence, Tuple
@@ -28,9 +28,6 @@ from ..exceptions import (
     QuoteNotFoundError,
 )
 from .user_service import UserService
-
-logger = logging.getLogger(__name__)
-
 
 class QuoteReadService:
     """

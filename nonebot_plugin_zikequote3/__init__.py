@@ -10,15 +10,11 @@ nonebot-plugin-zikequote3 新插件入口（dishka DI 版本）。
 - 模块导入时: matcher 定义（on_command 等）自动注册到 NoneBot
 """
 
-import logging
-
 from dishka import AsyncContainer
-from nonebot import get_driver, require
+from nonebot import get_driver, require, logger
 from nonebot.plugin import PluginMetadata
 
 from .config import ConfigPath
-
-logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # require 声明 —— 保留原 imports.py 中的全部 require
@@ -57,7 +53,6 @@ __plugin_meta__ = PluginMetadata(
 # 生命周期钩子
 # ---------------------------------------------------------------------------
 driver = get_driver()
-
 
 @driver.on_startup
 async def _startup() -> None:
@@ -124,7 +119,6 @@ async def _startup() -> None:
     if default_cfg.embedding.enabled:
         await _check_vector_index_consistency(container)
 
-
 async def _check_vector_index_consistency(container: AsyncContainer) -> None:
     """启动时检查向量索引的模型一致性。"""
     from .vector_search.search_service import VectorSearchService
@@ -148,7 +142,6 @@ async def _check_vector_index_consistency(container: AsyncContainer) -> None:
                     logger.info("向量索引为空，请执行 /重建语录索引 建立索引")
     except Exception as e:
         logger.warning("向量索引一致性检查失败: %s", e)
-
 
 # ---------------------------------------------------------------------------
 # 导入命令模块 —— 触发 matcher 注册（NoneBot2 标准模式）

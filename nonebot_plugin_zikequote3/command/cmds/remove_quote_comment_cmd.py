@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 
 from nonebot.adapters.onebot.v11 import (
     Bot,
@@ -19,9 +19,6 @@ from ..command_definition import matcher_remove_quote_comment
 from ...di import Inject, inject
 from ...services import ReviewService
 from ._error_handlers import command_error_handler
-
-logger = logging.getLogger(__name__)
-
 
 @matcher_remove_quote_comment.handle()
 @inject

@@ -8,7 +8,7 @@ ReviewService —— 评论领域服务。
 
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 import random
 from typing import Optional, Sequence
 
@@ -17,15 +17,11 @@ from ..database.repositories.quote_repository import QuoteRepository
 from ..database.repositories.review_repository import ReviewRepository
 from ..exceptions import QuoteNotFoundError, ResourceNotFoundError
 
-logger = logging.getLogger(__name__)
-
 AUTHOR_AI = "-1"
-
 
 def _generate_review_id() -> str:
     """生成 11 位随机数字评论 ID。"""
     return str(random.randint(10**10, 10**11 - 1))
-
 
 class ReviewService:
     """

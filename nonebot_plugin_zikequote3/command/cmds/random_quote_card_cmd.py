@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
-import logging
+from nonebot import logger
 import random
 from typing import TYPE_CHECKING, Optional
 
@@ -43,10 +43,6 @@ from ...templates.schema.card import TemplateCommentData, TemplateQuoteCardData
 from ...templates.registry import CARD
 from ...templates import card as card_template
 
-logger = logging.getLogger(__name__)
-
-
-
 def _to_data_uri(data: bytes, mime: str = "image/png") -> str:
     """
     将二进制数据转换为 Data URI 格式。
@@ -59,7 +55,6 @@ def _to_data_uri(data: bytes, mime: str = "image/png") -> str:
     :rtype: str
     """
     return f"data:{mime};base64,{base64.b64encode(data).decode()}"
-
 
 @matcher_random_quote_card.handle()
 @inject
@@ -199,7 +194,6 @@ async def handle_random_quote_card(
             await quote_write_svc.create_msg_quote_mapping(
                 str(send_msg["message_id"]), q_result.quote_id,
             )
-
 
 async def _pick_random_quote(
     resolved: "ResolvedQuery",

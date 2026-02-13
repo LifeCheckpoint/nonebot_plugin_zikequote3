@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 
 from nonebot.adapters.onebot.v11 import (
     Bot,
@@ -22,9 +22,6 @@ from ..command_definition import (
 from ...di import Inject, inject
 from ...services import QuoteWriteService, ReviewService, GroupService
 from ._error_handlers import command_error_handler, suppress_error
-
-logger = logging.getLogger(__name__)
-
 
 @matcher_add_quote_comment.handle()
 @inject
@@ -79,7 +76,6 @@ async def handle_add_quote_comment(
     # 检查用户-群映射存在性
     with suppress_error("检查用户-群映射"):
         await group_svc.ensure_member(group_id, str(event.sender.user_id))
-
 
 # 无前缀评论（静默模式）
 if matcher_add_quote_comment_no_prefix is not None:

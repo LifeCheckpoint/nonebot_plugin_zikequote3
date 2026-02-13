@@ -7,7 +7,7 @@
 """
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 from pathlib import Path
 from typing import Optional, Union
 
@@ -18,9 +18,6 @@ from nonebot_plugin_zikequote3.database.repositories.quote_repository import Quo
 from nonebot_plugin_zikequote3.vector_search.embedding_client import EmbeddingClient
 from nonebot_plugin_zikequote3.vector_search.vector_store import VectorStore
 from nonebot_plugin_zikequote3.vector_search.search_service import VectorSearchService
-
-logger = logging.getLogger(__name__)
-
 
 class VectorProvider(Provider):
     """向量搜索 DI Provider。

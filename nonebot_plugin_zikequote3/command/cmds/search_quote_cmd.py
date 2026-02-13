@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 from datetime import datetime
 from typing import Any, Optional
 
@@ -32,9 +32,6 @@ from ._error_handlers import command_error_handler
 from ...templates.registry import LISTING
 from ...templates.schema.listing import TemplateQuoteListData, render_list
 from ._display_helpers import transform_quotes_to_template_boxes
-
-logger = logging.getLogger(__name__)
-
 
 class _ArgsValidater(BaseModel):
     """
@@ -66,7 +63,6 @@ class _ArgsValidater(BaseModel):
     similarity: Optional[float] = None
     top_n: Optional[int] = None
     pattern: str = ""
-
 
 @matcher_search_quote.handle()
 @inject
@@ -164,7 +160,6 @@ async def handle_search_quote(
         config_svc=config_svc,
     )
 
-
 async def _do_normal_search(
     matcher: Any,
     group_id: str,
@@ -222,7 +217,6 @@ async def _do_normal_search(
         img = await html_render_svc.render(html, width=LISTING.width, height=LISTING.height)
         await matcher.finish(MsgSeg.image(img))
 
-
 def _try_get_hitokoto() -> Optional[str]:
     """尝试获取一言，失败时返回 None。"""
     try:
@@ -235,7 +229,6 @@ def _try_get_hitokoto() -> Optional[str]:
     except Exception:
         logger.debug("获取一言失败", exc_info=True)
     return None
-
 
 async def _do_fuzzy_search(
     matcher: Any,
@@ -368,5 +361,4 @@ async def _do_fuzzy_search(
         ))
         img = await html_render_svc.render(html, width=LISTING.width, height=LISTING.height)
         await matcher.finish(MsgSeg.image(img))
-
 

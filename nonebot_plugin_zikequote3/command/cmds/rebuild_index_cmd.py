@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 import asyncio
-import logging
+from nonebot import logger
 
 from dishka import AsyncContainer
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent
@@ -18,9 +18,6 @@ from ..command_definition import matcher_rebuild_index
 from ...di import Inject, get_container, inject
 from ...services.config_service import ConfigService
 from ...vector_search.search_service import VectorSearchService
-
-logger = logging.getLogger(__name__)
-
 
 async def _do_rebuild(
     container: AsyncContainer,
@@ -53,7 +50,6 @@ async def _do_rebuild(
     except Exception as e:
         logger.error("后台重建索引失败: %s", e)
         await bot.send(event, f"❌ 索引重建失败: {e}")
-
 
 @matcher_rebuild_index.handle()
 @inject

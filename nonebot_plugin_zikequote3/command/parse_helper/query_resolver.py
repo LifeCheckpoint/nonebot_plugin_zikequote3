@@ -10,7 +10,7 @@
 
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Any, Optional
 
@@ -19,13 +19,9 @@ from pydantic import BaseModel, Field
 if TYPE_CHECKING:
     from ...services.user_service import UserService
 
-logger = logging.getLogger(__name__)
-
-
 # ------------------------------------------------------------------ #
 #  枚举定义
 # ------------------------------------------------------------------ #
-
 
 class QueryIntent(Enum):
     """
@@ -56,7 +52,6 @@ class QueryIntent(Enum):
     AMBIGUOUS = auto()
     """存在歧义，需要进一步消解。"""
 
-
 class NumericDisambiguation(Enum):
     """
     纯数字输入的歧义消解策略。
@@ -77,11 +72,9 @@ class NumericDisambiguation(Enum):
     AS_BOTH = auto()
     """同时作为用户和关键词，合并候选池。"""
 
-
 # ------------------------------------------------------------------ #
 #  策略配置
 # ------------------------------------------------------------------ #
-
 
 class ResolveStrategy(BaseModel, frozen=True):
     """
@@ -134,11 +127,9 @@ class ResolveStrategy(BaseModel, frozen=True):
     fallback_to_self: bool = True
     fallback_to_keyword: bool = False
 
-
 # ------------------------------------------------------------------ #
 #  解析结果
 # ------------------------------------------------------------------ #
-
 
 class ResolvedQuery(BaseModel):
     """
@@ -181,7 +172,6 @@ class ResolvedQuery(BaseModel):
     def has_keyword(self) -> bool:
         """是否包含关键词。"""
         return self.keyword is not None and self.keyword.strip() != ""
-
 
 # ------------------------------------------------------------------ #
 #  预配置策略常量
@@ -242,11 +232,9 @@ STRATEGY_RANKING = ResolveStrategy(
 )
 """``/排行榜`` 使用的策略：参数仅为数量，不涉及用户解析。"""
 
-
 # ------------------------------------------------------------------ #
 #  核心解析器
 # ------------------------------------------------------------------ #
-
 
 class QueryResolver:
     """
@@ -529,11 +517,9 @@ class QueryResolver:
             raw_input=raw_text,
         )
 
-
 # ------------------------------------------------------------------ #
 #  辅助提取函数
 # ------------------------------------------------------------------ #
-
 
 def extract_at_qq(at_match: Any) -> Optional[str]:
     """
@@ -556,7 +542,6 @@ def extract_at_qq(at_match: Any) -> Optional[str]:
     if data is None:
         return None
     return data.get("qq")
-
 
 def extract_text(*matches: Any) -> str:
     """
@@ -581,7 +566,6 @@ def extract_text(*matches: Any) -> str:
         if text:
             parts.append(text)
     return " ".join(parts)
-
 
 __all__ = [
     "QueryIntent",

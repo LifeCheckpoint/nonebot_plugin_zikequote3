@@ -10,7 +10,7 @@ ConfigService —— 群组配置领域服务。
 
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 from ast import literal_eval
 from typing import Any, Optional, Sequence
 
@@ -21,9 +21,6 @@ from ..config import ConfigSchema, parse_config_from_toml
 from ..database.models.group_configs import GroupConfigs
 from ..database.repositories.group_config_repository import GroupConfigRepository
 from ..exceptions import ResourceNotFoundError, ValidationException
-
-logger = logging.getLogger(__name__)
-
 
 class ConfigService:
     """

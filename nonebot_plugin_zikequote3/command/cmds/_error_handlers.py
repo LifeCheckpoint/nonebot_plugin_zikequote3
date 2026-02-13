@@ -11,7 +11,7 @@
 
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 from asyncio import CancelledError
 from contextlib import asynccontextmanager, contextmanager
 from typing import AsyncIterator, Iterator
@@ -26,9 +26,6 @@ from ...exceptions import (
     ResourceNotFoundError,
     ValidationException,
 )
-
-logger = logging.getLogger(__name__)
-
 
 async def handle_command_error(matcher: type[Matcher], error: Exception) -> None:
     """
@@ -51,7 +48,6 @@ async def handle_command_error(matcher: type[Matcher], error: Exception) -> None
         # 非业务异常，上报 Sentry 并使用通用失败消息
         sentry_sdk.capture_exception(error)
         await matcher.finish(f"发生错误：{error}")
-
 
 @asynccontextmanager
 async def command_error_handler(
@@ -77,7 +73,6 @@ async def command_error_handler(
         logger.error("%s: %s", log_prefix, e, exc_info=True)
         await handle_command_error(matcher, e)
 
-
 @contextmanager
 def suppress_error(action: str = "") -> Iterator[None]:
     """
@@ -97,7 +92,6 @@ def suppress_error(action: str = "") -> Iterator[None]:
         log_prefix = f"非关键操作异常 / {action}" if action else "非关键操作异常"
         logger.warning("%s: %s", log_prefix, e, exc_info=True)
         sentry_sdk.capture_exception(e)
-
 
 @asynccontextmanager
 async def silent_error_handler(

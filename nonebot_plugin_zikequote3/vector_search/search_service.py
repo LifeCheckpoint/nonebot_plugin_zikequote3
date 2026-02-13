@@ -5,7 +5,7 @@
 """
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 from typing import List, Optional, Tuple
 
 from ..database.repositories.quote_repository import QuoteRepository
@@ -13,11 +13,8 @@ from ..database.models.quotes import Quote
 from .embedding_client import EmbeddingClient
 from .vector_store import VectorStore
 
-logger = logging.getLogger(__name__)
-
 # M5: 模块级缓存，跨 REQUEST 作用域的 VectorSearchService 实例共享
 _model_consistent_cache: bool | None = None
-
 
 class VectorSearchService:
     """向量搜索服务。

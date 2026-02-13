@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import asyncio
-import logging
+from nonebot import logger
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -16,10 +16,7 @@ from openai import AsyncOpenAI
 from ..config import EmbeddingConfig, LLMConfig
 from ..paths import PluginPath
 
-logger = logging.getLogger(__name__)
-
 _RETRY_BASE_DELAY = 1.0  # 秒
-
 
 class EmbeddingClient:
     """封装 OpenAI 兼容的 Embedding API 调用。

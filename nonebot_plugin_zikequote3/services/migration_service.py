@@ -12,7 +12,7 @@ MigrationService —— 群组数据迁移领域服务。
 from __future__ import annotations
 
 import itertools
-import logging
+from nonebot import logger
 from typing import Any, Dict, List, Optional, Sequence
 
 from ..database.models.quotes import Quote, QuoteCreate
@@ -20,9 +20,6 @@ from ..database.repositories.group_member_repository import GroupMemberRepositor
 from ..database.repositories.group_nickname_repository import GroupNicknameRepository
 from ..database.repositories.quote_repository import QuoteRepository
 from ..exceptions import ResourceNotFoundError, ValidationException
-
-logger = logging.getLogger(__name__)
-
 
 class MigrationService:
     """

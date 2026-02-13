@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 import base64
-import logging
+from nonebot import logger
 from typing import Sequence
 
 from ...database.models.quotes import Quote
@@ -16,10 +16,6 @@ from ...database.image_store import ImageStore
 from ...services import QuoteReadService, UserService
 from ...services.review_service import AUTHOR_AI
 from ...templates.schema.listing import TemplateQuoteBoxData
-
-logger = logging.getLogger(__name__)
-
-
 
 def _to_data_uri(data: bytes, mime: str = "image/png") -> str:
     """
@@ -33,7 +29,6 @@ def _to_data_uri(data: bytes, mime: str = "image/png") -> str:
     :rtype: str
     """
     return f"data:{mime};base64,{base64.b64encode(data).decode()}"
-
 
 async def transform_quotes_to_template_boxes(
     quotes: Sequence[Quote],

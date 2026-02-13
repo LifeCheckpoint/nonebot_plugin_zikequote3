@@ -12,7 +12,7 @@ UserService —— 用户领域服务。
 
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 from typing import Optional, Sequence
 
 import aiohttp
@@ -27,9 +27,6 @@ from ..database.repositories.group_nickname_repository import GroupNicknameRepos
 from ..database.repositories.user_nickname_repository import UserNicknameRepository
 from ..database.repositories.user_repository import UserRepository
 from ..exceptions import UserNotFoundError
-
-logger = logging.getLogger(__name__)
-
 
 class UserService:
     """

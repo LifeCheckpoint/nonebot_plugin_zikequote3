@@ -13,7 +13,7 @@ QuoteCollectionService —— 语录收集领域服务。
 from __future__ import annotations
 
 import asyncio
-import logging
+from nonebot import logger
 import random
 from dataclasses import dataclass
 from typing import Any, Callable, Coroutine, Optional, Protocol, Sequence
@@ -25,13 +25,9 @@ from .group_service import GroupService
 from .quote_write_service import QuoteWriteService
 from .user_service import UserService
 
-logger = logging.getLogger(__name__)
-
-
 # ------------------------------------------------------------------ #
 #  LLM 筛选结果数据类
 # ------------------------------------------------------------------ #
-
 
 class SelectedQuote:
     """
@@ -61,11 +57,9 @@ class SelectedQuote:
         self.comment = comment
         self.quote_id = quote_id
 
-
 # ------------------------------------------------------------------ #
 #  收集结果数据类
 # ------------------------------------------------------------------ #
-
 
 @dataclass
 class CollectedQuote:
@@ -74,11 +68,9 @@ class CollectedQuote:
     quote_id: str
     comment: Optional[str] = None
 
-
 # ------------------------------------------------------------------ #
 #  LLM 筛选器 Protocol（可选依赖）
 # ------------------------------------------------------------------ #
-
 
 class MessageFilter(Protocol):
     """
@@ -105,17 +97,14 @@ class MessageFilter(Protocol):
         """
         ...
 
-
 # ------------------------------------------------------------------ #
 #  基于键的非阻塞锁（迁移自 lock_service.py）
 # ------------------------------------------------------------------ #
-
 
 class CollectionLockError(Exception):
     """当尝试获取一个已被持有的收集锁时抛出。"""
 
     pass
-
 
 class _KeyedLock:
     """基于键的非阻塞锁，同一键重复获取会立即失败。"""
@@ -159,11 +148,9 @@ class _KeyedLock:
         """
         self._locks.pop(key, None)
 
-
 # ------------------------------------------------------------------ #
 #  QuoteCollectionService
 # ------------------------------------------------------------------ #
-
 
 class QuoteCollectionService:
     """

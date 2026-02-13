@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 from typing import Optional
 
 from nonebot.adapters.onebot.v11 import GroupMessageEvent
@@ -23,9 +23,6 @@ from ...database.image_store import ImageStore
 from ...vector_search.search_service import VectorSearchService
 from ._error_handlers import command_error_handler
 from .search_quote_cmd import _ArgsValidater, _do_fuzzy_search
-
-logger = logging.getLogger(__name__)
-
 
 def _parse_fuzzy_shorthand(
     tokens: list[str],
@@ -60,7 +57,6 @@ def _parse_fuzzy_shorthand(
 
     keyword = " ".join(tokens[rest_start:])
     return top_n, similarity, keyword
-
 
 @matcher_fuzzy_search_quote.handle()
 @inject

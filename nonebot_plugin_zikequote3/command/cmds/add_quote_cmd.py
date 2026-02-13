@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 
 from nonebot.adapters.onebot.v11 import (
     Bot,
@@ -18,9 +18,6 @@ from ...di import Inject, inject
 from ...services import QuoteWriteService, GroupService
 from ...database.image_store import ImageStore
 from ._error_handlers import command_error_handler, suppress_error
-
-logger = logging.getLogger(__name__)
-
 
 async def _fetch_image_from_url_or_file(url_or_file: str) -> bytes:
     """
@@ -42,7 +39,6 @@ async def _fetch_image_from_url_or_file(url_or_file: str) -> bytes:
         from pathlib import Path
 
         return Path(url_or_file).read_bytes()
-
 
 @matcher_add_quote.handle()
 @inject

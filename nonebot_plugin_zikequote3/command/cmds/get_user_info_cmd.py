@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 
 from nonebot.adapters.onebot.v11 import (
     GroupMessageEvent,
@@ -30,9 +30,6 @@ from ._error_handlers import command_error_handler
 from ...utils.base64_encoder import to_data_uri
 from ...templates.registry import USER_INFO
 from ...templates.schema.user_info import TemplateUserInfoData, render_user_info
-
-logger = logging.getLogger(__name__)
-
 
 @matcher_get_user_info.handle()
 @inject

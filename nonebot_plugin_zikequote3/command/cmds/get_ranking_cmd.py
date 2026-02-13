@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import datetime
-import logging
+from nonebot import logger
 from typing import List
 
 from nonebot.adapters.onebot.v11 import (
@@ -38,9 +38,6 @@ from ...templates.schema.rank import (
     render_rank,
 )
 
-logger = logging.getLogger(__name__)
-
-
 def _generate_date_range_mm_dd(
     start_date: datetime.date, end_date: datetime.date,
 ) -> List[str]:
@@ -60,7 +57,6 @@ def _generate_date_range_mm_dd(
         date_list.append(current.strftime("%m-%d"))
         current += datetime.timedelta(days=1)
     return date_list
-
 
 @matcher_get_ranking.handle()
 @inject

@@ -4,16 +4,13 @@
 提供从一言 API 获取随机名言的功能。
 """
 
-import logging
+from nonebot import logger
 from typing import Optional, Tuple
 
 import requests
 
-logger = logging.getLogger(__name__)
-
 # 默认一言 API 地址，与 config.ShowcaseConfig.hitokoto_url 保持一致
 _DEFAULT_HITOKOTO_URL = "https://v1.hitokoto.cn"
-
 
 def get_hitokoto(
     hitokoto_url: str = _DEFAULT_HITOKOTO_URL,

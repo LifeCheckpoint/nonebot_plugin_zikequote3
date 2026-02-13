@@ -9,7 +9,7 @@
 
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 
 from nonebot.adapters.onebot.v11 import GroupMessageEvent
 from nonebot.typing import T_State
@@ -19,9 +19,6 @@ from ...di import Inject, inject
 from ...services import QuoteCollectionService, ReviewService
 from ...services.review_service import AUTHOR_AI
 from ._error_handlers import command_error_handler
-
-logger = logging.getLogger(__name__)
-
 
 @matcher_update_quote_force.handle()
 @inject

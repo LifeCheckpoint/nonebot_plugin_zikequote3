@@ -11,7 +11,7 @@ GroupService —— 群组领域服务。
 
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 from typing import Optional, Sequence
 
 from ..database.models.group_members import GroupMember
@@ -21,9 +21,6 @@ from ..database.repositories.group_member_repository import GroupMemberRepositor
 from ..database.repositories.group_nickname_repository import GroupNicknameRepository
 from ..database.repositories.group_repository import GroupRepository
 from ..exceptions import ResourceNotFoundError
-
-logger = logging.getLogger(__name__)
-
 
 class GroupService:
     """

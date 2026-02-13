@@ -8,7 +8,7 @@ LLM 消息筛选器 —— MessageFilter 协议的具体实现。
 
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 from typing import List, Optional, Sequence
 
 from pydantic import BaseModel, Field
@@ -19,29 +19,22 @@ from ..services.quote_collection_service import SelectedQuote
 from .client import create_model, send_llm_request
 from .prompts.quote_pickup import quote_pickup
 
-logger = logging.getLogger(__name__)
-
-
 # ------------------------------------------------------------------ #
 #  LLM 响应的 Pydantic 模型
 # ------------------------------------------------------------------ #
-
 
 class _QuoteItem(BaseModel):
     msg_id: str
     quote: str
     comment: str = ""
 
-
 class _LlmPickupResponse(BaseModel):
     num_quotes: int = 0
     quotes: List[_QuoteItem] = Field(default_factory=list)
 
-
 # ------------------------------------------------------------------ #
 #  LlmMessageFilter
 # ------------------------------------------------------------------ #
-
 
 class LLMMessageFilter:
     """

@@ -11,7 +11,7 @@ QuoteWriteService —— 语录写入领域服务。
 
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 import random
 from typing import TYPE_CHECKING, Optional
 
@@ -31,9 +31,6 @@ from .user_service import UserService
 if TYPE_CHECKING:
     from ..vector_search.search_service import VectorSearchService
 
-logger = logging.getLogger(__name__)
-
-
 def _generate_quote_id() -> str:
     """
     生成 11 位随机数字语录 ID。
@@ -42,7 +39,6 @@ def _generate_quote_id() -> str:
     :rtype: str
     """
     return str(random.randint(10**10, 10**11 - 1))
-
 
 class QuoteWriteService:
     """

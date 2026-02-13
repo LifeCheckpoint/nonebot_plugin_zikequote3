@@ -11,7 +11,7 @@
 
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment as MsgSeg
 from nonebot.adapters import Message
@@ -30,9 +30,6 @@ from ...services.html_render_service import HtmlRenderServiceBase
 from ...templates.registry import CODE_FRAME
 from ...templates.schema.code_frame import TemplateCodeFrameData, render_code_frame
 from ._error_handlers import command_error_handler
-
-logger = logging.getLogger(__name__)
-
 
 # ===================================================================
 # region 查看当前配置
@@ -90,7 +87,6 @@ async def handle_get_current_config(
 
 # endregion
 
-
 # ===================================================================
 # region 修改配置
 # ===================================================================
@@ -133,7 +129,6 @@ async def handle_modify_config(
 
 # endregion
 
-
 # ===================================================================
 # region 批量修改配置
 # ===================================================================
@@ -156,7 +151,6 @@ async def handle_batch_modify_config(
     await matcher_batch_modify_config.finish("批量修改配置功能暂未实现~")
 
 # endregion
-
 
 # ===================================================================
 # region 重置配置

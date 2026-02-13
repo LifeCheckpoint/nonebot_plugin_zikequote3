@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 
 from nonebot.adapters.onebot.v11 import MessageSegment as MsgSeg
 from nonebot.exception import FinishedException
@@ -18,9 +18,6 @@ from ...services.html_render_service import HtmlRenderServiceBase
 from ...templates.registry import HELP
 from ...templates.schema.help import render_help
 from ._help_data import build_default_help_data
-
-logger = logging.getLogger(__name__)
-
 
 @matcher_get_help.handle()
 @inject

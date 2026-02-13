@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 from datetime import datetime
 
 from nonebot.adapters.onebot.v11 import (
@@ -33,9 +33,6 @@ from ._error_handlers import command_error_handler
 from ...templates.registry import LISTING
 from ...templates.schema.listing import TemplateQuoteListData, render_list
 from ._display_helpers import transform_quotes_to_template_boxes
-
-logger = logging.getLogger(__name__)
-
 
 @matcher_get_quote_list.handle()
 @inject

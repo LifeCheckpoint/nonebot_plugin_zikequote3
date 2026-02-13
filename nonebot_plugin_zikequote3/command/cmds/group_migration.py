@@ -10,7 +10,7 @@
 
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 from typing import Any
 
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment as MsgSeg
@@ -28,9 +28,6 @@ from ...templates.schema.migration import (
 )
 from ._error_handlers import command_error_handler
 from ...utils.token_generate import TokenManager
-
-logger = logging.getLogger(__name__)
-
 
 @matcher_group_migration.handle()
 @inject

@@ -9,7 +9,7 @@ LLM 筛选流程由 QuoteCollectionService.collect_and_save 封装。
 
 from __future__ import annotations
 
-import logging
+from nonebot import logger
 import random
 
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent
@@ -25,9 +25,6 @@ from ...services import (
 )
 from ...services.review_service import AUTHOR_AI
 from ._error_handlers import silent_error_handler, suppress_error
-
-logger = logging.getLogger(__name__)
-
 
 @matcher_collecting_listener.handle()
 @inject

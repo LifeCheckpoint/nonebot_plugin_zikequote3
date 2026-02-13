@@ -7,7 +7,15 @@
 """
 
 import pytest
+from loguru import logger as loguru_logger
 from pytest_asyncio import is_async_test
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _suppress_loguru_output():
+    """移除 loguru 默认 stderr sink，抑制 nonebot logger 的控制台噪音输出。"""
+    loguru_logger.remove()
+    yield
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]):
