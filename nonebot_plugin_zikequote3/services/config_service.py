@@ -183,7 +183,7 @@ class ConfigService:
             group_id, new_toml
         )
         logger.info(
-            "群组 %s 配置项 '%s' 已更新为 %r", group_id, schema_str, new_value
+            "群组 {} 配置项 '{}' 已更新为 {!r}", group_id, schema_str, new_value
         )
 
     async def get_parsed_config(self, group_id: str) -> ConfigSchema:
@@ -207,7 +207,7 @@ class ConfigService:
             return parse_config_from_toml(doc)
         except Exception:
             logger.warning(
-                "群组 %s 的 TOML 配置解析失败，使用默认配置", group_id
+                "群组 {} 的 TOML 配置解析失败，使用默认配置", group_id
             )
             return ConfigSchema()
 
@@ -310,7 +310,7 @@ class ConfigService:
                 group_doc = tomlkit.parse(gc.toml_config)
             except TOMLKitError:
                 logger.warning(
-                    "群组 %s 的 TOML 配置解析失败，跳过完整性修复",
+                    "群组 {} 的 TOML 配置解析失败，跳过完整性修复",
                     gc.group_id,
                 )
                 continue
@@ -323,7 +323,7 @@ class ConfigService:
 
             # 版本不一致 → 迁移
             logger.info(
-                "群组 %s 配置版本 v%s → v%s，执行迁移",
+                "群组 {} 配置版本 v{} → v{}，执行迁移",
                 gc.group_id,
                 group_version,
                 default_version,

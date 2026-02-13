@@ -226,7 +226,7 @@ class QuoteCollectionService:
             content=content.strip(),
         )
         logger.debug(
-            "消息已入队: group=%s, msg_id=%s, user=%s",
+            "消息已入队: group={}, msg_id={}, user={}",
             group_id, msg_id, user_id,
         )
 
@@ -381,7 +381,7 @@ class QuoteCollectionService:
             raise ValidationException("消息队列为空，无法执行收集")
 
         logger.info(
-            "开始收集 (group=%s): 队列中 %d 条消息",
+            "开始收集 (group={}): 队列中 {} 条消息",
             group_id, len(messages),
         )
 
@@ -411,7 +411,7 @@ class QuoteCollectionService:
                 )
                 if exists:
                     logger.debug(
-                        "跳过重复语录: author=%s, content=%s",
+                        "跳过重复语录: author={}, content={}",
                         author_id, content[:30],
                     )
                     continue
@@ -430,7 +430,7 @@ class QuoteCollectionService:
                 saved_details.append((quote_id, author_id, content))
             except Exception:
                 logger.warning(
-                    "保存语录失败: msg_id=%s", item.msg_id, exc_info=True
+                    "保存语录失败: msg_id={}", item.msg_id, exc_info=True
                 )
 
         if collected:
@@ -439,12 +439,12 @@ class QuoteCollectionService:
                 for qid, aid, ct in saved_details
             )
             logger.info(
-                "收集完成 (group=%s): 保存 %d/%d 条 — %s",
+                "收集完成 (group={}): 保存 {}/{} 条 — {}",
                 group_id, len(collected), len(selected), detail_lines,
             )
         else:
             logger.info(
-                "收集完成 (group=%s): 筛选 %d 条但最终保存 0 条",
+                "收集完成 (group={}): 筛选 {} 条但最终保存 0 条",
                 group_id, len(selected),
             )
         return collected

@@ -63,7 +63,7 @@ class LLMMessageFilter:
             return []
 
         logger.info(
-            "开始 LLM 筛选 (group=%s): 队列中 %d 条消息",
+            "开始 LLM 筛选 (group={}): 队列中 {} 条消息",
             group_id, len(messages),
         )
 
@@ -86,12 +86,12 @@ class LLMMessageFilter:
                 model, prompt, temperature=llm_cfg.temperature,
             )
             logger.debug(
-                "LLM 筛选响应 (group=%s): tokens=%s, text=%s",
+                "LLM 筛选响应 (group={}): tokens={}, text={}",
                 group_id, usage, response_text[:200],
             )
         except Exception:
             logger.warning(
-                "LLM 筛选请求失败 (group=%s)，本轮不产出语录",
+                "LLM 筛选请求失败 (group={})，本轮不产出语录",
                 group_id, exc_info=True,
             )
             return []
@@ -99,7 +99,7 @@ class LLMMessageFilter:
         # 检查空响应
         if not response_text or not response_text.strip():
             logger.warning(
-                "LLM 返回空响应 (group=%s)，本轮不产出语录", group_id,
+                "LLM 返回空响应 (group={})，本轮不产出语录", group_id,
             )
             return []
 
@@ -109,7 +109,7 @@ class LLMMessageFilter:
             parsed = llm_json_parse_model(_LlmPickupResponse, response_text)
         except Exception:
             logger.warning(
-                "LLM 筛选响应解析失败 (group=%s): %s",
+                "LLM 筛选响应解析失败 (group={}): {}",
                 group_id, response_text[:300], exc_info=True,
             )
             return []
@@ -120,7 +120,7 @@ class LLMMessageFilter:
         for item in parsed.quotes:
             if item.msg_id not in msg_id_set:
                 logger.warning(
-                    "LLM 返回的 msg_id=%s 不在队列中，跳过 (group=%s)",
+                    "LLM 返回的 msg_id={} 不在队列中，跳过 (group={})",
                     item.msg_id, group_id,
                 )
                 continue
@@ -131,7 +131,7 @@ class LLMMessageFilter:
             ))
 
         logger.info(
-            "LLM 筛选完成 (group=%s): %d/%d 条入选",
+            "LLM 筛选完成 (group={}): {}/{} 条入选",
             group_id, len(result), len(messages),
         )
         return result

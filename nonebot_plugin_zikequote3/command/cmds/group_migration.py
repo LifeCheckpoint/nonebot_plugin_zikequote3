@@ -138,7 +138,7 @@ async def handle_group_migration(
     token = token_mgr.generate(ttl=check_wait_time)
     logger.warning("迁移语录请求")
     logger.warning(
-        "来源群：%s -> 目标群：%s", source.result, target.result,
+        "来源群：{} -> 目标群：{}", source.result, target.result,
     )
     logger.warning("TOKEN: {}", token)
 

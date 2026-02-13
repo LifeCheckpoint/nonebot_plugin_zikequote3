@@ -84,7 +84,7 @@ class ReviewService:
             content=content.strip(),
         )
         logger.info(
-            "评论已添加: review_id=%s, quote_id=%s, author=%s",
+            "评论已添加: review_id={}, quote_id={}, author={}",
             review_id, quote_id, author_id,
         )
         return review_id

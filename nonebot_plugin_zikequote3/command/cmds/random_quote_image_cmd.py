@@ -86,7 +86,7 @@ async def handle_random_quote_image(
             raw_text=extract_text(text),
         )
         logger.debug(
-            "随机语录图解析结果: intent=%s, resolved=%s",
+            "随机语录图解析结果: intent={}, resolved={}",
             resolved.intent, resolved,
         )
 

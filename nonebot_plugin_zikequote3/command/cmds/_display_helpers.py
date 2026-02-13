@@ -100,7 +100,7 @@ async def transform_quotes_to_template_boxes(
                 image_uri = _to_data_uri(img_path.read_bytes())
             except Exception:
                 logger.warning(
-                    "语录列表获取语录 %s 图片失败", qd.quote_id, exc_info=True,
+                    "语录列表获取语录 {} 图片失败", qd.quote_id, exc_info=True,
                 )
 
         # 截断超长语录内容

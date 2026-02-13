@@ -392,7 +392,7 @@ class QueryResolver:
             )
         if strategy.support_qq:
             logger.debug(
-                "纯数字 PREFER_QUOTE_ID 回退: 解析为QQ号=%s", text,
+                "纯数字 PREFER_QUOTE_ID 回退: 解析为QQ号={}", text,
             )
             return ResolvedQuery(
                 intent=QueryIntent.USER_BY_QQ,
@@ -432,7 +432,7 @@ class QueryResolver:
             )
         if strategy.support_quote_id:
             logger.debug(
-                "纯数字 PREFER_QQ 回退: 解析为语录ID=%s", text,
+                "纯数字 PREFER_QQ 回退: 解析为语录ID={}", text,
             )
             return ResolvedQuery(
                 intent=QueryIntent.QUOTE_BY_ID,
@@ -476,7 +476,7 @@ class QueryResolver:
                     text, group_id, exact=strategy.nickname_exact,
                 )
             logger.debug(
-                "merge_candidates 模式: text=%s, users=%s", text, users,
+                "merge_candidates 模式: text={}, users={}", text, users,
             )
             return ResolvedQuery(
                 intent=QueryIntent.KEYWORD,
@@ -492,7 +492,7 @@ class QueryResolver:
             )
             if users:
                 logger.debug(
-                    "昵称匹配成功: text=%s, users=%s", text, users,
+                    "昵称匹配成功: text={}, users={}", text, users,
                 )
                 return ResolvedQuery(
                     intent=QueryIntent.USER_BY_NAME,

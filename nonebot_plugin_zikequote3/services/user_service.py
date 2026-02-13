@@ -215,7 +215,7 @@ class UserService:
                 qq_id, group_id, card
             )
             logger.info(
-                "用户 %s 在群 %s 群名片缓存已更新: %s -> %s",
+                "用户 {} 在群 {} 群名片缓存已更新: {} -> {}",
                 qq_id, group_id, current_card, card,
             )
 

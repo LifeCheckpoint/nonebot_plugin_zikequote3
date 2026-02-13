@@ -120,7 +120,7 @@ class EmbeddingClient:
                 if attempt < self._max_retries:
                     delay = _RETRY_BASE_DELAY * (2 ** attempt)
                     logger.warning(
-                        "Embedding API 调用失败 (第 %d 次)，%.1f 秒后重试: %s",
+                        "Embedding API 调用失败 (第 {} 次)，{:.1f} 秒后重试: {}",
                         attempt + 1, delay, exc,
                     )
                     await asyncio.sleep(delay)

@@ -277,7 +277,7 @@ class MigrationService:
         if source_members:
             source_qq_ids = [m.qq_id for m in source_members]
             logger.info(
-                "正在将 %d 名成员从源群 %s 迁移至目标群 %s...",
+                "正在将 {} 名成员从源群 {} 迁移至目标群 {}...",
                 len(source_qq_ids), source, target,
             )
             await self._group_member_repo.batch_add_members(target, source_qq_ids)

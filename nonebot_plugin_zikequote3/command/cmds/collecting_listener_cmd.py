@@ -119,7 +119,7 @@ async def handle_collecting_listener(
     # 异步锁，防止多次触发
     if collection_svc.is_collecting(group_id):
         logger.info(
-            "群 %s 的 LLM 收录任务已在进行中，跳过本次触发", group_id,
+            "群 {} 的 LLM 收录任务已在进行中，跳过本次触发", group_id,
         )
         return
 

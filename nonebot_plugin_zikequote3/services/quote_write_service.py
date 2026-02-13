@@ -127,7 +127,7 @@ class QuoteWriteService:
             image_content_uuid=image_content_uuid,
         )
         logger.info(
-            "语录已添加: quote_id=%s, group=%s, author=%s",
+            "语录已添加: quote_id={}, group={}, author={}",
             quote_id, group_id, author_id,
         )
 
