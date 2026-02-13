@@ -251,8 +251,6 @@ class TestHandleAddQuoteCommentNoPrefix:
         await handle_add_quote_comment_no_prefix(
             event=mock_group_event,
             bot=mock_bot,
-            quote_write_svc=mock_write_svc,
-            review_svc=mock_review_svc,
         )
 
         # 验证服务调用
@@ -286,8 +284,6 @@ class TestHandleAddQuoteCommentNoPrefix:
         await handle_add_quote_comment_no_prefix(
             event=mock_group_event,
             bot=mock_bot,
-            quote_write_svc=mock_write_svc,
-            review_svc=mock_review_svc,
         )
 
         # 验证 get_quote_id_by_msg_id 未被调用
@@ -319,8 +315,6 @@ class TestHandleAddQuoteCommentNoPrefix:
         await handle_add_quote_comment_no_prefix(
             event=mock_group_event,
             bot=mock_bot,
-            quote_write_svc=mock_write_svc,
-            review_svc=mock_review_svc,
         )
 
         # 验证 add_review 未被调用

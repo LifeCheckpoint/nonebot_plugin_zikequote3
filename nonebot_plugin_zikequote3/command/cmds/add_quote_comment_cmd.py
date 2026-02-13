@@ -80,40 +80,38 @@ async def handle_add_quote_comment(
 # 无前缀评论（静默模式）
 if matcher_add_quote_comment_no_prefix is not None:
 
-    @matcher_add_quote_comment_no_prefix.handle()
     @inject
-    async def handle_add_quote_comment_no_prefix(
+    async def _do_add_quote_comment_no_prefix(
         event: GroupMessageEvent,
         bot: Bot,
+        reply_message_id: str,
+        content: str,
         quote_write_svc: QuoteWriteService = Inject(QuoteWriteService),
         review_svc: ReviewService = Inject(ReviewService),
     ) -> None:
         """
-        处理静默评论语录（无命令前缀模式）。
+        静默评论语录的实际业务逻辑（延迟 DI 解析）。
 
-        当用户直接回复语录消息时，自动识别并添加评论。
+        仅在外层 handler 通过前置检查后才被调用，避免每条群消息都触发 DI 容器解析。
 
         :param event: 群消息事件
         :type event: GroupMessageEvent
         :param bot: Bot 实例
         :type bot: Bot
+        :param reply_message_id: 被回复消息的 ID
+        :type reply_message_id: str
+        :param content: 评论内容
+        :type content: str
         :param quote_write_svc: 语录写入服务（DI 注入）
         :type quote_write_svc: QuoteWriteService
         :param review_svc: 评论服务（DI 注入）
         :type review_svc: ReviewService
         """
-        reply = event.reply
-        content = event.get_plaintext().strip()
-        if reply is None or content == "":
-            return  # 不处理
-
         async with command_error_handler(
             matcher_add_quote_comment_no_prefix, "添加评论"
         ):
             # 获取语录 ID
-            quote_id = await quote_write_svc.get_quote_id_by_msg_id(
-                str(reply.message_id)
-            )
+            quote_id = await quote_write_svc.get_quote_id_by_msg_id(reply_message_id)
             if quote_id is None:
                 # 正常消息，不要处理
                 return
@@ -124,3 +122,31 @@ if matcher_add_quote_comment_no_prefix is not None:
                 author_id=str(event.sender.user_id),
                 content=content,
             )
+
+    @matcher_add_quote_comment_no_prefix.handle()
+    async def handle_add_quote_comment_no_prefix(
+        event: GroupMessageEvent,
+        bot: Bot,
+    ) -> None:
+        """
+        处理静默评论语录（无命令前缀模式）— 轻量级外层 handler。
+
+        仅做前置检查，通过后才调用内层函数触发 DI 解析，
+        避免每条群消息都急切加载 VectorStore 等重量级依赖。
+
+        :param event: 群消息事件
+        :type event: GroupMessageEvent
+        :param bot: Bot 实例
+        :type bot: Bot
+        """
+        reply = event.reply
+        content = event.get_plaintext().strip()
+        if reply is None or content == "":
+            return  # 不处理
+
+        await _do_add_quote_comment_no_prefix(
+            event=event,
+            bot=bot,
+            reply_message_id=str(reply.message_id),
+            content=content,
+        )
