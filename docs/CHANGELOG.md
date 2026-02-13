@@ -16,10 +16,12 @@ All notable changes to this project will be documented in this file.
 ## Added
 
 - 新增了模糊搜索功能
+- 新增了文本语义的向量数据库
 
 ## Changed
 
 - 重构了更加健壮的渲染模板架构
+- 优化了配置修改手感细节
 
 ## Fixed
 
@@ -27,6 +29,7 @@ All notable changes to this project will be documented in this file.
 - 修复语录收集未正确筛选、添加的问题
 - 修复语录排行榜数据占位未正确替换的问题
 - 修复日志无法正常输出的问题
+- 修复群组无法被正确自动添加的问题
 
 ## \[0.5.0alpha1\] - 2026-02-10 \[BREAKING CHANGES\]
 
