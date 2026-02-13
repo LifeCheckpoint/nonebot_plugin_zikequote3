@@ -16,6 +16,7 @@ import random
 from typing import TYPE_CHECKING, Optional
 
 from ..database.models.quotes import Quote
+from ..database.repositories.group_repository import GroupRepository
 from ..database.repositories.image_repository import ImageRepository
 from ..database.repositories.mapping_repository import MappingRepository
 from ..database.repositories.quote_repository import QuoteRepository
@@ -61,6 +62,7 @@ class QuoteWriteService:
         mapping_repo: MappingRepository,
         user_service: UserService,
         config_service: ConfigService,
+        group_repo: GroupRepository | None = None,
         vector_search_svc: VectorSearchService | None = None,
     ) -> None:
         self._quote_repo = quote_repo
@@ -68,6 +70,7 @@ class QuoteWriteService:
         self._mapping_repo = mapping_repo
         self._user_service = user_service
         self._config_service = config_service
+        self._group_repo = group_repo
         self._vector_search_svc = vector_search_svc
 
     # ------------------------------------------------------------------ #
@@ -107,6 +110,10 @@ class QuoteWriteService:
                 raise ImageNotFoundError(
                     f"图片 UUID 不存在: {image_content_uuid}"
                 )
+
+        # 确保群组记录存在（兜底保护）
+        if self._group_repo is not None:
+            await self._group_repo.ensure_group_exists(group_id)
 
         # 确保作者用户记录存在
         await self._user_service.get_or_create_user(author_id)

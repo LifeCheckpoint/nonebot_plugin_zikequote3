@@ -76,6 +76,9 @@ async def handle_collecting_listener(
     if not msg or msg == "" or len(msg) > max_length:
         return
 
+    # 确保群组记录存在（外键约束保护）
+    await group_svc.ensure_group_exists(group_id)
+
     # 入队与阈值检查
     is_threshold = False
     async with silent_error_handler("收录与阈值检查"):

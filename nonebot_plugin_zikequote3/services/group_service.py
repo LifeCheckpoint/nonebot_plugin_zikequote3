@@ -83,6 +83,10 @@ class GroupService:
         """
         return await self._group_repo.group_exists(group_id)
 
+    async def ensure_group_exists(self, group_id: str) -> None:
+        """确保群组记录存在，不存在则以 group_id 作为占位名称创建。"""
+        await self._group_repo.ensure_group_exists(group_id)
+
     async def update_group_name(self, group_id: str, name: str) -> None:
         """
         更新群组名称。

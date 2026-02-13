@@ -77,6 +77,9 @@ async def handle_add_quote(
 
     group_id = str(event.group_id)
 
+    # 确保群组记录存在（外键约束保护）
+    await group_svc.ensure_group_exists(group_id)
+
     # 检查图片数据存在性
     image_uuid = None
     img_url_or_file: str = ""

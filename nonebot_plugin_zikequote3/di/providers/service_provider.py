@@ -205,6 +205,7 @@ class ServiceProvider(Provider):
         mapping_repo: MappingRepository,
         user_service: UserService,
         config_service: ConfigService,
+        group_repo: GroupRepository,
         vector_search_svc: VectorSearchService,
     ) -> QuoteWriteService:
         """
@@ -220,6 +221,8 @@ class ServiceProvider(Provider):
         :type user_service: UserService
         :param config_service: 配置服务
         :type config_service: ConfigService
+        :param group_repo: 群组仓库（用于 ensure_group_exists 兜底保护）
+        :type group_repo: GroupRepository
         :param vector_search_svc: 向量搜索服务（基础设施不可用时为 None）
         :type vector_search_svc: VectorSearchService
         :returns: 语录写入服务实例
@@ -231,6 +234,7 @@ class ServiceProvider(Provider):
             mapping_repo=mapping_repo,
             user_service=user_service,
             config_service=config_service,
+            group_repo=group_repo,
             vector_search_svc=vector_search_svc,
         )
 
