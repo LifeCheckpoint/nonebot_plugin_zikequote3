@@ -115,30 +115,26 @@ class VectorStore:
         :type dimensions: int
         """
         db = self._get_db()
-        existing = list(await db.list_tables())
-        if self.QUOTE_TABLE not in existing:
-            schema = pa.schema(
-                [
-                    pa.field("quote_id", pa.utf8()),
-                    pa.field("group_id", pa.utf8()),
-                    pa.field("content", pa.utf8()),
-                    pa.field("vector", pa.list_(pa.float32(), dimensions)),
-                ]
-            )
-            await db.create_table(self.QUOTE_TABLE, schema=schema)
+        schema = pa.schema(
+            [
+                pa.field("quote_id", pa.utf8()),
+                pa.field("group_id", pa.utf8()),
+                pa.field("content", pa.utf8()),
+                pa.field("vector", pa.list_(pa.float32(), dimensions)),
+            ]
+        )
+        await db.create_table(self.QUOTE_TABLE, schema=schema, exist_ok=True)
 
     async def _ensure_meta_table(self) -> None:
         """确保 vector_meta 表存在。"""
         db = self._get_db()
-        existing = list(await db.list_tables())
-        if self.META_TABLE not in existing:
-            schema = pa.schema(
-                [
-                    pa.field("key", pa.utf8()),
-                    pa.field("value", pa.utf8()),
-                ]
-            )
-            await db.create_table(self.META_TABLE, schema=schema)
+        schema = pa.schema(
+            [
+                pa.field("key", pa.utf8()),
+                pa.field("value", pa.utf8()),
+            ]
+        )
+        await db.create_table(self.META_TABLE, schema=schema, exist_ok=True)
 
     async def upsert(self, records: List[Dict[str, Any]]) -> None:
         """插入或更新向量记录。
