@@ -20,6 +20,7 @@ from tomlkit.exceptions import TOMLKitError
 from ..config import ConfigSchema, parse_config_from_toml
 from ..database.models.group_configs import GroupConfigs
 from ..database.repositories.group_config_repository import GroupConfigRepository
+from ..database.repositories.group_repository import GroupRepository
 from ..exceptions import ResourceNotFoundError, ValidationException
 
 class ConfigService:
@@ -40,8 +41,10 @@ class ConfigService:
     def __init__(
         self,
         group_config_repo: GroupConfigRepository,
+        group_repo: GroupRepository,
     ) -> None:
         self._group_config_repo = group_config_repo
+        self._group_repo = group_repo
 
     # ------------------------------------------------------------------ #
     #  查询
@@ -174,6 +177,8 @@ class ConfigService:
         doc[section][key] = new_value  # type: ignore[index]
 
         new_toml = tomlkit.dumps(doc)
+        # 确保 group 记录存在，避免外键约束失败
+        await self._group_repo.ensure_group_exists(group_id)
         await self._group_config_repo.update_or_create_group_config(
             group_id, new_toml
         )

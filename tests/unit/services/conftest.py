@@ -198,6 +198,7 @@ def quote_collection_service(
     )
     cs = ConfigService(
         group_config_repo=mock_group_config_repo,
+        group_repo=AsyncMock(spec=GroupRepository),
     )
     qws = QuoteWriteService(
         quote_repo=mock_quote_repo,
@@ -244,9 +245,11 @@ def statistics_service(
 @pytest.fixture
 def config_service(
     mock_group_config_repo: AsyncMock,
+    mock_group_repo: AsyncMock,
 ) -> ConfigService:
     return ConfigService(
         group_config_repo=mock_group_config_repo,
+        group_repo=mock_group_repo,
     )
 
 

@@ -75,7 +75,13 @@ class DatabaseProvider(Provider):
         session = session_factory()
         try:
             yield session
-            await session.commit()
+            # dishka 在关闭 scope 时可能通过 asend() 而非 athrow() 恢复 generator，
+            # 导致上游异常不会被 except 捕获。此时 session 可能处于 flush 失败状态，
+            # 直接 commit 会触发 PendingRollbackError。因此在 commit 前检查 session 状态。
+            if session.is_active and not session.in_nested_transaction():
+                await session.commit()
+            else:
+                await session.rollback()
         except BaseException:
             await session.rollback()
             raise

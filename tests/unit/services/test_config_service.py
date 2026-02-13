@@ -238,7 +238,7 @@ class TestModifySingleValue:
     """modify_single_value 测试。"""
 
     async def test_modify_existing_config(
-        self, config_service: ConfigService, mock_group_config_repo: AsyncMock
+        self, config_service: ConfigService, mock_group_config_repo: AsyncMock, mock_group_repo: AsyncMock
     ) -> None:
         toml_str = "[collecting]\npickup_interval = 80"
         mock_group_config_repo.get_toml_config_by_group_id.return_value = toml_str
@@ -246,19 +246,21 @@ class TestModifySingleValue:
         mock_group_config_repo.update_or_create_group_config.return_value = fake
 
         await config_service.modify_single_value("g1", "collecting.pickup_interval", 200)
+        mock_group_repo.ensure_group_exists.assert_awaited_once_with("g1")
         mock_group_config_repo.update_or_create_group_config.assert_awaited_once()
         call_args = mock_group_config_repo.update_or_create_group_config.call_args
         assert call_args[0][0] == "g1"
         assert "200" in call_args[0][1]
 
     async def test_modify_creates_config_when_none(
-        self, config_service: ConfigService, mock_group_config_repo: AsyncMock
+        self, config_service: ConfigService, mock_group_config_repo: AsyncMock, mock_group_repo: AsyncMock
     ) -> None:
         mock_group_config_repo.get_toml_config_by_group_id.return_value = None
         fake = GroupConfigs(group_id="g1", toml_config="")
         mock_group_config_repo.update_or_create_group_config.return_value = fake
 
         await config_service.modify_single_value("g1", "collecting.pickup_interval", 150)
+        mock_group_repo.ensure_group_exists.assert_awaited_once_with("g1")
         mock_group_config_repo.update_or_create_group_config.assert_awaited_once()
 
     async def test_invalid_path_format_raises(

@@ -153,17 +153,21 @@ class ServiceProvider(Provider):
     def provide_config_service(
         self,
         group_config_repo: GroupConfigRepository,
+        group_repo: GroupRepository,
     ) -> ConfigService:
         """
         提供配置服务实例。
 
         :param group_config_repo: 群配置仓库
         :type group_config_repo: GroupConfigRepository
+        :param group_repo: 群组仓库
+        :type group_repo: GroupRepository
         :returns: 配置服务实例
         :rtype: ConfigService
         """
         return ConfigService(
             group_config_repo=group_config_repo,
+            group_repo=group_repo,
         )
 
     @provide

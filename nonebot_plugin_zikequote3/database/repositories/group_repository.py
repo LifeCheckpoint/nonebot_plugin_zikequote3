@@ -178,6 +178,19 @@ class GroupRepository(BaseRepository[GroupModel, GroupCreate, Group]):
             return instance.to_dto()
         return await self.create_group(group_id, name)
 
+    async def ensure_group_exists(self, group_id: str) -> None:
+        """
+        确保群组记录存在，不存在则以群号作为占位名称创建。
+
+        用于外键约束场景：在写入关联表之前保证 ``groups`` 表中有对应行。
+
+        :param group_id: 群号
+        :type group_id: str
+        """
+        exists = await self.exists_by_id(group_id)
+        if not exists:
+            await self.create_group(group_id, name=group_id)
+
     # ---- 删除 ----
 
     async def delete_group(self, group_id: str) -> bool:
