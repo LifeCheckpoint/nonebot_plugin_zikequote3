@@ -6,7 +6,6 @@ All notable changes to this project will be documented in this file.
 >
 > - 语录群际共享
 > - LLM 关键词标注
-> - 向量化数据库与语义化查询
 > - 图片储存检查
 > - 其它依托于 LLM 的大型统计 / 语义化功能
 > - 定期数据备份功能
@@ -27,6 +26,7 @@ All notable changes to this project will be documented in this file.
 - 修复添加语录无法添加图片的问题
 - 修复语录收集未正确筛选、添加的问题
 - 修复语录排行榜数据占位未正确替换的问题
+- 修复日志无法正常输出的问题
 
 ## \[0.5.0alpha1\] - 2026-02-10 \[BREAKING CHANGES\]
 
