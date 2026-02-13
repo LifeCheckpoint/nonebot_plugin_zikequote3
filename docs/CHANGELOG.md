@@ -11,7 +11,7 @@ All notable changes to this project will be documented in this file.
 > - 定期数据备份功能
 > - 后端管理功能
 
-## \[0.5.0alpha2\] - 2026-02-??
+## \[0.5.0alpha2\] - 2026-02-13
 
 ## Added
 
