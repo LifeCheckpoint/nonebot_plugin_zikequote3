@@ -134,7 +134,7 @@ async def handle_search_quote(
                 if keyword.available else ""
             ),
         )
-        logger.debug("解析结果参数: %s", params)
+        logger.debug("解析结果参数: {}", params)
 
     # 模糊语义搜索分支
     if params.use_fuzzy:

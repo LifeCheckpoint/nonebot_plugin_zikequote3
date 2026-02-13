@@ -70,7 +70,7 @@ async def command_error_handler(
         raise
     except Exception as e:
         log_prefix = f"命令异常 / {action}" if action else "命令异常"
-        logger.error("%s: %s", log_prefix, e, exc_info=True)
+        logger.error("{}: {}", log_prefix, e, exc_info=True)
         await handle_command_error(matcher, e)
 
 @contextmanager
@@ -90,7 +90,7 @@ def suppress_error(action: str = "") -> Iterator[None]:
         raise
     except Exception as e:
         log_prefix = f"非关键操作异常 / {action}" if action else "非关键操作异常"
-        logger.warning("%s: %s", log_prefix, e, exc_info=True)
+        logger.warning("{}: {}", log_prefix, e, exc_info=True)
         sentry_sdk.capture_exception(e)
 
 @asynccontextmanager
@@ -115,7 +115,7 @@ async def silent_error_handler(
         raise
     except Exception as e:
         log_prefix = f"后台任务异常 / {action}" if action else "后台任务异常"
-        logger.error("%s: %s", log_prefix, e, exc_info=True)
+        logger.error("{}: {}", log_prefix, e, exc_info=True)
         sentry_sdk.capture_exception(e)
         if finish_on_error:
             raise FinishedException()

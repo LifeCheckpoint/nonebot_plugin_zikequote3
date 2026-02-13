@@ -265,7 +265,7 @@ class QuoteCollectionService:
         :type group_id: str
         """
         await self._msg_queue_repo.clear_group_queue(group_id)
-        logger.info("队列已清空: group=%s", group_id)
+        logger.info("队列已清空: group={}", group_id)
 
     async def get_queue_messages(
         self, group_id: str, *, limit: Optional[int] = None
@@ -388,7 +388,7 @@ class QuoteCollectionService:
         # 2. 筛选
         selected = await self._select_quotes(messages, group_id)
         if not selected:
-            logger.info("收集完成但无筛选结果: group=%s", group_id)
+            logger.info("收集完成但无筛选结果: group={}", group_id)
             return []
 
         # 3. 保存
@@ -398,7 +398,7 @@ class QuoteCollectionService:
             # 查找原始消息获取作者信息
             source_msg = await self._msg_queue_repo.get_msg_by_id(item.msg_id)
             if source_msg is None:
-                logger.warning("消息数据未找到: msg_id=%s", item.msg_id)
+                logger.warning("消息数据未找到: msg_id={}", item.msg_id)
                 continue
 
             author_id = source_msg.qq_id

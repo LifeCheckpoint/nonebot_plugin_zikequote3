@@ -357,7 +357,7 @@ class QuoteReadService:
             )
         else:
             # 未知算法回退到均匀随机
-            logger.warning("未知算法 '%s'，回退到均匀随机", algorithm)
+            logger.warning("未知算法 '{}'，回退到均匀随机", algorithm)
             return random.choice(pool)
 
         ids = list(weights.keys())

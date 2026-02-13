@@ -80,7 +80,7 @@ async def handle_get_current_config(
         except FinishedException:
             raise
         except Exception as e:
-            logger.warning("配置预览图片渲染失败，降级为纯文本: %s", e)
+            logger.warning("配置预览图片渲染失败，降级为纯文本: {}", e)
             await matcher_get_current_config.finish(
                 f"当前群组配置：\n{toml_str}"
             )

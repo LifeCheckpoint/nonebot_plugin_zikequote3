@@ -48,7 +48,7 @@ async def _do_rebuild(
             count = await vector_search_svc.reindex_all(group_id)
         await bot.send(event, f"✅ 索引重建完成！{scope_desc}共索引了 {count} 条语录。")
     except Exception as e:
-        logger.error("后台重建索引失败: %s", e)
+        logger.error("后台重建索引失败: {}", e)
         await bot.send(event, f"❌ 索引重建失败: {e}")
 
 @matcher_rebuild_index.handle()

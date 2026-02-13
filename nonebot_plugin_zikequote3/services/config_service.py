@@ -95,7 +95,7 @@ class ConfigService:
         result = await self._group_config_repo.update_or_create_group_config(
             group_id, config_toml
         )
-        logger.info("群组 %s 配置已更新", group_id)
+        logger.info("群组 {} 配置已更新", group_id)
         return result
 
     async def delete_group_config(self, group_id: str) -> None:
@@ -111,7 +111,7 @@ class ConfigService:
             raise ResourceNotFoundError(f"群组 {group_id} 配置不存在")
 
         await self._group_config_repo.delete_group_config(group_id)
-        logger.info("群组 %s 配置已删除", group_id)
+        logger.info("群组 {} 配置已删除", group_id)
 
     async def modify_single_value(
         self,
@@ -339,8 +339,8 @@ class ConfigService:
                 gc.group_id, new_toml
             )
             fixed_count += 1
-            logger.info("群组 %s 配置已迁移到 v%s", gc.group_id, default_version)
+            logger.info("群组 {} 配置已迁移到 v{}", gc.group_id, default_version)
 
         if fixed_count:
-            logger.info("共修复 %d 个群组的配置完整性", fixed_count)
+            logger.info("共修复 {} 个群组的配置完整性", fixed_count)
         return fixed_count

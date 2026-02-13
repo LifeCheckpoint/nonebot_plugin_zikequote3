@@ -137,11 +137,11 @@ async def _check_vector_index_consistency(container: AsyncContainer) -> None:
             else:
                 count = await svc.get_index_count()
                 if count > 0:
-                    logger.info("向量索引就绪，共 %d 条记录", count)
+                    logger.info("向量索引就绪，共 {} 条记录", count)
                 else:
                     logger.info("向量索引为空，请执行 /重建语录索引 建立索引")
     except Exception as e:
-        logger.warning("向量索引一致性检查失败: %s", e)
+        logger.warning("向量索引一致性检查失败: {}", e)
 
 # ---------------------------------------------------------------------------
 # 导入命令模块 —— 触发 matcher 注册（NoneBot2 标准模式）

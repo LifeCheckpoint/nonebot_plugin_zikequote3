@@ -90,7 +90,7 @@ class VectorSearchService:
         if not quote.content:
             return
         if self._store.reindex_lock.locked():
-            logger.info("正在重建索引，跳过 index_quote(quote_id=%s)", quote.quote_id)
+            logger.info("正在重建索引，跳过 index_quote(quote_id={})", quote.quote_id)
             return
         async with self._store.reindex_lock:
             vector = await self._embedding.embed_query(quote.content)
@@ -110,7 +110,7 @@ class VectorSearchService:
         :type quote_id: str
         """
         if self._store.reindex_lock.locked():
-            logger.info("正在重建索引，跳过 remove_quote(quote_id=%s)", quote_id)
+            logger.info("正在重建索引，跳过 remove_quote(quote_id={})", quote_id)
             return
         async with self._store.reindex_lock:
             await self._store.delete([quote_id])
@@ -165,7 +165,7 @@ class VectorSearchService:
                 ]
                 await self._store.upsert(records)
                 total_indexed += len(records)
-                logger.info("向量索引进度: %d/%d", total_indexed, len(text_quotes))
+                logger.info("向量索引进度: {}/{}", total_indexed, len(text_quotes))
 
             # M5: 重建完成后模型一定一致
             _model_consistent_cache = True
@@ -184,7 +184,7 @@ class VectorSearchService:
         try:
             stored_dims = int(meta.get("dimensions", "0"))
         except (ValueError, TypeError):
-            logger.warning("meta 表中 dimensions 值损坏: %r，视为不一致", meta.get("dimensions"))
+            logger.warning("meta 表中 dimensions 值损坏: {!r}，视为不一致", meta.get("dimensions"))
             return False
         return (
             stored_model == self._embedding.model_name

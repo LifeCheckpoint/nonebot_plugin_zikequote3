@@ -109,7 +109,7 @@ async def handle_random_quote_card(
             at_target=extract_at_qq(at_user),
             raw_text=extract_text(text),
         )
-        logger.debug("语录卡解析结果: intent=%s, resolved=%s", resolved.intent, resolved)
+        logger.debug("语录卡解析结果: intent={}, resolved={}", resolved.intent, resolved)
 
     async with command_error_handler(matcher_random_quote_card, "获取语录卡"):
         # 根据解析结果构建候选池并随机选取
@@ -168,7 +168,7 @@ async def handle_random_quote_card(
                 img_path = image_store.get_path(q_result.image_content_uuid)
                 image_uri = _to_data_uri(img_path.read_bytes())
             except FileNotFoundError:
-                logger.warning("语录图片文件已丢失: %s", q_result.image_content_uuid)
+                logger.warning("语录图片文件已丢失: {}", q_result.image_content_uuid)
 
         # 渲染卡片
         quote_card_html = card_template.render_card(

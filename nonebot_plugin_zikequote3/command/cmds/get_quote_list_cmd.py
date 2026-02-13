@@ -103,7 +103,7 @@ async def handle_get_quote_list(
                 )
 
         user_qq = result.single_user
-        logger.debug("解析结果用户: %s", user_qq)
+        logger.debug("解析结果用户: {}", user_qq)
 
         # 解析范围参数
         page_from, page_to = parse_page_range(

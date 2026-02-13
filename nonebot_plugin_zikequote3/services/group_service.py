@@ -95,7 +95,7 @@ class GroupService:
         :type name: str
         """
         await self._group_repo.update_or_create_group(group_id, name)
-        logger.info("群 %s 名称已更新为 %s", group_id, name)
+        logger.info("群 {} 名称已更新为 {}", group_id, name)
 
     # ------------------------------------------------------------------ #
     #  群成员关系管理（原 group_relationship_service）

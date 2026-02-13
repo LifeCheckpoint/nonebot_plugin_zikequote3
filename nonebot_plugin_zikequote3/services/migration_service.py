@@ -188,7 +188,7 @@ class MigrationService:
             "source": source,
             "target": target,
         }
-        logger.info("群组迁移完成: %s -> %s, 语录 %d 条", source, target, migrated_count)
+        logger.info("群组迁移完成: {} -> {}, 语录 {} 条", source, target, migrated_count)
         return result
 
     # ------------------------------------------------------------------ #
@@ -221,12 +221,12 @@ class MigrationService:
         :rtype: int
         """
         # 清空目标群语录（无论覆写还是合并模式都需要，因为写入的是完整集合）
-        logger.info("正在清空目标群 %s 的语录...", target)
+        logger.info("正在清空目标群 {} 的语录...", target)
         await self._quote_repo.delete_quotes_by_group(target)
 
         # 如果不保留源群，先清空源群语录以释放 ID
         if not keep_source:
-            logger.info("正在清空源群 %s 的语录 (Move 模式)...", source)
+            logger.info("正在清空源群 {} 的语录 (Move 模式)...", source)
             await self._quote_repo.delete_quotes_by_group(source)
 
         # 批量写入
@@ -242,7 +242,7 @@ class MigrationService:
                 )
                 for q in final_quotes
             ]
-            logger.info("正在向目标群 %s 写入 %d 条语录...", target, len(quotes_to_create))
+            logger.info("正在向目标群 {} 写入 {} 条语录...", target, len(quotes_to_create))
             await self._quote_repo.batch_create_quotes(quotes_to_create)
 
         return len(final_quotes)
@@ -286,7 +286,7 @@ class MigrationService:
         # 迁移群名片
         source_nicknames = await self._group_nickname_repo.get_nicknames_by_group(source)
         if source_nicknames:
-            logger.info("正在迁移 %d 条群名片记录...", len(source_nicknames))
+            logger.info("正在迁移 {} 条群名片记录...", len(source_nicknames))
             for nickname in source_nicknames:
                 try:
                     await self._group_nickname_repo.add_group_nickname(
@@ -301,7 +301,7 @@ class MigrationService:
 
         # 清理源群信息
         if clear_member_info:
-            logger.info("正在清理源群 %s 的用户信息...", source)
+            logger.info("正在清理源群 {} 的用户信息...", source)
             await self._group_member_repo.delete_all_members_by_group(source)
             await self._group_nickname_repo.clear_group_all_nicknames(source)
 

@@ -135,7 +135,7 @@ class ReviewService:
         if not deleted:
             raise ResourceNotFoundError(f"删除评论失败: {review_id}")
 
-        logger.info("评论已删除: review_id=%s", review_id)
+        logger.info("评论已删除: review_id={}", review_id)
 
     # ------------------------------------------------------------------ #
     #  统计

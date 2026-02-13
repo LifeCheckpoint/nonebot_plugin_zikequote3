@@ -192,7 +192,7 @@ class UserService:
         current_name = current.name if current else None
         if current_name != nickname:
             await self._user_nickname_repo.set_current_nickname(qq_id, nickname)
-            logger.info("用户 %s 昵称缓存已更新: %s -> %s", qq_id, current_name, nickname)
+            logger.info("用户 {} 昵称缓存已更新: {} -> {}", qq_id, current_name, nickname)
 
     async def sync_group_card(self, qq_id: str, group_id: str, card: str) -> None:
         """
@@ -362,7 +362,7 @@ class UserService:
         try:
             avatar_bytes = await self.fetch_avatar(qq_id)
         except Exception:
-            logger.warning("获取用户 %s 头像失败", qq_id, exc_info=True)
+            logger.warning("获取用户 {} 头像失败", qq_id, exc_info=True)
             return None
         await self._user_repo.update_user(qq_id, avatar=avatar_bytes)
         return avatar_bytes

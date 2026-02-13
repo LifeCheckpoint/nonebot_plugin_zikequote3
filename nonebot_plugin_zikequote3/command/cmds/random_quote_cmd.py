@@ -87,7 +87,7 @@ async def handle_random_quote(
             at_target=extract_at_qq(at_user),
             raw_text=extract_text(text),
         )
-        logger.debug("随机语录解析结果: intent=%s, resolved=%s", resolved.intent, resolved)
+        logger.debug("随机语录解析结果: intent={}, resolved={}", resolved.intent, resolved)
 
     async with command_error_handler(matcher_random_quote, "获取随机语录"):
         # 根据解析结果构建候选池并随机选取

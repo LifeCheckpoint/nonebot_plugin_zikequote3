@@ -123,7 +123,7 @@ async def handle_collecting_listener(
     # 执行收集流程
     async with silent_error_handler("LLM 筛选"):
         collected = await collection_svc.collect_and_save(group_id)
-        logger.info("筛选到 %d 条语录", len(collected))
+        logger.info("筛选到 {} 条语录", len(collected))
 
     # 为每条语录添加 AI 评论
     for item in collected:

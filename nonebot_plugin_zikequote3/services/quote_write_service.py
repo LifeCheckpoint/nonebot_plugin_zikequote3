@@ -221,7 +221,7 @@ class QuoteWriteService:
         if not updated:
             raise DatabaseOperationError(f"更新语录失败: {quote_id}")
 
-        logger.info("语录已更新: quote_id=%s", quote_id)
+        logger.info("语录已更新: quote_id={}", quote_id)
 
         # 异步更新向量索引（不影响主流程）
         updated_quote = await self._quote_repo.get_quote_by_id(quote_id)
@@ -251,7 +251,7 @@ class QuoteWriteService:
         # 同时清理关联的映射
         await self._mapping_repo.delete_mappings_by_quote_id(quote_id)
 
-        logger.info("语录已删除: quote_id=%s", quote_id)
+        logger.info("语录已删除: quote_id={}", quote_id)
 
         # 异步删除向量索引（不影响主流程）
         await self._try_remove_quote(quote_id, existing.group_id)
@@ -271,7 +271,7 @@ class QuoteWriteService:
         :raises DatabaseOperationError: 映射创建失败
         """
         await self._mapping_repo.create_mapping(msg_id, quote_id)
-        logger.debug("映射已创建: msg_id=%s -> quote_id=%s", msg_id, quote_id)
+        logger.debug("映射已创建: msg_id={} -> quote_id={}", msg_id, quote_id)
 
     async def get_quote_id_by_msg_id(self, msg_id: str) -> Optional[str]:
         """
@@ -304,7 +304,7 @@ class QuoteWriteService:
                 return
             await self._vector_search_svc.index_quote(quote)
         except Exception as e:
-            logger.warning("向量索引更新失败 (quote_id=%s): %s", quote.quote_id, e)
+            logger.warning("向量索引更新失败 (quote_id={}): {}", quote.quote_id, e)
 
     async def _try_remove_quote(self, quote_id: str, group_id: str) -> None:
         """尝试删除语录的向量索引，失败仅记录日志。
@@ -324,7 +324,7 @@ class QuoteWriteService:
                 return
             await self._vector_search_svc.remove_quote(quote_id)
         except Exception as e:
-            logger.warning("向量索引删除失败 (quote_id=%s): %s", quote_id, e)
+            logger.warning("向量索引删除失败 (quote_id={}): {}", quote_id, e)
 
     # ------------------------------------------------------------------ #
     #  去重检查

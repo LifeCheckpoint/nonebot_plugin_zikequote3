@@ -56,7 +56,7 @@ class VectorProvider(Provider):
         try:
             return EmbeddingClient(self._embedding_config, self._llm_config)
         except Exception as e:
-            logger.warning("EmbeddingClient 创建失败: %s", e)
+            logger.warning("EmbeddingClient 创建失败: {}", e)
             return None  # type: ignore[return-value]
 
     @provide(scope=Scope.APP)
@@ -74,7 +74,7 @@ class VectorProvider(Provider):
             await store.ensure_table(self._embedding_config.dimensions)
             return store
         except Exception as e:
-            logger.warning("VectorStore 创建失败: %s", e)
+            logger.warning("VectorStore 创建失败: {}", e)
             return None  # type: ignore[return-value]
 
     @provide(scope=Scope.REQUEST)

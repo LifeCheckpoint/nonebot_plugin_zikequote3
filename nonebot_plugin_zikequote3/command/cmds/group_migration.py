@@ -140,7 +140,7 @@ async def handle_group_migration(
     logger.warning(
         "来源群：%s -> 目标群：%s", source.result, target.result,
     )
-    logger.warning("TOKEN: %s", token)
+    logger.warning("TOKEN: {}", token)
 
     # 构建迁移确认卡片数据
     migration_data = TemplateMigrationData(
@@ -227,7 +227,7 @@ async def handle_group_migration(
         )
         prompt_msg = MsgSeg.image(img) + token_hint
     except Exception as e:
-        logger.warning("迁移确认卡片图片渲染失败，降级为纯文本: %s", e)
+        logger.warning("迁移确认卡片图片渲染失败，降级为纯文本: {}", e)
         prompt_msg = confirm_fallback_text + token_hint
 
     import nonebot_plugin_waiter as waiter

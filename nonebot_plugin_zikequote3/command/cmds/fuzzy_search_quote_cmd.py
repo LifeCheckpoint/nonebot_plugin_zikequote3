@@ -150,7 +150,7 @@ async def handle_fuzzy_search_quote(
             top_n=final_top_n,
             pattern=parsed_keyword,
         )
-        logger.debug("模糊搜索解析结果: %s", params)
+        logger.debug("模糊搜索解析结果: {}", params)
 
         # --- M3: 边界校验 top_n 和 similarity ---
         if params.top_n is not None and params.top_n < 1:

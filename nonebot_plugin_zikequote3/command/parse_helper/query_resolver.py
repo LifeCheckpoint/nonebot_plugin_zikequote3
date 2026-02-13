@@ -284,7 +284,7 @@ class QueryResolver:
         """
         # Step 1: @提及（无歧义，最高优先级）
         if at_target is not None and strategy.support_at:
-            logger.debug("解析为 @提及: at_target=%s", at_target)
+            logger.debug("解析为 @提及: at_target={}", at_target)
             return ResolvedQuery(
                 intent=QueryIntent.USER_BY_AT,
                 user_candidates=[at_target],
@@ -295,7 +295,7 @@ class QueryResolver:
         text = raw_text.strip()
         if not text:
             if strategy.fallback_to_self:
-                logger.debug("空输入，回退到发送者: sender_id=%s", sender_id)
+                logger.debug("空输入，回退到发送者: sender_id={}", sender_id)
                 return ResolvedQuery(
                     intent=QueryIntent.SELF,
                     user_candidates=[sender_id],
@@ -348,7 +348,7 @@ class QueryResolver:
             return self._resolve_numeric_prefer_qq(text, strategy, raw_text)
 
         if disambiguation == NumericDisambiguation.PREFER_KEYWORD:
-            logger.debug("纯数字 PREFER_KEYWORD: 解析为关键词=%s", text)
+            logger.debug("纯数字 PREFER_KEYWORD: 解析为关键词={}", text)
             return ResolvedQuery(
                 intent=QueryIntent.KEYWORD,
                 keyword=text,
@@ -356,7 +356,7 @@ class QueryResolver:
             )
 
         # AS_BOTH: 同时填充 user_candidates 和 keyword
-        logger.debug("纯数字 AS_BOTH: 同时作为QQ号和关键词=%s", text)
+        logger.debug("纯数字 AS_BOTH: 同时作为QQ号和关键词={}", text)
         candidates = [text] if strategy.support_qq else []
         return ResolvedQuery(
             intent=QueryIntent.KEYWORD,
@@ -384,7 +384,7 @@ class QueryResolver:
         :rtype: ResolvedQuery
         """
         if strategy.support_quote_id:
-            logger.debug("纯数字 PREFER_QUOTE_ID: 解析为语录ID=%s", text)
+            logger.debug("纯数字 PREFER_QUOTE_ID: 解析为语录ID={}", text)
             return ResolvedQuery(
                 intent=QueryIntent.QUOTE_BY_ID,
                 quote_id=text,
@@ -424,7 +424,7 @@ class QueryResolver:
         :rtype: ResolvedQuery
         """
         if strategy.support_qq:
-            logger.debug("纯数字 PREFER_QQ: 解析为QQ号=%s", text)
+            logger.debug("纯数字 PREFER_QQ: 解析为QQ号={}", text)
             return ResolvedQuery(
                 intent=QueryIntent.USER_BY_QQ,
                 user_candidates=[text],
@@ -502,7 +502,7 @@ class QueryResolver:
 
         # 昵称无匹配，尝试回退为关键词
         if strategy.support_keyword or strategy.fallback_to_keyword:
-            logger.debug("回退为关键词: text=%s", text)
+            logger.debug("回退为关键词: text={}", text)
             return ResolvedQuery(
                 intent=QueryIntent.KEYWORD,
                 keyword=text,
@@ -510,7 +510,7 @@ class QueryResolver:
             )
 
         # 无法解析
-        logger.debug("无法解析文本输入: text=%s", text)
+        logger.debug("无法解析文本输入: text={}", text)
         return ResolvedQuery(
             intent=QueryIntent.KEYWORD,
             keyword=text,
