@@ -11,6 +11,12 @@ All notable changes to this project will be documented in this file.
 > - 定期数据备份功能
 > - 后端管理功能
 
+## \[0.5.0alpha3\] - 2026-02-15
+
+## Fixed
+
+- 修复截图因 cache 路径丢失导致失败的问题
+
 ## \[0.5.0alpha2\] - 2026-02-13
 
 ## Added
