@@ -30,6 +30,7 @@ class PluginPath:
     module_templates_js_root = module_templates_root / "src" / "assets" / "js"
     module_utils_root = plugin_root / "utils"
 
+    data_cache_path = store.get_cache_dir("ZikeQuote3")
     data_db_path = store.get_data_dir("ZikeQuote3") / "zikequote3.db"
     data_image_root = store.get_data_dir("ZikeQuote3") / "quote_images"
     data_vector_db_path = store.get_data_dir("ZikeQuote3") / "vector_db"
