@@ -27,7 +27,7 @@ from ...di import Inject, inject
 from ...services import ConfigService, StatisticsService, QuoteReadService, UserService
 from ...services.html_render_service import HtmlRenderServiceBase
 from ...database.image_store import ImageStore
-from ...vector_search.search_service import VectorSearchService
+from ...vector_search.capability import VectorSearchCapability
 from ._error_handlers import command_error_handler
 from ...templates.registry import LISTING
 from ...templates.schema.listing import TemplateQuoteListData, render_list
@@ -83,7 +83,7 @@ async def handle_search_quote(
     image_store: ImageStore = Inject(ImageStore),
     html_render_svc: HtmlRenderServiceBase = Inject(HtmlRenderServiceBase),
     config_svc: ConfigService = Inject(ConfigService),
-    vector_search_svc: VectorSearchService = Inject(VectorSearchService),
+    vector_search_svc: VectorSearchCapability = Inject(VectorSearchCapability),
 ) -> None:
     """
     处理语录搜索命令。
@@ -239,7 +239,7 @@ async def _do_fuzzy_search(
     group_id: str,
     params: _ArgsValidater,
     *,
-    vector_search_svc: Optional[VectorSearchService],
+    vector_search_svc: VectorSearchCapability,
     quote_read_svc: QuoteReadService,
     user_svc: UserService,
     image_store: ImageStore,
@@ -256,8 +256,8 @@ async def _do_fuzzy_search(
     :type group_id: str
     :param params: 搜索参数校验模型。
     :type params: _ArgsValidater
-    :param vector_search_svc: 向量搜索服务，未启用时为 ``None``。
-    :type vector_search_svc: Optional[VectorSearchService]
+    :param vector_search_svc: 稳定的向量搜索能力抽象。
+    :type vector_search_svc: VectorSearchCapability
     :param quote_read_svc: 语录读取服务。
     :type quote_read_svc: QuoteReadService
     :param user_svc: 用户服务。
@@ -281,9 +281,10 @@ async def _do_fuzzy_search(
             )
             return
 
-        if vector_search_svc is None:
+        if not vector_search_svc.get_status().available:
             await matcher.finish(
-                "向量搜索基础设施未就绪，请检查启动期全局 Embedding 配置（model、base_url、api_key_path）"
+                vector_search_svc.get_unavailable_reason()
+                or "向量搜索基础设施未就绪，请检查启动期全局 Embedding 配置（model、base_url、api_key_path）"
             )
             return
 

@@ -110,17 +110,18 @@ async def handle_modify_config(
     :param config_svc: 配置服务（DI 注入）
     :type config_svc: ConfigService
     """
-    args = arg.extract_plain_text().strip().split(" ", 2)
+    raw_arg = arg.extract_plain_text().strip()
     group_id = str(event.group_id)
 
     async with command_error_handler(matcher_modify_config, "修改配置"):
-        # 参数检查
-        if len(args) < 2:
+        schema_str, separator, raw_value = raw_arg.partition(" ")
+        if not schema_str or not separator or not raw_value.strip():
             raise ValueError("参数过少，至少需要两个参数👻~")
 
-        # 解析参数
         try:
-            schema_str, new_value = config_svc.parse_config_param(args)
+            schema_str, new_value = config_svc.parse_config_param(
+                [schema_str, raw_value]
+            )
         except Exception as e:
             raise ValueError(f"输入的参数，好奇怪喵X_X: {e}")
 

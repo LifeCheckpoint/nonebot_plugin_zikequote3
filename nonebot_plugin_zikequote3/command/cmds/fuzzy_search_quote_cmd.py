@@ -20,7 +20,7 @@ from ...di import Inject, inject
 from ...services import ConfigService, QuoteReadService, UserService
 from ...services.html_render_service import HtmlRenderServiceBase
 from ...database.image_store import ImageStore
-from ...vector_search.search_service import VectorSearchService
+from ...vector_search.capability import VectorSearchCapability
 from ._error_handlers import command_error_handler
 from .search_quote_cmd import _ArgsValidater, _do_fuzzy_search
 
@@ -68,7 +68,7 @@ async def handle_fuzzy_search_quote(
     similarity: Match[float],
     top_n: Match[int],
     no_image: Query[bool] = Query("no_image.value", False),
-    vector_search_svc: VectorSearchService = Inject(VectorSearchService),
+    vector_search_svc: VectorSearchCapability = Inject(VectorSearchCapability),
     quote_read_svc: QuoteReadService = Inject(QuoteReadService),
     user_svc: UserService = Inject(UserService),
     image_store: ImageStore = Inject(ImageStore),
@@ -93,8 +93,8 @@ async def handle_fuzzy_search_quote(
     :type top_n: Match[int]
     :param no_image: 是否排除图片语录。
     :type no_image: Query[bool]
-    :param vector_search_svc: 向量搜索服务（DI 注入）。
-    :type vector_search_svc: VectorSearchService
+    :param vector_search_svc: 稳定的向量搜索能力抽象（DI 注入）。
+    :type vector_search_svc: VectorSearchCapability
     :param quote_read_svc: 语录读取服务（DI 注入）。
     :type quote_read_svc: QuoteReadService
     :param user_svc: 用户服务（DI 注入）。
@@ -158,16 +158,11 @@ async def handle_fuzzy_search_quote(
         if params.similarity is not None and not (0.0 <= params.similarity <= 1.0):
             await matcher_fuzzy_search_quote.finish("相似度阈值（-s）必须在 0.0 到 1.0 之间哦~")
 
-    # 两层检查：先检查群组配置，再检查基础设施
+    # 两层检查：先检查群组配置，再走统一的向量能力契约
     cfg = await config_svc.get_parsed_config(group_id)
     if not cfg.embedding.enabled:
         await matcher_fuzzy_search_quote.finish(
             "当前群组未启用向量搜索，请先执行 /修改语录配置 embedding.enabled True"
-        )
-
-    if vector_search_svc is None:
-        await matcher_fuzzy_search_quote.finish(
-            "向量搜索基础设施未就绪，请检查启动期全局 Embedding 配置（model、base_url、api_key_path）"
         )
 
     await _do_fuzzy_search(

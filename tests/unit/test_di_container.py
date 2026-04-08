@@ -47,6 +47,7 @@ from nonebot_plugin_zikequote3.services.statistics_service import StatisticsServ
 from nonebot_plugin_zikequote3.services.user_service import UserService
 from nonebot_plugin_zikequote3.di.container import create_container
 from nonebot_plugin_zikequote3.di.providers.database_provider import DatabaseProvider
+from nonebot_plugin_zikequote3.vector_search.capability import VectorSearchCapability
 
 
 # ---------------------------------------------------------------------------
@@ -220,6 +221,18 @@ class TestCreateContainer:
         assert s1 is not s2
         await container.close()
 
+
+    async def test_container_provides_stable_unavailable_vector_capability(self) -> None:
+        """向量依赖缺失时，容器仍提供类型稳定的不可用能力抽象。"""
+        container = create_container(
+            db_path=":memory:",
+            image_store_path=Path("__test_images_not_used__"),
+        )
+        async with container() as request_scope:
+            capability = await request_scope.get(VectorSearchCapability)
+            assert capability.get_status().available is False
+            assert await capability.is_available() is False
+        await container.close()
 
 # ---------------------------------------------------------------------------
 # RepositoryProvider 测试

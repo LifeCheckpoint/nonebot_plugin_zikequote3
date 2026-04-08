@@ -8,6 +8,8 @@ from unittest.mock import AsyncMock
 import pytest
 
 from nonebot_plugin_zikequote3.database.models.quotes import Quote
+from nonebot_plugin_zikequote3.exceptions import OperationError
+from nonebot_plugin_zikequote3.vector_search.capability import UnavailableVectorSearchService
 from nonebot_plugin_zikequote3.vector_search.search_service import VectorSearchService
 
 
@@ -377,3 +379,25 @@ class TestIsAvailable:
         mock_vector_store.count.side_effect = RuntimeError("连接失败")
 
         assert await vector_search_service.is_available() is False
+
+
+# ================================================================
+# unavailable capability
+# ================================================================
+
+
+class TestUnavailableVectorSearchService:
+    """UnavailableVectorSearchService 测试。"""
+
+    async def test_reports_unavailable_status(self):
+        svc = UnavailableVectorSearchService("基础设施未就绪")
+
+        assert svc.get_status().available is False
+        assert svc.get_unavailable_reason() == "基础设施未就绪"
+        assert await svc.is_available() is False
+
+    async def test_operation_raises_operation_error(self):
+        svc = UnavailableVectorSearchService("基础设施未就绪")
+
+        with pytest.raises(OperationError, match="基础设施未就绪"):
+            await svc.reindex_all("group1")

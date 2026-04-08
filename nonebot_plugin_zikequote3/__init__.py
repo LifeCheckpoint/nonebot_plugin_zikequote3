@@ -104,12 +104,16 @@ async def _startup() -> None:
 
 async def _check_vector_index_consistency(container: AsyncContainer) -> None:
     """启动时检查向量索引的模型一致性。"""
-    from .vector_search.search_service import VectorSearchService
+    from .vector_search.capability import VectorSearchCapability
 
     try:
         async with container() as request_scope:
-            svc = await request_scope.get(VectorSearchService)
-            if svc is None:
+            svc = await request_scope.get(VectorSearchCapability)
+            if not svc.get_status().available:
+                logger.warning(
+                    "向量搜索基础设施未就绪，跳过一致性检查: {}",
+                    svc.get_unavailable_reason() or "未知原因",
+                )
                 return
             consistent = await svc.check_model_consistency()
             if not consistent:

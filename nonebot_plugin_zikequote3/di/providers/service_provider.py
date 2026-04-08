@@ -10,7 +10,7 @@ from __future__ import annotations
 from dishka import Provider, Scope, provide
 
 from ...config import ConfigSchema
-from ...vector_search.search_service import VectorSearchService
+from ...vector_search.capability import VectorSearchCapability
 from ...database.repositories.group_config_repository import GroupConfigRepository
 from ...database.repositories.group_member_repository import GroupMemberRepository
 from ...database.repositories.group_nickname_repository import GroupNicknameRepository
@@ -226,7 +226,7 @@ class ServiceProvider(Provider):
         user_service: UserService,
         config_service: ConfigService,
         group_repo: GroupRepository,
-        vector_search_svc: VectorSearchService,
+        vector_search_svc: VectorSearchCapability,
     ) -> QuoteWriteService:
         """
         提供语录写入服务实例。
@@ -243,8 +243,8 @@ class ServiceProvider(Provider):
         :type config_service: ConfigService
         :param group_repo: 群组仓库（用于 ensure_group_exists 兜底保护）
         :type group_repo: GroupRepository
-        :param vector_search_svc: 向量搜索服务（基础设施不可用时为 None）
-        :type vector_search_svc: VectorSearchService
+        :param vector_search_svc: 稳定的向量搜索能力抽象
+        :type vector_search_svc: VectorSearchCapability
         :returns: 语录写入服务实例
         :rtype: QuoteWriteService
         """

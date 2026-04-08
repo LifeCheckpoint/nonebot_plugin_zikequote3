@@ -10,13 +10,14 @@ from typing import List, Optional, Tuple
 
 from ..database.repositories.quote_repository import QuoteRepository
 from ..database.models.quotes import Quote
+from .capability import VectorCapabilityStatus, VectorSearchCapability
 from .embedding_client import EmbeddingClient
 from .vector_store import VectorStore
 
 # M5: 模块级缓存，跨 REQUEST 作用域的 VectorSearchService 实例共享
 _model_consistent_cache: bool | None = None
 
-class VectorSearchService:
+class VectorSearchService(VectorSearchCapability):
     """向量搜索服务。
 
     协调 :class:`EmbeddingClient` 和 :class:`VectorStore`，
@@ -35,10 +36,17 @@ class VectorSearchService:
         embedding_client: EmbeddingClient,
         vector_store: VectorStore,
         quote_repo: QuoteRepository,
+        *,
+        status: VectorCapabilityStatus | None = None,
     ):
         self._embedding = embedding_client
         self._store = vector_store
         self._repo = quote_repo
+        self._status = status or VectorCapabilityStatus.available_status()
+
+    def get_status(self) -> VectorCapabilityStatus:
+        """返回当前向量能力状态。"""
+        return self._status
 
     async def semantic_search(
         self,
@@ -213,6 +221,8 @@ class VectorSearchService:
         :returns: 基础设施就绪返回 ``True``，否则返回 ``False``。
         :rtype: bool
         """
+        if not self._status.available:
+            return False
         try:
             # 验证 store 连接正常（调用 count 会触发 _get_db 检查）
             await self._store.count()

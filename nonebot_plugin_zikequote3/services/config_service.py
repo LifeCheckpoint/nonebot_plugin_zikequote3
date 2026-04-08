@@ -11,7 +11,8 @@ ConfigService —— 群组配置领域服务。
 from __future__ import annotations
 
 from ast import literal_eval
-from typing import Any, Optional, Sequence
+from dataclasses import dataclass
+from typing import Any, Literal, Optional, Sequence
 
 import tomlkit
 from nonebot import logger
@@ -29,6 +30,48 @@ _EMBEDDING_GLOBAL_ONLY_ITEMS = frozenset(
     for field_name in EmbeddingConfig.model_fields
     if field_name != "enabled"
 )
+
+
+@dataclass(frozen=True, slots=True)
+class ConfigDiagnostic:
+    """单条群配置诊断信息。"""
+
+    code: str
+    message: str
+
+
+@dataclass(frozen=True, slots=True)
+class ParsedConfigResult:
+    """群配置解析结果，兼容返回生效配置并显式暴露诊断信息。"""
+
+    config: ConfigSchema
+    source: Literal["default", "group", "repaired"]
+    diagnostics: tuple[ConfigDiagnostic, ...] = ()
+    stored_toml: str | None = None
+    normalized_group_toml: str | None = None
+
+    @property
+    def has_diagnostics(self) -> bool:
+        """是否存在需要暴露的诊断信息。"""
+        return bool(self.diagnostics)
+
+    @property
+    def needs_repair(self) -> bool:
+        """当前结果是否需要写回修复后的配置。"""
+        if self.stored_toml is None:
+            return False
+        if self.source == "repaired":
+            return True
+        return (
+            self.normalized_group_toml is not None
+            and self.normalized_group_toml != self.stored_toml
+        )
+
+    def format_diagnostics(self) -> str:
+        """格式化诊断信息，便于日志或用户提示输出。"""
+        if not self.diagnostics:
+            return "无"
+        return "；".join(item.message for item in self.diagnostics)
 
 
 class ConfigService:
@@ -69,6 +112,7 @@ class ConfigService:
     def _get_nonreloadable_items(self) -> set[str]:
         """获取群级热更新禁止覆盖的配置项路径集合。"""
         return {
+            "configure.cfg_version",
             *self._default_config.configure.nonreloadable_items,
             *_EMBEDDING_GLOBAL_ONLY_ITEMS,
         }
@@ -179,6 +223,165 @@ class ConfigService:
             self._default_config.configure.cfg_version
         )
         return normalized_doc
+
+    def _set_group_doc_value(
+        self,
+        doc: tomlkit.TOMLDocument,
+        section_name: str,
+        key_name: str,
+        value: Any,
+    ) -> None:
+        """向群配置文档安全写入单个 ``section.key`` 项。"""
+        if section_name not in doc:
+            doc[section_name] = tomlkit.table()
+        doc[section_name][key_name] = value  # type: ignore[index]
+
+    def _remove_group_doc_value(
+        self,
+        doc: tomlkit.TOMLDocument,
+        section_name: str,
+        key_name: str,
+    ) -> None:
+        """从群配置文档移除单个 ``section.key`` 项，并清理空节。"""
+        if section_name not in doc:
+            return
+
+        section = doc[section_name]
+        if key_name in section:
+            del section[key_name]
+        if hasattr(section, "keys") and len(list(section.keys())) == 0:
+            del doc[section_name]
+
+    def _sanitize_group_doc(
+        self,
+        raw_doc: tomlkit.TOMLDocument,
+        *,
+        group_id: str,
+    ) -> tuple[tomlkit.TOMLDocument, tuple[ConfigDiagnostic, ...]]:
+        """清洗群配置文档，仅保留可用的群级覆盖项。"""
+        diagnostics: list[ConfigDiagnostic] = []
+        candidate_doc = tomlkit.document()
+        nonreloadable_items = self._get_nonreloadable_items()
+
+        for section_name in raw_doc:
+            if not hasattr(self._default_config, section_name):
+                diagnostics.append(ConfigDiagnostic(
+                    code="unknown_section",
+                    message=f"群组 {group_id} 配置包含未知配置节 '{section_name}'，已忽略",
+                ))
+                continue
+
+            section_value = raw_doc[section_name]
+            if not hasattr(section_value, "keys"):
+                diagnostics.append(ConfigDiagnostic(
+                    code="invalid_section",
+                    message=f"群组 {group_id} 配置节 '{section_name}' 不是合法 table，已回退为默认值",
+                ))
+                continue
+
+            section_model = getattr(self._default_config, section_name)
+            for key_name in section_value:
+                schema_str = f"{section_name}.{key_name}"
+                if schema_str == "configure.cfg_version":
+                    continue
+                if not hasattr(section_model, key_name):
+                    diagnostics.append(ConfigDiagnostic(
+                        code="unknown_key",
+                        message=f"群组 {group_id} 配置包含未知配置项 '{schema_str}'，已忽略",
+                    ))
+                    continue
+                if schema_str in nonreloadable_items:
+                    diagnostics.append(ConfigDiagnostic(
+                        code="nonreloadable_item",
+                        message=f"群组 {group_id} 配置项 '{schema_str}' 仅支持启动期全局配置，已忽略群级覆盖",
+                    ))
+                    continue
+
+                self._set_group_doc_value(
+                    candidate_doc,
+                    section_name,
+                    key_name,
+                    section_value[key_name],
+                )
+
+        sanitized_doc = tomlkit.document()
+        for section_name, key_name, value in self._iter_group_doc_items(candidate_doc):
+            schema_str = f"{section_name}.{key_name}"
+            self._set_group_doc_value(sanitized_doc, section_name, key_name, value)
+            try:
+                self._validate_effective_config(
+                    sanitized_doc,
+                    context=f"群组 {group_id} 配置",
+                )
+            except ValidationException as exc:
+                self._remove_group_doc_value(sanitized_doc, section_name, key_name)
+                diagnostics.append(ConfigDiagnostic(
+                    code="invalid_value",
+                    message=f"群组 {group_id} 配置项 '{schema_str}' 校验失败，已回退为默认值: {exc}",
+                ))
+
+        return sanitized_doc, tuple(diagnostics)
+
+    def _inspect_group_config_toml(
+        self,
+        group_id: str,
+        toml_str: str | None,
+    ) -> ParsedConfigResult:
+        """分析群配置 TOML，返回兼容配置与显式诊断结果。"""
+        if toml_str is None:
+            return ParsedConfigResult(
+                config=self._copy_default_config(),
+                source="default",
+            )
+
+        try:
+            raw_doc = tomlkit.parse(toml_str)
+        except TOMLKitError as exc:
+            diagnostics = (
+                ConfigDiagnostic(
+                    code="toml_parse_failed",
+                    message=f"群组 {group_id} 配置 TOML 解析失败，已回退到默认配置: {exc}",
+                ),
+            )
+            normalized_toml = tomlkit.dumps(
+                self._normalize_group_doc(tomlkit.document())
+            )
+            return ParsedConfigResult(
+                config=self._copy_default_config(),
+                source="repaired",
+                diagnostics=diagnostics,
+                stored_toml=toml_str,
+                normalized_group_toml=normalized_toml,
+            )
+
+        sanitized_doc, diagnostics = self._sanitize_group_doc(raw_doc, group_id=group_id)
+        try:
+            config = self._validate_effective_config(
+                sanitized_doc,
+                context=f"群组 {group_id} 配置",
+            )
+        except ValidationException as exc:
+            diagnostics = (
+                *diagnostics,
+                ConfigDiagnostic(
+                    code="schema_repair_failed",
+                    message=f"群组 {group_id} 配置整体校验失败，已回退到默认配置: {exc}",
+                ),
+            )
+            sanitized_doc = tomlkit.document()
+            config = self._copy_default_config()
+            source: Literal["default", "group", "repaired"] = "repaired"
+        else:
+            source = "group" if not diagnostics else "repaired"
+
+        normalized_toml = tomlkit.dumps(self._normalize_group_doc(sanitized_doc))
+        return ParsedConfigResult(
+            config=config,
+            source=source,
+            diagnostics=diagnostics,
+            stored_toml=toml_str,
+            normalized_group_toml=normalized_toml,
+        )
 
     # ------------------------------------------------------------------ #
     #  查询
@@ -320,32 +523,37 @@ class ConfigService:
             "群组 {} 配置项 '{}' 已更新为 {!r}", group_id, schema_str, new_value
         )
 
+    async def get_parsed_config_result(self, group_id: str) -> ParsedConfigResult:
+        """
+        获取群组的结构化配置结果，并显式携带诊断信息。
+
+        :param group_id: 群组 ID
+        :type group_id: str
+        :returns: 包含生效配置与诊断结果的解析对象
+        :rtype: ParsedConfigResult
+        """
+        toml_str = await self._group_config_repo.get_toml_config_by_group_id(group_id)
+        return self._inspect_group_config_toml(group_id, toml_str)
+
     async def get_parsed_config(self, group_id: str) -> ConfigSchema:
         """
-        获取群组的结构化配置（Pydantic 模型）。
+        获取群组的结构化配置（兼容入口）。
 
-        如果群组无自定义配置，返回启动期已加载的全局配置。
+        当群配置损坏时，仍返回可用配置，但会通过日志显式暴露诊断结果。
 
         :param group_id: 群组 ID
         :type group_id: str
         :returns: 解析后的 ``ConfigSchema`` 实例
         :rtype: ConfigSchema
         """
-        toml_str = await self._group_config_repo.get_toml_config_by_group_id(group_id)
-        if toml_str is None:
-            return self._copy_default_config()
-
-        try:
-            doc = tomlkit.parse(toml_str)
-            self._ensure_group_doc_structure(doc, reject_nonreloadable=False)
-            return self._validate_effective_config(doc, context=f"群组 {group_id} 配置")
-        except Exception:
+        result = await self.get_parsed_config_result(group_id)
+        if result.has_diagnostics:
             logger.warning(
-                "群组 {} 的 TOML 配置解析或校验失败，回退到启动期全局配置",
+                "群组 {} 配置使用兼容读取结果；诊断信息：{}",
                 group_id,
-                exc_info=True,
+                result.format_diagnostics(),
             )
-            return self._copy_default_config()
+        return result.config
 
     async def get_config_value(
         self, group_id: str, section: str, key: str
@@ -424,46 +632,26 @@ class ConfigService:
 
     async def fix_config_integrity(self) -> int:
         """
-        检查所有群组配置的版本，将旧版本配置迁移到当前默认模板。
+        检查所有群组配置的完整性，并将损坏配置修复为可用状态。
 
-        :returns: 被修复（迁移）的群组数量
+        :returns: 被修复（迁移/规范化）的群组数量
         :rtype: int
         """
-        default_version = self._default_config.configure.cfg_version
-
         all_configs: Sequence[GroupConfigs] = (
             await self._group_config_repo.get_all_group_configs()
         )
 
         fixed_count = 0
         for gc in all_configs:
-            try:
-                group_doc = tomlkit.parse(gc.toml_config)
-                self._ensure_group_doc_structure(group_doc, reject_nonreloadable=False)
-                self._validate_effective_config(
-                    group_doc,
-                    context=f"群组 {gc.group_id} 配置",
-                )
-            except (TOMLKitError, ValidationException):
+            result = self._inspect_group_config_toml(gc.group_id, gc.toml_config)
+            if not result.needs_repair or result.normalized_group_toml is None:
+                continue
+
+            if result.has_diagnostics:
                 logger.warning(
-                    "群组 {} 的 TOML 配置解析或校验失败，跳过完整性修复",
+                    "群组 {} 的配置存在损坏，启动期将自动修复；诊断信息：{}",
                     gc.group_id,
-                    exc_info=True,
-                )
-                continue
-
-            group_version = group_doc.get("configure", {}).get("cfg_version", -1)
-            new_toml = tomlkit.dumps(self._normalize_group_doc(group_doc))
-
-            if group_version == default_version and new_toml == gc.toml_config:
-                continue
-
-            if group_version != default_version:
-                logger.info(
-                    "群组 {} 配置版本 v{} → v{}，执行迁移",
-                    gc.group_id,
-                    group_version,
-                    default_version,
+                    result.format_diagnostics(),
                 )
             else:
                 logger.info(
@@ -472,10 +660,11 @@ class ConfigService:
                 )
 
             await self._group_config_repo.update_or_create_group_config(
-                gc.group_id, new_toml
+                gc.group_id,
+                result.normalized_group_toml,
             )
             fixed_count += 1
-            logger.info("群组 {} 配置已规范化到 v{}", gc.group_id, default_version)
+            logger.info("群组 {} 配置已修复为可用状态", gc.group_id)
 
         if fixed_count:
             logger.info("共修复 {} 个群组的配置完整性", fixed_count)

@@ -20,6 +20,7 @@ from nonebot_plugin_zikequote3.services.html_render_service import HtmlRenderSer
 from nonebot_plugin_zikequote3.services.quote_read_service import QuoteReadService
 from nonebot_plugin_zikequote3.services.statistics_service import StatisticsService
 from nonebot_plugin_zikequote3.services.user_service import UserService
+from nonebot_plugin_zikequote3.vector_search.capability import UnavailableVectorSearchService
 from nonebot_plugin_zikequote3.vector_search.search_service import VectorSearchService
 
 # 运行时从 stub 模块获取 mock matcher
@@ -357,3 +358,52 @@ class TestHandleSearchQuote:
             limit=7,
             threshold=0.66,
         )
+
+    async def test_fuzzy_search_shared_flow_finishes_when_vector_capability_unavailable(
+        self,
+        patch_container,
+        mock_group_event: MagicMock,
+    ) -> None:
+        mock_stats_svc = AsyncMock(spec=StatisticsService)
+        mock_read_svc = AsyncMock(spec=QuoteReadService)
+        mock_user_svc = AsyncMock(spec=UserService)
+        mock_image_store = MagicMock(spec=ImageStore)
+        mock_render_svc = AsyncMock(spec=HtmlRenderServiceBase)
+        mock_config_svc = AsyncMock(spec=ConfigService)
+        mock_cfg = MagicMock()
+        mock_cfg.embedding.enabled = True
+        mock_config_svc.get_parsed_config = AsyncMock(return_value=mock_cfg)
+
+        patch_container({
+            StatisticsService: mock_stats_svc,
+            QuoteReadService: mock_read_svc,
+            UserService: mock_user_svc,
+            ImageStore: mock_image_store,
+            HtmlRenderServiceBase: mock_render_svc,
+            ConfigService: mock_config_svc,
+            VectorSearchService: UnavailableVectorSearchService("基础设施未就绪"),
+        })
+
+        with pytest.raises(FinishedException):
+            await handle_search_quote(
+                event=mock_group_event,
+                at_user=_make_match(),
+                qq=_make_match(),
+                max_result=_make_match(),
+                keyword=_make_keyword_match("语义关键词"),
+                similarity=_make_match(),
+                top_n=_make_match(),
+                no_image=_make_query(result=False),
+                use_regex=_make_query(result=False),
+                use_fuzzy=_make_query(result=True),
+                stats_svc=mock_stats_svc,
+                quote_read_svc=mock_read_svc,
+                user_svc=mock_user_svc,
+                image_store=mock_image_store,
+                html_render_svc=mock_render_svc,
+            )
+
+        finish_calls = matcher_search_quote.finish.call_args_list
+        assert any("基础设施未就绪" in str(c) for c in finish_calls)
+        mock_stats_svc.search_quotes.assert_not_awaited()
+        mock_render_svc.render.assert_not_awaited()

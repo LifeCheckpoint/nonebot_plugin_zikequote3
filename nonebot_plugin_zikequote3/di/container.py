@@ -41,7 +41,7 @@ def create_container(
     :type render_device_factor: float
     :param default_config: 启动期加载的全局配置真源
     :type default_config: Optional[ConfigSchema]
-    :param embedding_config: Embedding 配置，为 None 或未启用时不注册向量搜索
+    :param embedding_config: Embedding 配置，向量 Provider 会基于它构造稳定可选能力契约
     :type embedding_config: Optional[EmbeddingConfig]
     :param llm_config: LLM 配置，向量搜索需要
     :type llm_config: Optional[LLMConfig]
@@ -55,7 +55,7 @@ def create_container(
         InfraProvider(image_store_path, render_device_factor=render_device_factor),
         RepositoryProvider(),
         ServiceProvider(default_config=default_config),
-        # 始终注册 VectorProvider；disabled 时各 provide 方法返回 None
+        # 始终注册 VectorProvider；由其返回类型稳定的可选能力抽象
         VectorProvider(embedding_config, llm_config, vector_db_path),
     ]
 

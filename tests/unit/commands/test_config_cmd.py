@@ -173,13 +173,45 @@ class TestHandleModifyConfig:
             )
 
         # 验证服务调用
-        mock_config_svc.parse_config_param.assert_called_once()
+        mock_config_svc.parse_config_param.assert_called_once_with(
+            ["general.key", "new_value"]
+        )
         mock_config_svc.modify_single_value.assert_awaited_once_with(
             "123456", "general.key", "new_value"
         )
         # 验证成功消息
         finish_calls = matcher_modify_config.finish.call_args_list
         assert any("修改成功" in str(c) for c in finish_calls)
+
+    async def test_modify_preserves_string_value_with_spaces(
+        self,
+        patch_container,
+        mock_group_event: MagicMock,
+    ) -> None:
+        """带空格的合法字符串值应完整传给解析层，不得被命令层截断。"""
+        mock_config_svc = AsyncMock(spec=ConfigService)
+        mock_config_svc.parse_config_param = MagicMock(
+            return_value=("general.key", "hello world")
+        )
+        mock_config_svc.modify_single_value = AsyncMock(return_value=None)
+        patch_container({ConfigService: mock_config_svc})
+
+        mock_arg = MagicMock()
+        mock_arg.extract_plain_text.return_value = "general.key 'hello world'"
+
+        with pytest.raises(FinishedException):
+            await handle_modify_config(
+                event=mock_group_event,
+                arg=mock_arg,
+                config_svc=mock_config_svc,
+            )
+
+        mock_config_svc.parse_config_param.assert_called_once_with(
+            ["general.key", "'hello world'"]
+        )
+        mock_config_svc.modify_single_value.assert_awaited_once_with(
+            "123456", "general.key", "hello world"
+        )
 
     async def test_too_few_args(
         self,

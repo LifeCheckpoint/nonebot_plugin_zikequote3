@@ -17,7 +17,7 @@ from nonebot_plugin_alconna import Query
 from ..command_definition import matcher_rebuild_index
 from ...di import Inject, get_container, inject
 from ...services.config_service import ConfigService
-from ...vector_search.search_service import VectorSearchService
+from ...vector_search.capability import VectorSearchCapability
 
 async def _do_rebuild(
     container: AsyncContainer,
@@ -28,7 +28,7 @@ async def _do_rebuild(
 ) -> None:
     """后台执行重建索引，完成后通过 bot.send 发送结果。
 
-    在内部创建独立的 REQUEST 作用域来获取 :class:`VectorSearchService`，
+    在内部创建独立的 REQUEST 作用域来获取 :class:`VectorSearchCapability`，
     避免使用 handler 中已关闭的 REQUEST 作用域。
 
     :param container: dishka 异步容器。
@@ -44,7 +44,7 @@ async def _do_rebuild(
     """
     try:
         async with container() as request_container:
-            vector_search_svc = await request_container.get(VectorSearchService)
+            vector_search_svc = await request_container.get(VectorSearchCapability)
             count = await vector_search_svc.reindex_all(group_id)
         await bot.send(event, f"✅ 索引重建完成！{scope_desc}共索引了 {count} 条语录。")
     except Exception as e:
@@ -57,7 +57,7 @@ async def handle_rebuild_index(
     bot: Bot,
     event: GroupMessageEvent,
     rebuild_all: Query[bool] = Query("rebuild_all.value", False),
-    vector_search_svc: VectorSearchService = Inject(VectorSearchService),
+    vector_search_svc: VectorSearchCapability = Inject(VectorSearchCapability),
     config_svc: ConfigService = Inject(ConfigService),
 ) -> None:
     """处理重建语录向量索引命令。
@@ -68,23 +68,24 @@ async def handle_rebuild_index(
     :type event: GroupMessageEvent
     :param rebuild_all: 是否重建所有群的索引。
     :type rebuild_all: Query[bool]
-    :param vector_search_svc: 向量搜索服务（DI 注入）。
-    :type vector_search_svc: VectorSearchService
+    :param vector_search_svc: 稳定的向量搜索能力抽象（DI 注入）。
+    :type vector_search_svc: VectorSearchCapability
     :param config_svc: 配置服务（DI 注入）。
     :type config_svc: ConfigService
     """
     group_id = str(event.group_id)
 
-    # 两层检查：先检查群组配置，再检查基础设施
+    # 两层检查：先检查群组配置，再走统一的向量能力契约
     cfg = await config_svc.get_parsed_config(group_id)
     if not cfg.embedding.enabled:
         await matcher_rebuild_index.finish(
             "当前群组未启用向量搜索，请先执行 /修改语录配置 embedding.enabled True"
         )
 
-    if vector_search_svc is None:
+    if not vector_search_svc.get_status().available:
         await matcher_rebuild_index.finish(
-            "向量搜索基础设施未就绪，请检查启动期全局 Embedding 配置（model、base_url、api_key_path）"
+            vector_search_svc.get_unavailable_reason()
+            or "向量搜索基础设施未就绪，请检查启动期全局 Embedding 配置（model、base_url、api_key_path）"
         )
 
     do_all = rebuild_all.result if rebuild_all.available else False

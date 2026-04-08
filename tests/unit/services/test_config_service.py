@@ -4,7 +4,7 @@ ConfigService 单元测试。
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -177,6 +177,11 @@ class TestParseConfigParam:
         schema, value = ConfigService.parse_config_param(["key", "'hello'"])
         assert value == "hello"
 
+    def test_string_value_with_spaces(self) -> None:
+        schema, value = ConfigService.parse_config_param(["key", "'hello world'"])
+        assert schema == "key"
+        assert value == "hello world"
+
     def test_insufficient_args_raises(self) -> None:
         with pytest.raises(ValidationException):
             ConfigService.parse_config_param(["only_one"])
@@ -229,13 +234,35 @@ class TestGetParsedConfig:
         assert result.collecting.pickup_interval == 200
         assert result.collecting.msg_max_length == 50
 
-    async def test_returns_default_on_invalid_toml(
+    async def test_result_exposes_diagnostics_on_invalid_toml(
         self, config_service: ConfigService, mock_group_config_repo: AsyncMock
     ) -> None:
         mock_group_config_repo.get_toml_config_by_group_id.return_value = "[broken ="
-        result = await config_service.get_parsed_config("g1")
-        # 解析失败应回退到默认值
+
+        result = await config_service.get_parsed_config_result("g1")
+
+        assert result.config.collecting.pickup_interval == 80
+        assert result.source == "repaired"
+        assert result.has_diagnostics is True
+        assert result.needs_repair is True
+        assert result.normalized_group_toml is not None
+        assert "TOML 解析失败" in result.format_diagnostics()
+
+    async def test_compatible_getter_returns_usable_config_and_logs_diagnostics(
+        self,
+        config_service: ConfigService,
+        mock_group_config_repo: AsyncMock,
+    ) -> None:
+        mock_group_config_repo.get_toml_config_by_group_id.return_value = "[broken ="
+
+        with patch(
+            "nonebot_plugin_zikequote3.services.config_service.logger.warning"
+        ) as mock_warning:
+            result = await config_service.get_parsed_config("g1")
+
         assert result.collecting.pickup_interval == 80
+        mock_warning.assert_called_once()
+        assert "兼容读取结果" in mock_warning.call_args.args[0]
 
     async def test_returns_startup_default_when_no_group_config(
         self,
@@ -304,6 +331,43 @@ class TestGetParsedConfig:
         assert result.embedding.model == "startup-model"
         assert result.embedding.default_top_n == 7
         assert result.embedding.default_threshold == pytest.approx(0.61)
+
+    async def test_result_reports_and_normalizes_invalid_group_level_embedding_overrides(
+        self,
+        mock_group_config_repo: AsyncMock,
+        mock_group_repo: AsyncMock,
+    ) -> None:
+        startup_cfg = ConfigSchema()
+        startup_cfg.embedding.enabled = False
+        startup_cfg.embedding.model = "startup-model"
+        startup_cfg.embedding.default_top_n = 7
+        startup_cfg.embedding.default_threshold = 0.61
+        svc = ConfigService(
+            group_config_repo=mock_group_config_repo,
+            group_repo=mock_group_repo,
+            default_config=startup_cfg,
+        )
+        mock_group_config_repo.get_toml_config_by_group_id.return_value = (
+            "[embedding]\n"
+            "enabled = true\n"
+            'model = "group-model"\n'
+            "default_top_n = 99\n"
+            "default_threshold = 0.9\n"
+        )
+
+        result = await svc.get_parsed_config_result("g1")
+
+        assert result.source == "repaired"
+        assert result.has_diagnostics is True
+        assert result.needs_repair is True
+        assert "仅支持启动期全局配置" in result.format_diagnostics()
+        assert result.config.embedding.enabled is True
+        assert result.config.embedding.model == "startup-model"
+        assert result.normalized_group_toml is not None
+        assert 'model = "group-model"' not in result.normalized_group_toml
+        assert "default_top_n = 99" not in result.normalized_group_toml
+        assert "default_threshold = 0.9" not in result.normalized_group_toml
+        assert "enabled = true" in result.normalized_group_toml
 
 
 # ---------------------------------------------------------------------------
@@ -509,13 +573,61 @@ class TestFixConfigIntegrity:
         assert result == 1
         mock_group_config_repo.update_or_create_group_config.assert_awaited_once()
 
-    async def test_invalid_toml_skipped(
+    async def test_invalid_toml_gets_repaired(
         self, config_service: ConfigService, mock_group_config_repo: AsyncMock
     ) -> None:
-        """无法解析的 TOML 配置应被跳过，不影响其他群组。"""
+        """无法解析的 TOML 配置应在启动期被修复为可用状态。"""
+        import tomlkit
+
         broken = GroupConfigs(group_id="g1", toml_config="[broken =")
         mock_group_config_repo.get_all_group_configs.return_value = [broken]
 
         result = await config_service.fix_config_integrity()
-        assert result == 0
-        mock_group_config_repo.update_or_create_group_config.assert_not_awaited()
+
+        assert result == 1
+        mock_group_config_repo.update_or_create_group_config.assert_awaited_once()
+        written_toml = mock_group_config_repo.update_or_create_group_config.call_args.args[1]
+        written_doc = tomlkit.parse(written_toml)
+        assert written_doc["configure"]["cfg_version"] == ConfigSchema().configure.cfg_version  # type: ignore[index]
+
+    async def test_invalid_group_level_embedding_overrides_get_cleaned_and_persisted(
+        self,
+        mock_group_config_repo: AsyncMock,
+        mock_group_repo: AsyncMock,
+    ) -> None:
+        import tomlkit
+
+        startup_cfg = ConfigSchema()
+        startup_cfg.embedding.model = "startup-model"
+        startup_cfg.embedding.default_top_n = 7
+        startup_cfg.embedding.default_threshold = 0.61
+        svc = ConfigService(
+            group_config_repo=mock_group_config_repo,
+            group_repo=mock_group_repo,
+            default_config=startup_cfg,
+        )
+        broken = GroupConfigs(
+            group_id="g1",
+            toml_config=(
+                "[embedding]\n"
+                "enabled = true\n"
+                'model = "group-model"\n'
+                "default_top_n = 99\n"
+                "default_threshold = 0.9\n"
+            ),
+        )
+        mock_group_config_repo.get_all_group_configs.return_value = [broken]
+
+        result = await svc.fix_config_integrity()
+
+        assert result == 1
+        mock_group_config_repo.update_or_create_group_config.assert_awaited_once()
+        call_args = mock_group_config_repo.update_or_create_group_config.call_args
+        assert call_args.args[0] == "g1"
+        written_toml = call_args.args[1]
+        assert 'model = "group-model"' not in written_toml
+        assert "default_top_n = 99" not in written_toml
+        assert "default_threshold = 0.9" not in written_toml
+        written_doc = tomlkit.parse(written_toml)
+        assert written_doc["embedding"]["enabled"] is True  # type: ignore[index]
+        assert written_doc["configure"]["cfg_version"] == ConfigSchema().configure.cfg_version  # type: ignore[index]
