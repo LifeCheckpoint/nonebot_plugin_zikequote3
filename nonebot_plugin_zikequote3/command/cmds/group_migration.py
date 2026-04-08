@@ -250,18 +250,23 @@ async def handle_group_migration(
         )
 
     # 验证成功，执行迁移
-    await migration_svc.execute_migration(
-        final_quotes=final_quotes,
-        source=str(source.result),
-        target=str(target.result),
-        overwrite=overwrite.result,
-        keep_source=keep_source.result,
-        clear_member_info=clear_member_info.result,
-    )
+    async with command_error_handler(
+        matcher_group_migration, "群聊语录迁移执行"
+    ):
+        await migration_svc.execute_migration(
+            final_quotes=final_quotes,
+            source=str(source.result),
+            target=str(target.result),
+            overwrite=overwrite.result,
+            keep_source=keep_source.result,
+            clear_member_info=clear_member_info.result,
+            deduplicate=duplicate.result,
+            exclude_non_member=exclude_member.result,
+        )
 
-    await matcher_group_migration.finish(
-        f"迁移成功！\n"
-        f"已将 {source_count} 条语录从 "
-        f"{source.result} 迁移至 {target.result}。\n"
-        f"最终目标群语录数：{final_count}。"
-    )
+        await matcher_group_migration.finish(
+            f"迁移成功！\n"
+            f"已将 {source_count} 条语录从 "
+            f"{source.result} 迁移至 {target.result}。\n"
+            f"最终目标群语录数：{final_count}。"
+        )

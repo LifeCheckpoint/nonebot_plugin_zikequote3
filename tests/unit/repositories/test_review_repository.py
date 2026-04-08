@@ -193,6 +193,22 @@ class TestReviewCount:
         assert stats["unique_reviewers"] >= 1
         assert stats["reviewed_quotes"] >= 1
 
+    async def test_reassign_reviews_by_quote(
+        self, review_repo: ReviewRepository,
+        user_repo: UserRepository, group_repo: GroupRepository,
+        async_session,
+    ):
+        await _seed_user_and_group(user_repo, group_repo, "rv_u23", "rv_g23")
+        await _seed_quote(async_session, "rv_q23a", "rv_u23", "rv_g23")
+        await _seed_quote(async_session, "rv_q23b", "rv_u23", "rv_g23")
+        await review_repo.create_review("rv_r23a", "rv_u23", "rv_q23a", "A")
+        await review_repo.create_review("rv_r23b", "rv_u23", "rv_q23a", "B")
+
+        ok = await review_repo.reassign_reviews_by_quote("rv_q23a", "rv_q23b")
+        assert ok is True
+        results = await review_repo.get_reviews_by_quote("rv_q23b")
+        assert len(results) == 2
+
 
 class TestReviewUpdate:
     """更新相关测试。"""

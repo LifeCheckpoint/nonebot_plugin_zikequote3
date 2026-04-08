@@ -67,6 +67,30 @@ class TestQuoteCreate:
         ok = await quote_repo.batch_create_quotes([])
         assert ok is True
 
+    async def test_batch_clone_quotes(
+        self, quote_repo: QuoteRepository,
+        user_repo: UserRepository, group_repo: GroupRepository,
+    ):
+        await _seed_user_and_group(user_repo, group_repo, "qt_u4", "qt_g4")
+        await _seed_user_and_group(user_repo, group_repo, "qt_u4", "qt_g4_target")
+        source = await quote_repo.create_quote("qt_q4", "qt_u4", "qt_g4", content="原语录")
+        clone = Quote(
+            quote_id="qt_q4_clone",
+            author_id=source.author_id,
+            group_id="qt_g4_target",
+            content=source.content,
+            image_content_uuid=source.image_content_uuid,
+            total_show_time=source.total_show_time,
+            time_stamp=source.time_stamp,
+        )
+
+        ok = await quote_repo.batch_clone_quotes([clone])
+        assert ok is True
+        cloned = await quote_repo.get_quote_by_id("qt_q4_clone")
+        assert cloned is not None
+        assert cloned.group_id == "qt_g4_target"
+        assert cloned.time_stamp == source.time_stamp
+
 
 # ---- 单条查询测试 ----
 
@@ -392,6 +416,25 @@ class TestQuoteUpdate:
         """不传任何字段时应返回 True（无操作）。"""
         ok = await quote_repo.update_quote("any_id")
         assert ok is True
+
+    async def test_update_quote_migration_state(
+        self, quote_repo: QuoteRepository,
+        user_repo: UserRepository, group_repo: GroupRepository,
+    ):
+        await _seed_user_and_group(user_repo, group_repo, "qt_u71a", "qt_g71a")
+        await _seed_user_and_group(user_repo, group_repo, "qt_u71a", "qt_g71b")
+        await quote_repo.create_quote("qt_q71a", "qt_u71a", "qt_g71a", content="迁移态")
+
+        ok = await quote_repo.update_quote_migration_state(
+            "qt_q71a",
+            group_id="qt_g71b",
+            total_show_time=7,
+        )
+        assert ok is True
+        updated = await quote_repo.get_quote_by_id("qt_q71a")
+        assert updated is not None
+        assert updated.group_id == "qt_g71b"
+        assert updated.total_show_time == 7
 
     async def test_update_nonexistent_quote(self, quote_repo: QuoteRepository):
         ok = await quote_repo.update_quote("nonexistent", content="内容")

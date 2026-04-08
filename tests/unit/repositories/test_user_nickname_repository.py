@@ -1,6 +1,7 @@
 """UserNicknameRepository 单元测试。"""
 
 import pytest
+from sqlalchemy.exc import IntegrityError
 
 from nonebot_plugin_zikequote3.database.models.user_nicknames import UserNickname
 from nonebot_plugin_zikequote3.database.repositories.user_nickname_repository import UserNicknameRepository
@@ -133,7 +134,7 @@ class TestUserNicknameSetCurrent:
     ):
         await _seed_user(user_repo, "un_u22")
         await user_nickname_repo.add_nickname("un_u22", True, "A")
-        await user_nickname_repo.add_nickname("un_u22", True, "B")
+        await user_nickname_repo.add_nickname("un_u22", False, "B")
         await user_nickname_repo.add_nickname("un_u22", False, "C")
 
         await user_nickname_repo.set_current_nickname("un_u22", "C")
@@ -143,6 +144,17 @@ class TestUserNicknameSetCurrent:
         assert current_count == 1
         current = [n for n in all_nicks if n.current_using][0]
         assert current.name == "C"
+
+    async def test_unique_current_nickname_is_enforced_by_database(
+        self, user_nickname_repo: UserNicknameRepository, user_repo: UserRepository,
+        async_session,
+    ):
+        await _seed_user(user_repo, "un_u23")
+        await user_nickname_repo.add_nickname("un_u23", True, "A")
+
+        with pytest.raises(IntegrityError):
+            await user_nickname_repo.add_nickname("un_u23", True, "B")
+        await async_session.rollback()
 
 
 class TestUserNicknameDelete:

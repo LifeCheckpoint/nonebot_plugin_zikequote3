@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, ForeignKey, String
+from sqlalchemy import Boolean, ForeignKey, Index, String, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nonebot_plugin_zikequote3.database.sa.base import Base
@@ -30,6 +30,14 @@ class UserNicknameModel(Base):
     """
 
     __tablename__ = "user_nicknames"
+    __table_args__ = (
+        Index(
+            "uq_user_nicknames_current_using",
+            "qq_id",
+            unique=True,
+            sqlite_where=text("current_using = 1"),
+        ),
+    )
 
     qq_id: Mapped[str] = mapped_column(
         String, ForeignKey("users.qq_id"), primary_key=True

@@ -1,6 +1,7 @@
 """GroupNicknameRepository 单元测试。"""
 
 import pytest
+from sqlalchemy.exc import IntegrityError
 
 from nonebot_plugin_zikequote3.database.models.group_nicknames import GroupNickname
 from nonebot_plugin_zikequote3.database.repositories.group_nickname_repository import GroupNicknameRepository
@@ -169,7 +170,7 @@ class TestGroupNicknameSetCurrent:
     ):
         await _seed(group_repo, user_repo, "gn_g22", "gn_u22")
         await group_nickname_repo.add_group_nickname("gn_u22", "gn_g22", True, "A")
-        await group_nickname_repo.add_group_nickname("gn_u22", "gn_g22", True, "B")
+        await group_nickname_repo.add_group_nickname("gn_u22", "gn_g22", False, "B")
         await group_nickname_repo.add_group_nickname("gn_u22", "gn_g22", False, "C")
 
         await group_nickname_repo.set_current_group_nickname("gn_u22", "gn_g22", "C")
@@ -179,6 +180,18 @@ class TestGroupNicknameSetCurrent:
         assert current_count == 1
         current = [n for n in all_nicks if n.current_using][0]
         assert current.name == "C"
+
+    async def test_unique_current_group_nickname_is_enforced_by_database(
+        self, group_nickname_repo: GroupNicknameRepository,
+        group_repo: GroupRepository, user_repo: UserRepository,
+        async_session,
+    ):
+        await _seed(group_repo, user_repo, "gn_g23", "gn_u23")
+        await group_nickname_repo.add_group_nickname("gn_u23", "gn_g23", True, "A")
+
+        with pytest.raises(IntegrityError):
+            await group_nickname_repo.add_group_nickname("gn_u23", "gn_g23", True, "B")
+        await async_session.rollback()
 
 
 class TestGroupNicknameDelete:

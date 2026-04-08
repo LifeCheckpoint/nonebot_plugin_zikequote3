@@ -12,14 +12,46 @@ MigrationService —— 群组数据迁移领域服务。
 from __future__ import annotations
 
 import itertools
-from nonebot import logger
-from typing import Any, Dict, List, Optional, Sequence
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Literal, Optional, Sequence
 
-from ..database.models.quotes import Quote, QuoteCreate
+from nonebot import logger
+from sqlalchemy.exc import IntegrityError
+
+from ..database.models.quotes import Quote
 from ..database.repositories.group_member_repository import GroupMemberRepository
 from ..database.repositories.group_nickname_repository import GroupNicknameRepository
+from ..database.repositories.mapping_repository import MappingRepository
 from ..database.repositories.quote_repository import QuoteRepository
-from ..exceptions import ResourceNotFoundError, ValidationException
+from ..database.repositories.review_repository import ReviewRepository
+from ..exceptions import OperationError
+
+
+@dataclass(slots=True)
+class _QuoteCandidate:
+    quote: Quote
+    origin: Literal["source", "target"]
+    original_quote_id: str
+
+
+@dataclass(slots=True)
+class _RemovedQuoteCandidate:
+    candidate: _QuoteCandidate
+    reason: Literal["deduplicated", "overwrite", "exclude_non_member"]
+    winner: Optional[_QuoteCandidate] = None
+
+
+@dataclass(slots=True)
+class _QuoteMigrationPlan:
+    source_quotes: List[Quote]
+    target_quotes: List[Quote]
+    final_candidates: List[_QuoteCandidate]
+    removed_candidates: List[_RemovedQuoteCandidate] = field(default_factory=list)
+
+    @property
+    def final_quotes(self) -> List[Quote]:
+        return [candidate.quote for candidate in self.final_candidates]
+
 
 class MigrationService:
     """
@@ -37,6 +69,10 @@ class MigrationService:
     :type group_member_repo: GroupMemberRepository
     :param group_nickname_repo: 群名片仓储实例
     :type group_nickname_repo: GroupNicknameRepository
+    :param review_repo: 评论仓储实例
+    :type review_repo: ReviewRepository
+    :param mapping_repo: 消息映射仓储实例
+    :type mapping_repo: MappingRepository
     """
 
     def __init__(
@@ -44,10 +80,14 @@ class MigrationService:
         quote_repo: QuoteRepository,
         group_member_repo: GroupMemberRepository,
         group_nickname_repo: GroupNicknameRepository,
+        review_repo: ReviewRepository,
+        mapping_repo: MappingRepository,
     ) -> None:
         self._quote_repo = quote_repo
         self._group_member_repo = group_member_repo
         self._group_nickname_repo = group_nickname_repo
+        self._review_repo = review_repo
+        self._mapping_repo = mapping_repo
 
     # ------------------------------------------------------------------ #
     #  迁移前统计与比较
@@ -83,49 +123,27 @@ class MigrationService:
             ``after_members`` 的字典
         :rtype: Dict[str, Any]
         """
-        source_quotes = list(
-            await self._quote_repo.get_quotes_by_group(source)
-        )
-        target_quotes = list(
-            await self._quote_repo.get_quotes_by_group(target)
-        )
+        source_quotes = list(await self._quote_repo.get_quotes_by_group(source))
+        target_quotes = list(await self._quote_repo.get_quotes_by_group(target))
 
         source_members = await self._group_member_repo.get_members_by_group(source)
         target_members = await self._group_member_repo.get_members_by_group(target)
-        target_qq_ids = {m.qq_id for m in target_members}
+        target_qq_ids = {member.qq_id for member in target_members}
 
-        # 记录源群 ID 集合
-        source_ids = {q.quote_id for q in source_quotes}
-
-        # 合并或覆写
-        if overwrite:
-            final_quotes = list(source_quotes)
-        else:
-            final_quotes = list(source_quotes) + list(target_quotes)
-
-        # 更改归属
-        for q in final_quotes:
-            q.group_id = target
-
-        # 排除非目标群成员
-        if exclude_non_member:
-            final_quotes = [q for q in final_quotes if q.author_id in target_qq_ids]
-
-        # 去重
-        if deduplicate:
-            final_quotes = self._deduplicate_quotes(final_quotes)
-
-        # 处理重复 ID
-        final_quotes = self._resolve_duplicate_ids(
-            final_quotes,
-            force_new_ids_for_source=keep_source,
-            source_ids=source_ids,
+        plan = await self._build_quote_migration_plan(
+            source_quotes=source_quotes,
+            target_quotes=target_quotes,
+            target=target,
+            target_member_ids=target_qq_ids,
+            overwrite=overwrite,
+            deduplicate=deduplicate,
+            exclude_non_member=exclude_non_member,
+            keep_source=keep_source,
         )
 
-        # 成员统计
         before_members = len(target_members)
-        all_member_ids = {m.qq_id for m in target_members} | {
-            m.qq_id for m in source_members
+        all_member_ids = {member.qq_id for member in target_members} | {
+            member.qq_id for member in source_members
         }
         after_members = len(all_member_ids)
 
@@ -133,8 +151,8 @@ class MigrationService:
             "source_quotes": source_quotes,
             "source_count": len(source_quotes),
             "target_count": len(target_quotes),
-            "final_quotes": final_quotes,
-            "final_count": len(final_quotes),
+            "final_quotes": plan.final_quotes,
+            "final_count": len(plan.final_candidates),
             "before_members": before_members,
             "after_members": after_members,
         }
@@ -152,6 +170,8 @@ class MigrationService:
         overwrite: bool = False,
         keep_source: bool = True,
         clear_member_info: bool = False,
+        deduplicate: bool = False,
+        exclude_non_member: bool = False,
     ) -> Dict[str, Any]:
         """
         执行群组数据迁移。
@@ -168,18 +188,43 @@ class MigrationService:
         :type keep_source: bool
         :param clear_member_info: 是否清除源群用户信息
         :type clear_member_info: bool
+        :param deduplicate: 是否对语录去重
+        :type deduplicate: bool
+        :param exclude_non_member: 是否排除非目标群成员的语录
+        :type exclude_non_member: bool
         :returns: 迁移结果摘要字典
         :rtype: Dict[str, Any]
         """
-        # 1. 语录迁移
-        migrated_count = await self._migrate_quotes(
-            final_quotes, source, target,
-            overwrite=overwrite, keep_source=keep_source,
+        target_members = await self._group_member_repo.get_members_by_group(target)
+        plan = await self._build_quote_migration_plan(
+            source_quotes=list(await self._quote_repo.get_quotes_by_group(source)),
+            target_quotes=list(await self._quote_repo.get_quotes_by_group(target)),
+            target=target,
+            target_member_ids={member.qq_id for member in target_members},
+            overwrite=overwrite,
+            deduplicate=deduplicate,
+            exclude_non_member=exclude_non_member,
+            keep_source=keep_source,
         )
 
-        # 2. 用户信息迁移
+        if final_quotes and len(final_quotes) != len(plan.final_candidates):
+            logger.warning(
+                "群迁移预览结果与执行时不一致: preview={}, execute={}",
+                len(final_quotes),
+                len(plan.final_candidates),
+            )
+
+        migrated_count = await self._migrate_quotes(
+            plan,
+            source,
+            target,
+            keep_source=keep_source,
+        )
+
         members_migrated = await self._migrate_user_infos(
-            source, target, clear_member_info=clear_member_info,
+            source,
+            target,
+            clear_member_info=clear_member_info,
         )
 
         result = {
@@ -197,55 +242,95 @@ class MigrationService:
 
     async def _migrate_quotes(
         self,
-        final_quotes: List[Quote],
+        plan: _QuoteMigrationPlan,
         source: str,
         target: str,
         *,
-        overwrite: bool,
         keep_source: bool,
     ) -> int:
         """
-        执行语录迁移，返回迁移的语录数。
+        执行非 destructive 语录迁移并显式处理关联引用。
 
-        :param final_quotes: 最终语录列表
-        :type final_quotes: List[Quote]
+        :param plan: 迁移计划
+        :type plan: _QuoteMigrationPlan
         :param source: 源群号
         :type source: str
         :param target: 目标群号
         :type target: str
-        :param overwrite: 是否覆写模式
-        :type overwrite: bool
         :param keep_source: 是否保留源群语录
         :type keep_source: bool
-        :returns: 迁移的语录数
+        :returns: 迁移后的目标群语录数
         :rtype: int
         """
-        # 清空目标群语录（无论覆写还是合并模式都需要，因为写入的是完整集合）
-        logger.info("正在清空目标群 {} 的语录...", target)
-        await self._quote_repo.delete_quotes_by_group(target)
+        reassignments: dict[str, str] = {}
+        delete_with_cleanup: set[str] = set()
+        delete_after_reassign: set[str] = set()
 
-        # 如果不保留源群，先清空源群语录以释放 ID
+        cloned_quotes = [
+            candidate.quote
+            for candidate in plan.final_candidates
+            if keep_source and candidate.origin == "source"
+        ]
+        if cloned_quotes:
+            logger.info("正在为目标群 {} 克隆 {} 条源群语录...", target, len(cloned_quotes))
+            await self._quote_repo.batch_clone_quotes(cloned_quotes)
+
+        for removed in plan.removed_candidates:
+            candidate = removed.candidate
+            if candidate.origin == "source" and keep_source:
+                continue
+            if candidate.origin == "source" and removed.reason == "exclude_non_member":
+                continue
+
+            if removed.winner is not None:
+                reassignments[candidate.original_quote_id] = removed.winner.quote.quote_id
+                delete_after_reassign.add(candidate.original_quote_id)
+            else:
+                delete_with_cleanup.add(candidate.original_quote_id)
+
+        for old_quote_id, new_quote_id in reassignments.items():
+            logger.info("正在重写语录引用: {} -> {}", old_quote_id, new_quote_id)
+            await self._review_repo.reassign_reviews_by_quote(
+                old_quote_id=old_quote_id,
+                new_quote_id=new_quote_id,
+            )
+            await self._mapping_repo.reassign_mappings_by_quote(
+                old_quote_id=old_quote_id,
+                new_quote_id=new_quote_id,
+            )
+
         if not keep_source:
-            logger.info("正在清空源群 {} 的语录 (Move 模式)...", source)
-            await self._quote_repo.delete_quotes_by_group(source)
+            for candidate in plan.final_candidates:
+                if candidate.origin == "source":
+                    await self._quote_repo.update_quote_migration_state(
+                        quote_id=candidate.original_quote_id,
+                        group_id=target,
+                        total_show_time=candidate.quote.total_show_time,
+                    )
+                else:
+                    await self._quote_repo.update_quote_migration_state(
+                        quote_id=candidate.original_quote_id,
+                        total_show_time=candidate.quote.total_show_time,
+                    )
+        else:
+            for candidate in plan.final_candidates:
+                if candidate.origin == "target":
+                    await self._quote_repo.update_quote_migration_state(
+                        quote_id=candidate.original_quote_id,
+                        total_show_time=candidate.quote.total_show_time,
+                    )
 
-        # 批量写入
-        if final_quotes:
-            quotes_to_create = [
-                QuoteCreate(
-                    quote_id=q.quote_id,
-                    author_id=q.author_id,
-                    group_id=target,
-                    content=q.content,
-                    image_content_uuid=q.image_content_uuid,
-                    total_show_time=q.total_show_time,
-                )
-                for q in final_quotes
-            ]
-            logger.info("正在向目标群 {} 写入 {} 条语录...", target, len(quotes_to_create))
-            await self._quote_repo.batch_create_quotes(quotes_to_create)
+        for quote_id in delete_with_cleanup:
+            logger.info("正在显式清理被移除语录 {} 的评论与消息映射...", quote_id)
+            await self._review_repo.delete_reviews_by_quote(quote_id)
+            await self._mapping_repo.delete_mappings_by_quote_id(quote_id)
+            await self._quote_repo.delete_quote(quote_id)
 
-        return len(final_quotes)
+        for quote_id in delete_after_reassign:
+            logger.info("正在删除已完成引用重写的语录 {}...", quote_id)
+            await self._quote_repo.delete_quote(quote_id)
+
+        return len(plan.final_candidates)
 
     # ------------------------------------------------------------------ #
     #  用户信息子迁移（原 userinfo_submigration_service）
@@ -272,22 +357,30 @@ class MigrationService:
         """
         migrated = 0
 
-        # 迁移群成员关系
         source_members = await self._group_member_repo.get_members_by_group(source)
         if source_members:
-            source_qq_ids = [m.qq_id for m in source_members]
+            source_qq_ids = [member.qq_id for member in source_members]
             logger.info(
                 "正在将 {} 名成员从源群 {} 迁移至目标群 {}...",
-                len(source_qq_ids), source, target,
+                len(source_qq_ids),
+                source,
+                target,
             )
             await self._group_member_repo.batch_add_members(target, source_qq_ids)
             migrated = len(source_qq_ids)
 
-        # 迁移群名片
         source_nicknames = await self._group_nickname_repo.get_nicknames_by_group(source)
+        target_nicknames = await self._group_nickname_repo.get_nicknames_by_group(target)
+        existing_target_pairs = {
+            (nickname.qq_id, nickname.name) for nickname in target_nicknames
+        }
+
         if source_nicknames:
             logger.info("正在迁移 {} 条群名片记录...", len(source_nicknames))
             for nickname in source_nicknames:
+                nickname_key = (nickname.qq_id, nickname.name)
+                if nickname_key in existing_target_pairs:
+                    continue
                 try:
                     await self._group_nickname_repo.add_group_nickname(
                         qq_id=nickname.qq_id,
@@ -295,11 +388,24 @@ class MigrationService:
                         current_using=False,
                         name=nickname.name,
                     )
-                except Exception:
-                    # 忽略重复或其他插入错误
-                    pass
+                    existing_target_pairs.add(nickname_key)
+                except IntegrityError as exc:
+                    if self._is_duplicate_conflict(exc):
+                        logger.info(
+                            "群名片重复，按预期跳过: qq_id={}, group_id={}, name={}",
+                            nickname.qq_id,
+                            target,
+                            nickname.name,
+                        )
+                        continue
+                    raise OperationError(
+                        f"迁移群名片失败: qq_id={nickname.qq_id}, group_id={target}, name={nickname.name}"
+                    ) from exc
+                except Exception as exc:  # pragma: no cover - 精确错误路径由单测覆盖
+                    raise OperationError(
+                        f"迁移群名片失败: qq_id={nickname.qq_id}, group_id={target}, name={nickname.name}"
+                    ) from exc
 
-        # 清理源群信息
         if clear_member_info:
             logger.info("正在清理源群 {} 的用户信息...", source)
             await self._group_member_repo.delete_all_members_by_group(source)
@@ -308,7 +414,192 @@ class MigrationService:
         return migrated
 
     # ------------------------------------------------------------------ #
-    #  内部工具方法
+    #  计划构建与内部工具方法
+    # ------------------------------------------------------------------ #
+
+    async def _build_quote_migration_plan(
+        self,
+        *,
+        source_quotes: Sequence[Quote],
+        target_quotes: Sequence[Quote],
+        target: str,
+        target_member_ids: set[str],
+        overwrite: bool,
+        deduplicate: bool,
+        exclude_non_member: bool,
+        keep_source: bool,
+    ) -> _QuoteMigrationPlan:
+        source_candidates = [
+            _QuoteCandidate(
+                quote=self._copy_quote(quote, group_id=target),
+                origin="source",
+                original_quote_id=quote.quote_id,
+            )
+            for quote in source_quotes
+        ]
+        target_candidates = [
+            _QuoteCandidate(
+                quote=self._copy_quote(quote),
+                origin="target",
+                original_quote_id=quote.quote_id,
+            )
+            for quote in target_quotes
+        ]
+
+        removed_candidates: list[_RemovedQuoteCandidate] = []
+        if overwrite:
+            final_candidates = list(source_candidates)
+            removed_candidates.extend(
+                _RemovedQuoteCandidate(candidate=candidate, reason="overwrite")
+                for candidate in target_candidates
+            )
+        else:
+            final_candidates = list(target_candidates) + list(source_candidates)
+
+        if exclude_non_member:
+            filtered_candidates: list[_QuoteCandidate] = []
+            for candidate in final_candidates:
+                if (
+                    candidate.origin == "source"
+                    and candidate.quote.author_id not in target_member_ids
+                ):
+                    removed_candidates.append(
+                        _RemovedQuoteCandidate(
+                            candidate=candidate,
+                            reason="exclude_non_member",
+                        )
+                    )
+                    continue
+                filtered_candidates.append(candidate)
+            final_candidates = filtered_candidates
+
+        if deduplicate:
+            final_candidates, deduplicated_candidates = self._deduplicate_candidates(
+                final_candidates
+            )
+            removed_candidates.extend(deduplicated_candidates)
+
+        if keep_source:
+            await self._assign_clone_quote_ids(
+                final_candidates,
+                existing_quotes=[*source_quotes, *target_quotes],
+            )
+
+        return _QuoteMigrationPlan(
+            source_quotes=list(source_quotes),
+            target_quotes=list(target_quotes),
+            final_candidates=final_candidates,
+            removed_candidates=removed_candidates,
+        )
+
+    def _deduplicate_candidates(
+        self,
+        candidates: Sequence[_QuoteCandidate],
+    ) -> tuple[list[_QuoteCandidate], list[_RemovedQuoteCandidate]]:
+        winners: dict[tuple[str, Optional[str], Optional[str]], _QuoteCandidate] = {}
+        ordered_winners: list[_QuoteCandidate] = []
+        removed: list[_RemovedQuoteCandidate] = []
+
+        for candidate in candidates:
+            fingerprint = (
+                candidate.quote.author_id,
+                candidate.quote.content,
+                candidate.quote.image_content_uuid,
+            )
+            winner = winners.get(fingerprint)
+            if winner is None:
+                winners[fingerprint] = candidate
+                ordered_winners.append(candidate)
+                continue
+
+            winner.quote.total_show_time += candidate.quote.total_show_time
+            removed.append(
+                _RemovedQuoteCandidate(
+                    candidate=candidate,
+                    reason="deduplicated",
+                    winner=winner,
+                )
+            )
+
+        return ordered_winners, removed
+
+    async def _assign_clone_quote_ids(
+        self,
+        candidates: Sequence[_QuoteCandidate],
+        *,
+        existing_quotes: Sequence[Quote],
+    ) -> None:
+        source_candidates = [
+            candidate for candidate in candidates if candidate.origin == "source"
+        ]
+        if not source_candidates:
+            return
+
+        used_ids = {quote.quote_id for quote in existing_quotes}
+        next_id_generator = await self._new_quote_id_generator(existing_quotes)
+
+        for candidate in source_candidates:
+            new_id = next(next_id_generator)
+            while new_id in used_ids:
+                new_id = next(next_id_generator)
+            candidate.quote = self._copy_quote(candidate.quote, quote_id=new_id)
+            used_ids.add(new_id)
+
+    async def _new_quote_id_generator(
+        self,
+        existing_quotes: Sequence[Quote],
+    ):
+        numeric_ids = [
+            parsed_id
+            for parsed_id in (
+                self._parse_int_quote_id(quote.quote_id) for quote in existing_quotes
+            )
+            if parsed_id is not None
+        ]
+        current_max = max(numeric_ids, default=0)
+        db_max_raw = await self._quote_repo.get_max_quote_id()
+        db_max = db_max_raw if isinstance(db_max_raw, int) else 0
+        start_id = max(current_max, db_max) + 1
+        return (str(number) for number in itertools.count(start_id))
+
+    @staticmethod
+    def _copy_quote(
+        quote: Quote,
+        *,
+        quote_id: Optional[str] = None,
+        group_id: Optional[str] = None,
+        total_show_time: Optional[int] = None,
+    ) -> Quote:
+        return Quote(
+            quote_id=quote_id or quote.quote_id,
+            author_id=quote.author_id,
+            group_id=group_id or quote.group_id,
+            content=quote.content,
+            image_content_uuid=quote.image_content_uuid,
+            total_show_time=(
+                quote.total_show_time if total_show_time is None else total_show_time
+            ),
+            time_stamp=quote.time_stamp,
+        )
+
+    @staticmethod
+    def _parse_int_quote_id(value: str) -> Optional[int]:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _is_duplicate_conflict(exc: IntegrityError) -> bool:
+        message = str(exc).lower()
+        return (
+            "unique constraint failed" in message
+            or "unique violation" in message
+            or "duplicate" in message
+        )
+
+    # ------------------------------------------------------------------ #
+    #  兼容保留的静态方法（供既有单测与辅助逻辑复用）
     # ------------------------------------------------------------------ #
 
     @staticmethod
@@ -321,13 +612,13 @@ class MigrationService:
         :returns: 去重后的语录列表
         :rtype: List[Quote]
         """
-        merged: dict[tuple, Quote] = {}
-        for q in quotes:
-            fingerprint = (q.author_id, q.content, q.image_content_uuid)
+        merged: dict[tuple[str, Optional[str], Optional[str]], Quote] = {}
+        for quote in quotes:
+            fingerprint = (quote.author_id, quote.content, quote.image_content_uuid)
             if fingerprint in merged:
-                merged[fingerprint].total_show_time += q.total_show_time
+                merged[fingerprint].total_show_time += quote.total_show_time
             else:
-                merged[fingerprint] = q
+                merged[fingerprint] = quote
         return list(merged.values())
 
     @staticmethod
@@ -352,17 +643,26 @@ class MigrationService:
         if not quotes:
             return quotes
 
-        current_max = max(int(q.quote_id) for q in quotes)
-        start_id = current_max + 1
-        new_id_gen = (str(i) for i in itertools.count(start_id))
+        numeric_ids = [
+            parsed_id
+            for parsed_id in (MigrationService._parse_int_quote_id(q.quote_id) for q in quotes)
+            if parsed_id is not None
+        ]
+        start_id = max(numeric_ids, default=0) + 1
+        new_id_gen = (str(number) for number in itertools.count(start_id))
         seen: set[str] = set()
 
-        for q in quotes:
-            if force_new_ids_for_source and source_ids and q.quote_id in source_ids:
-                q.quote_id = next(new_id_gen)
-                continue
-            if q.quote_id in seen:
-                q.quote_id = next(new_id_gen)
-            seen.add(q.quote_id)
+        for quote in quotes:
+            needs_new_id = (
+                force_new_ids_for_source
+                and source_ids is not None
+                and quote.quote_id in source_ids
+            ) or quote.quote_id in seen
+            if needs_new_id:
+                new_id = next(new_id_gen)
+                while new_id in seen or (source_ids is not None and new_id in source_ids):
+                    new_id = next(new_id_gen)
+                quote.quote_id = new_id
+            seen.add(quote.quote_id)
 
         return quotes

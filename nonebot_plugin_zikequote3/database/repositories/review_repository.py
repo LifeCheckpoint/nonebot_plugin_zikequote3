@@ -209,6 +209,32 @@ class ReviewRepository(BaseRepository[ReviewModel, ReviewCreate, Review]):
         result = await self._session.execute(stmt)
         return result.scalar_one()
 
+    async def reassign_reviews_by_quote(
+        self,
+        old_quote_id: str,
+        new_quote_id: str,
+    ) -> bool:
+        """将旧语录上的评论批量重写到新语录。
+
+        :param old_quote_id: 原语录 ID。
+        :type old_quote_id: str
+        :param new_quote_id: 新语录 ID。
+        :type new_quote_id: str
+        :returns: 是否存在被重写的评论。
+        :rtype: bool
+        """
+        if old_quote_id == new_quote_id:
+            return True
+
+        stmt = (
+            update(ReviewModel)
+            .where(ReviewModel.quote_id == old_quote_id)
+            .values(quote_id=new_quote_id)
+        )
+        result = await self._session.execute(stmt)
+        await self._session.flush()
+        return result.rowcount > 0  # type: ignore[union-attr]
+
     async def get_review_statistics(self) -> Dict[str, Any]:
         """获取评论统计信息。
 

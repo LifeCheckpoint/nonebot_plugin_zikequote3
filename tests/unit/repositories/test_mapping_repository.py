@@ -127,6 +127,17 @@ class TestMappingRead:
         count = await mapping_repo.count_mappings_by_quote_id("q500")
         assert count >= 1
 
+    async def test_reassign_mappings_by_quote(self, mapping_repo: MappingRepository, async_session):
+        await _seed_quote(async_session, "q501")
+        await _seed_quote(async_session, "q502")
+        await mapping_repo.create_mapping("msg501", "q501")
+        await mapping_repo.create_mapping("msg502", "q501")
+
+        ok = await mapping_repo.reassign_mappings_by_quote("q501", "q502")
+        assert ok is True
+        results = await mapping_repo.get_mappings_by_quote_id("q502")
+        assert len(results) == 2
+
     async def test_get_all_mappings(self, mapping_repo: MappingRepository, async_session):
         await _seed_quote(async_session, "q600")
         await mapping_repo.create_mapping("msg600", "q600")

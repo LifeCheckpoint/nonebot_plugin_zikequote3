@@ -9,6 +9,7 @@ MsgQueueModel, QueueGroupMessageCountModel, MsgIdQuoteIdMapModel, GroupConfigMod
 
 import pytest
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from nonebot_plugin_zikequote3.database.sa.base import Base
 from nonebot_plugin_zikequote3.database.sa.models import (
@@ -65,6 +66,12 @@ class TestBusinessDDL:
             "content", "image_content_uuid", "total_show_time",
         }
         assert table.c.quote_id.primary_key
+        assert table.c.content.nullable is True
+        assert {
+            constraint.name
+            for constraint in table.constraints
+            if constraint.name is not None
+        } >= {"ck_quotes_content_or_image_present"}
 
     def test_reviews_table_columns(self, async_engine):
         table = Base.metadata.tables["reviews"]
@@ -271,6 +278,37 @@ class TestQuoteModel:
         result = await async_session.get(QuoteModel, "q-200")
         assert result is not None
         assert result.image_content_uuid == "img-q-200"
+
+    @pytest.mark.anyio
+    async def test_create_image_only(self, async_session):
+        await _ensure_user(async_session, "50011a")
+        await _ensure_group(async_session, "60011a")
+        await _ensure_image(async_session, "img-q-201")
+        quote = QuoteModel(
+            quote_id="q-201", author_id="50011a", group_id="60011a",
+            content=None, image_content_uuid="img-q-201",
+            total_show_time=0,
+        )
+        async_session.add(quote)
+        await async_session.flush()
+        result = await async_session.get(QuoteModel, "q-201")
+        assert result is not None
+        assert result.content is None
+        assert result.image_content_uuid == "img-q-201"
+
+    @pytest.mark.anyio
+    async def test_create_without_text_and_image_rejected(self, async_session):
+        await _ensure_user(async_session, "50011b")
+        await _ensure_group(async_session, "60011b")
+        quote = QuoteModel(
+            quote_id="q-201b", author_id="50011b", group_id="60011b",
+            content=None, image_content_uuid=None,
+            total_show_time=0,
+        )
+        async_session.add(quote)
+        with pytest.raises(IntegrityError):
+            await async_session.flush()
+        await async_session.rollback()
 
     @pytest.mark.anyio
     async def test_update(self, async_session):

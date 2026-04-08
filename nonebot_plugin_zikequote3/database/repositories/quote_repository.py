@@ -77,6 +77,33 @@ class QuoteRepository(BaseRepository[QuoteModel, QuoteCreate, Quote]):
         await self._session.flush()
         return True
 
+    async def batch_clone_quotes(self, quotes: Sequence[Quote]) -> bool:
+        """批量克隆已有语录并保留原始时间戳。
+
+        :param quotes: 待克隆的语录 DTO 列表。
+        :type quotes: Sequence[Quote]
+        :returns: 操作是否成功。
+        :rtype: bool
+        """
+        if not quotes:
+            return True
+
+        instances = [
+            QuoteModel(
+                quote_id=quote.quote_id,
+                author_id=quote.author_id,
+                group_id=quote.group_id,
+                content=quote.content,
+                image_content_uuid=quote.image_content_uuid,
+                total_show_time=quote.total_show_time,
+                time_stamp=quote.time_stamp,
+            )
+            for quote in quotes
+        ]
+        self._session.add_all(instances)
+        await self._session.flush()
+        return True
+
     # ---- 查询（单条） ----
 
     async def get_quote_by_id(self, quote_id: str) -> Optional[Quote]:
@@ -471,6 +498,37 @@ class QuoteRepository(BaseRepository[QuoteModel, QuoteCreate, Quote]):
             .where(QuoteModel.quote_id == quote_id)
             .values(**values)
         )
+        result = await self._session.execute(stmt)
+        await self._session.flush()
+        return result.rowcount > 0  # type: ignore[union-attr]
+
+    async def update_quote_migration_state(
+        self,
+        quote_id: str,
+        *,
+        group_id: Optional[str] = None,
+        total_show_time: Optional[int] = None,
+    ) -> bool:
+        """更新群迁移过程中需要调整的语录状态。
+
+        :param quote_id: 语录 ID。
+        :type quote_id: str
+        :param group_id: 目标群组 ID。
+        :type group_id: Optional[str]
+        :param total_show_time: 更新后的展示次数。
+        :type total_show_time: Optional[int]
+        :returns: 是否成功更新（找到记录）。
+        :rtype: bool
+        """
+        values: Dict[str, Any] = {}
+        if group_id is not None:
+            values["group_id"] = group_id
+        if total_show_time is not None:
+            values["total_show_time"] = total_show_time
+        if not values:
+            return True
+
+        stmt = update(QuoteModel).where(QuoteModel.quote_id == quote_id).values(**values)
         result = await self._session.execute(stmt)
         await self._session.flush()
         return result.rowcount > 0  # type: ignore[union-attr]

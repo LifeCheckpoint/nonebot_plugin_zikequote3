@@ -7,7 +7,15 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nonebot_plugin_zikequote3.database.sa.base import Base
@@ -31,8 +39,8 @@ class QuoteModel(Base):
     :type author_id: str
     :param group_id: 群号，外键关联 ``groups.group_id``
     :type group_id: str
-    :param content: 语录内容
-    :type content: str
+    :param content: 语录内容，可为空（与图片至少存在一项）
+    :type content: Optional[str]
     :param image_content_uuid: 关联图片 UUID，可为空
     :type image_content_uuid: Optional[str]
     :param total_show_time: 总展示次数，默认为 0
@@ -40,6 +48,12 @@ class QuoteModel(Base):
     """
 
     __tablename__ = "quotes"
+    __table_args__ = (
+        CheckConstraint(
+            "(content IS NOT NULL AND content != '') OR image_content_uuid IS NOT NULL",
+            name="ck_quotes_content_or_image_present",
+        ),
+    )
 
     quote_id: Mapped[str] = mapped_column(String, primary_key=True)
     time_stamp: Mapped[datetime] = mapped_column(
@@ -51,7 +65,7 @@ class QuoteModel(Base):
     group_id: Mapped[str] = mapped_column(
         String, ForeignKey("groups.group_id"), nullable=False
     )
-    content: Mapped[str] = mapped_column(Text, nullable=False)
+    content: Mapped[Optional[str]] = mapped_column(Text, nullable=True, default=None)
     image_content_uuid: Mapped[Optional[str]] = mapped_column(
         String,
         ForeignKey("images.uuid", ondelete="SET NULL"),

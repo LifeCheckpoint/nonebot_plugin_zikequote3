@@ -24,6 +24,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from nonebot.exception import FinishedException
 
+from nonebot_plugin_zikequote3.exceptions import OperationError
 from nonebot_plugin_zikequote3.services.group_service import GroupService
 from nonebot_plugin_zikequote3.services.migration_service import MigrationService
 from nonebot_plugin_zikequote3.services.html_render_service import HtmlRenderServiceBase
@@ -510,11 +511,69 @@ class TestHandleGroupMigrationExecute:
                 html_render_svc=svcs["html_render_svc"],
             )
 
-        # 验证 execute_migration 被调用
-        svcs["migration_svc"].execute_migration.assert_awaited_once()
+        # 验证 execute_migration 被调用且携带一致性相关参数
+        svcs["migration_svc"].execute_migration.assert_awaited_once_with(
+            final_quotes=result["final_quotes"],
+            source="111111",
+            target="222222",
+            overwrite=False,
+            keep_source=False,
+            clear_member_info=False,
+            deduplicate=False,
+            exclude_non_member=False,
+        )
         # 验证 finish 包含成功消息
         finish_calls = matcher_group_migration.finish.call_args_list
         assert any("迁移成功" in str(c) for c in finish_calls)
+
+    async def test_migration_failure_is_reported(
+        self,
+        patch_container,
+        mock_group_event: MagicMock,
+    ) -> None:
+        """迁移失败：应透出可验证的业务失败信息。"""
+        svcs = _build_services()
+        svcs["group_svc"].group_exists = AsyncMock(return_value=True)
+        result = _prepare_result()
+        svcs["migration_svc"].prepare_migration = AsyncMock(return_value=result)
+        svcs["migration_svc"].execute_migration = AsyncMock(
+            side_effect=OperationError("迁移群名片失败")
+        )
+        svcs["token_mgr"].generate = MagicMock(return_value="test-token-123")
+        svcs["token_mgr"].verify_and_use = MagicMock(
+            return_value=(True, "成功")
+        )
+        svcs["html_render_svc"].render = AsyncMock(return_value=b"fake-img")
+        patch_container({
+            MigrationService: svcs["migration_svc"],
+            GroupService: svcs["group_svc"],
+            TokenManager: svcs["token_mgr"],
+            HtmlRenderServiceBase: svcs["html_render_svc"],
+        })
+
+        mock_resp = MagicMock()
+        mock_resp.extract_plain_text.return_value = "确认 test-token-123"
+        waiter_mod = sys.modules["nonebot_plugin_waiter"]
+        waiter_mod.prompt = AsyncMock(return_value=mock_resp)  # type: ignore[attr-defined]
+
+        with pytest.raises(FinishedException):
+            await handle_group_migration(
+                event=mock_group_event,
+                source=_make_match(available=True, result="111111"),
+                target=_make_match(available=True, result="222222"),
+                overwrite=_make_query(result=False),
+                duplicate=_make_query(result=False),
+                exclude_member=_make_query(result=False),
+                clear_member_info=_make_query(result=False),
+                keep_source=_make_query(result=False),
+                migration_svc=svcs["migration_svc"],
+                group_svc=svcs["group_svc"],
+                token_mgr=svcs["token_mgr"],
+                html_render_svc=svcs["html_render_svc"],
+            )
+
+        finish_calls = matcher_group_migration.finish.call_args_list
+        assert any("操作失败：迁移群名片失败" in str(c) for c in finish_calls)
 
     async def test_render_fallback_to_text(
         self,
