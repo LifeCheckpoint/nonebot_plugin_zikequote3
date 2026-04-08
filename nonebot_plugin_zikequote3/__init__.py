@@ -1,17 +1,14 @@
 """
-nonebot-plugin-zikequote3 新插件入口（dishka DI 版本）。
-
-替代旧的 __init__.py，消除 ``from .imports import *`` 全局单例模式，
-改用 dishka AsyncContainer 管理所有依赖的生命周期。
+nonebot-plugin-zikequote3 插件入口（dishka DI 版本）。
 
 生命周期：
-- driver.on_startup: 创建数据库表 → 组装 DI 容器 → 绑定到 NoneBot Driver
+- driver.on_startup: 读取并校验配置 → 初始化基础设施 → 执行 Alembic 升级 → 组装 DI 容器
 - driver.on_shutdown: 由 setup_dishka 自动关闭容器，释放连接池
 - 模块导入时: matcher 定义（on_command 等）自动注册到 NoneBot
 """
 
 from dishka import AsyncContainer
-from nonebot import get_driver, require, logger
+from nonebot import get_driver, logger, require
 from nonebot.plugin import PluginMetadata
 
 from .config import ConfigPath
@@ -54,69 +51,56 @@ __plugin_meta__ = PluginMetadata(
 # ---------------------------------------------------------------------------
 driver = get_driver()
 
+
 @driver.on_startup
 async def _startup() -> None:
-    """
-    启动时初始化：
-    1. 导入所有 ORM 模型（确保 Base.metadata 注册全部表）
-    2. 创建 AsyncEngine 并执行 create_all 建表
-    3. 组装 dishka 容器并绑定到 NoneBot Driver
-    """
-    from pathlib import Path
-
-    import tomlkit
-
-    from .config import ConfigPath, parse_config_from_toml
-    from .paths import PluginPath
-    from .di import create_container
-    from .di.nonebot_integration import setup_dishka
-    from .database.sa.base import Base
-    from .database.sa.engine import create_async_engine_factory
-
-    # 导入全部 ORM 模型，触发 Base.metadata 注册
-    from .database.sa import models as _models  # noqa: F401
-
-    # 0) 读取默认配置以获取 render_device_factor
+    """启动时初始化插件依赖。"""
     from nonebot import get_plugin_config
 
-    cfg_file = get_plugin_config(ConfigPath).config_toml
-    default_cfg = parse_config_from_toml(
-        tomlkit.parse(Path(cfg_file).read_text(encoding="utf-8"))
+    from .config import ConfigLoadError, load_config_from_path
+    from .database.alembic_runtime import (
+        DatabaseMigrationError,
+        migrate_database_to_head,
     )
-
-    # 初始化 Sentry 错误追踪
-    from .utils.sentry_init import init_sentry
-    init_sentry(default_cfg.sentry.dsn_path)
-
-    # 创建引擎并初始化数据库表
-    engine = create_async_engine_factory(PluginPath.data_db_path)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    await engine.dispose()  # 临时引擎，建表后释放
-
-    # 创建 DI 容器
-    container = create_container(
-        db_path=PluginPath.data_db_path,
-        image_store_path=PluginPath.data_image_root,
-        render_device_factor=default_cfg.showcase.render_device_factor,
-        embedding_config=default_cfg.embedding,
-        llm_config=default_cfg.llm,
-        vector_db_path=PluginPath.data_vector_db_path,
-    )
-
-    # 配置完整性修复
+    from .di import create_container
+    from .di.nonebot_integration import setup_dishka
+    from .paths import PluginPath
     from .services.config_service import ConfigService
+    from .utils.sentry_init import init_sentry
 
-    async with container() as request_ctx:
-        config_svc = await request_ctx.get(ConfigService)
-        await config_svc.fix_config_integrity()
+    config_path = get_plugin_config(ConfigPath).config_toml
 
-    # 绑定到 NoneBot Driver
-    setup_dishka(container, driver)
+    try:
+        default_cfg = load_config_from_path(config_path)
+        init_sentry(default_cfg.sentry.dsn_path)
 
-    # 启动时检查向量索引模型一致性
-    if default_cfg.embedding.enabled:
-        await _check_vector_index_consistency(container)
+        await migrate_database_to_head(PluginPath.data_db_path)
+
+        container = create_container(
+            db_path=PluginPath.data_db_path,
+            image_store_path=PluginPath.data_image_root,
+            render_device_factor=default_cfg.showcase.render_device_factor,
+            default_config=default_cfg,
+            embedding_config=default_cfg.embedding,
+            llm_config=default_cfg.llm,
+            vector_db_path=PluginPath.data_vector_db_path,
+        )
+
+        async with container() as request_ctx:
+            config_svc = await request_ctx.get(ConfigService)
+            await config_svc.fix_config_integrity()
+
+        setup_dishka(container, driver)
+
+        if default_cfg.embedding.enabled:
+            await _check_vector_index_consistency(container)
+    except (ConfigLoadError, DatabaseMigrationError) as exc:
+        logger.opt(exception=exc).critical("ZikeQuote3 启动失败: {}", exc)
+        raise
+    except Exception as exc:  # pragma: no cover - 启动期诊断兜底
+        logger.opt(exception=exc).critical("ZikeQuote3 启动阶段出现未预期异常: {}", exc)
+        raise
+
 
 async def _check_vector_index_consistency(container: AsyncContainer) -> None:
     """启动时检查向量索引的模型一致性。"""
@@ -141,6 +125,7 @@ async def _check_vector_index_consistency(container: AsyncContainer) -> None:
                     logger.info("向量索引为空，请执行 /重建语录索引 建立索引")
     except Exception as e:
         logger.warning("向量索引一致性检查失败: {}", e)
+
 
 # ---------------------------------------------------------------------------
 # 导入命令模块 —— 触发 matcher 注册（NoneBot2 标准模式）
