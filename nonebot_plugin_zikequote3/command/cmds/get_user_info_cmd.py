@@ -24,6 +24,7 @@ from ..parse_helper.query_resolver import (
     extract_text,
 )
 from ...di import Inject, inject
+from ...exceptions import UserNotFoundError
 from ...services import StatisticsService, UserService
 from ...services.html_render_service import HtmlRenderServiceBase
 from ._error_handlers import command_error_handler
@@ -93,7 +94,7 @@ async def handle_get_user_info(
     async with command_error_handler(matcher_get_user_info, "获取用户信息"):
         # 检查用户是否存在
         if not user_qq or not await user_svc.user_exists(user_qq):
-            raise ValueError("没有找到有效的用户哦.·´¯`(>▂<)´¯`·. ")
+            raise UserNotFoundError("没有找到有效的用户哦.·´¯`(>▂<)´¯`·. ")
 
         # 获取显示名称
         display_name = await user_svc.get_display_name(user_qq, group_id)

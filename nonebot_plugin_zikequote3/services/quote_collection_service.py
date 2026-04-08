@@ -20,9 +20,10 @@ from typing import Any, Callable, Coroutine, Optional, Protocol, Sequence
 
 from ..database.models.msgs_queue import MsgQueue
 from ..database.repositories.msg_queue_repository import MsgQueueRepository
-from ..exceptions import ResourceNotFoundError, ValidationException
+from ..exceptions import OperationError, ValidationException
 from .group_service import GroupService
 from .quote_write_service import QuoteWriteService
+from .review_service import AUTHOR_AI, ReviewService
 from .user_service import UserService
 
 # ------------------------------------------------------------------ #
@@ -101,13 +102,12 @@ class MessageFilter(Protocol):
 #  基于键的非阻塞锁（迁移自 lock_service.py）
 # ------------------------------------------------------------------ #
 
-class CollectionLockError(Exception):
+class CollectionLockError(OperationError):
     """当尝试获取一个已被持有的收集锁时抛出。"""
 
-    pass
 
-class _KeyedLock:
-    """基于键的非阻塞锁，同一键重复获取会立即失败。"""
+class CollectionLockManager:
+    """APP 级共享收集锁管理器。"""
 
     def __init__(self) -> None:
         self._locks: dict[str, str] = {}
@@ -181,14 +181,17 @@ class QuoteCollectionService:
         quote_write_service: QuoteWriteService,
         user_service: UserService,
         group_service: GroupService,
+        review_service: ReviewService,
+        lock_manager: CollectionLockManager,
         message_filter: Optional[MessageFilter] = None,
     ) -> None:
         self._msg_queue_repo = msg_queue_repo
         self._quote_write_service = quote_write_service
         self._user_service = user_service
         self._group_service = group_service
+        self._review_service = review_service
+        self._lock_manager = lock_manager
         self._message_filter = message_filter
-        self._lock = _KeyedLock()
 
     # ------------------------------------------------------------------ #
     #  队列管理
@@ -297,7 +300,7 @@ class QuoteCollectionService:
         :returns: 是否正在收集
         :rtype: bool
         """
-        return self._lock.is_locked(group_id)
+        return self._lock_manager.is_locked(group_id)
 
     def acquire_lock(self, group_id: str) -> None:
         """
@@ -307,7 +310,9 @@ class QuoteCollectionService:
         :type group_id: str
         :raises CollectionLockError: 锁已被持有
         """
-        self._lock.acquire(group_id, f"群 {group_id} 正在收集中，请稍后再试")
+        self._lock_manager.acquire(
+            group_id, f"群 {group_id} 正在收集中，请稍后再试"
+        )
 
     def release_lock(self, group_id: str) -> None:
         """
@@ -316,7 +321,19 @@ class QuoteCollectionService:
         :param group_id: 群号
         :type group_id: str
         """
-        self._lock.release(group_id)
+        self._lock_manager.release(group_id)
+
+    async def _run_with_lock(
+        self,
+        group_id: str,
+        action: Callable[[], Coroutine[Any, Any, list[CollectedQuote]]],
+    ) -> list[CollectedQuote]:
+        """在共享收集锁保护下执行收集相关动作。"""
+        self.acquire_lock(group_id)
+        try:
+            return await action()
+        finally:
+            self.release_lock(group_id)
 
     # ------------------------------------------------------------------ #
     #  收集流程
@@ -343,15 +360,41 @@ class QuoteCollectionService:
         :raises CollectionLockError: 群组正在收集中
         :raises ValidationException: 队列为空
         """
-        self.acquire_lock(group_id)
-        try:
+
+        async def _action() -> list[CollectedQuote]:
             return await self._do_collect(
                 group_id,
                 limit=limit,
                 allow_duplicate=allow_duplicate,
             )
-        finally:
-            self.release_lock(group_id)
+
+        return await self._run_with_lock(group_id, _action)
+
+    async def collect_and_finalize(
+        self,
+        group_id: str,
+        *,
+        limit: Optional[int] = None,
+        allow_duplicate: bool = True,
+    ) -> list[CollectedQuote]:
+        """
+        执行完整收集闭环：保存语录 → 追加 AI 评论 → 清理队列。
+
+        若任一步骤失败，则异常向上抛出，由 REQUEST 级事务统一回滚，
+        从而避免留下“已保存语录、未清队列”的半成功状态。
+        """
+
+        async def _action() -> list[CollectedQuote]:
+            collected = await self._do_collect(
+                group_id,
+                limit=limit,
+                allow_duplicate=allow_duplicate,
+            )
+            await self._append_ai_reviews(collected)
+            await self.clear_queue(group_id)
+            return collected
+
+        return await self._run_with_lock(group_id, _action)
 
     async def _do_collect(
         self,
@@ -394,9 +437,9 @@ class QuoteCollectionService:
         # 3. 保存
         collected: list[CollectedQuote] = []
         saved_details: list[tuple[str, str, str]] = []  # (quote_id, author_id, content)
+        messages_by_id = {msg.msg_id: msg for msg in messages}
         for item in selected:
-            # 查找原始消息获取作者信息
-            source_msg = await self._msg_queue_repo.get_msg_by_id(item.msg_id)
+            source_msg = messages_by_id.get(item.msg_id)
             if source_msg is None:
                 logger.warning("消息数据未找到: msg_id={}", item.msg_id)
                 continue
@@ -416,22 +459,17 @@ class QuoteCollectionService:
                     )
                     continue
 
-            try:
-                quote_id = await self._quote_write_service.add_quote(
-                    group_id=group_id,
-                    author_id=author_id,
-                    content=content,
-                )
-                comment = item.comment if item.comment else None
-                collected.append(CollectedQuote(
-                    quote_id=quote_id,
-                    comment=comment,
-                ))
-                saved_details.append((quote_id, author_id, content))
-            except Exception:
-                logger.warning(
-                    "保存语录失败: msg_id={}", item.msg_id, exc_info=True
-                )
+            quote_id = await self._quote_write_service.add_quote(
+                group_id=group_id,
+                author_id=author_id,
+                content=content,
+            )
+            comment = item.comment.strip() if item.comment and item.comment.strip() else None
+            collected.append(CollectedQuote(
+                quote_id=quote_id,
+                comment=comment,
+            ))
+            saved_details.append((quote_id, author_id, content))
 
         if collected:
             detail_lines = "; ".join(
@@ -448,6 +486,19 @@ class QuoteCollectionService:
                 group_id, len(selected),
             )
         return collected
+
+    async def _append_ai_reviews(
+        self,
+        collected: Sequence[CollectedQuote],
+    ) -> None:
+        """为收集结果中的 AI 评论统一建档。"""
+        for item in collected:
+            if item.comment:
+                await self._review_service.add_review(
+                    quote_id=item.quote_id,
+                    author_id=AUTHOR_AI,
+                    content=item.comment,
+                )
 
     async def _select_quotes(
         self,

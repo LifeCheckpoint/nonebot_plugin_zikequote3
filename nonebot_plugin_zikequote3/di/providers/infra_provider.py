@@ -29,6 +29,9 @@ from nonebot_plugin_zikequote3.services.html_render_service import (
     HtmlRenderServiceBase,
     PlaywrightHtmlRenderService,
 )
+from nonebot_plugin_zikequote3.services.quote_collection_service import (
+    CollectionLockManager,
+)
 from nonebot_plugin_zikequote3.utils.token_generate import TokenManager
 
 
@@ -73,6 +76,11 @@ class InfraProvider(Provider):
         :rtype: TokenManager
         """
         return TokenManager()
+
+    @provide(scope=Scope.APP)
+    def provide_collection_lock_manager(self) -> CollectionLockManager:
+        """创建 APP 级别共享收集锁管理器。"""
+        return CollectionLockManager()
 
     @provide(scope=Scope.APP)
     def provide_html_render_service(self) -> HtmlRenderServiceBase:

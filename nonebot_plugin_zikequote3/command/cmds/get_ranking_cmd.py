@@ -17,9 +17,11 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot.adapters import Message
 from nonebot.params import CommandArg
 
-from ..command_definition import matcher_get_ranking, default_cfg
+from ..command_definition import matcher_get_ranking
 from ...di import Inject, inject
+from ...exceptions import OperationError, ResourceNotFoundError
 from ...services import (
+    ConfigService,
     GroupService,
     QuoteCollectionService,
     QuoteReadService,
@@ -68,6 +70,7 @@ async def handle_get_ranking(
     group_svc: GroupService = Inject(GroupService),
     quote_read_svc: QuoteReadService = Inject(QuoteReadService),
     collection_svc: QuoteCollectionService = Inject(QuoteCollectionService),
+    config_svc: ConfigService = Inject(ConfigService),
     html_render_svc: HtmlRenderServiceBase = Inject(HtmlRenderServiceBase),
 ) -> None:
     """
@@ -91,10 +94,11 @@ async def handle_get_ranking(
     :type html_render_svc: HtmlRenderServiceBase
     """
     group_id = str(event.group_id)
+    cfg = await config_svc.get_parsed_config(group_id)
 
     # 解析参数，获取展示数量
     key = arg.extract_plain_text().strip()
-    max_rank = default_cfg.showcase.max_rank_user_num
+    max_rank = cfg.showcase.max_rank_user_num
     if key and key.isnumeric() and int(key) > 0:
         max_showcase_number = min(int(key), max(1, max_rank))
     else:
@@ -108,7 +112,7 @@ async def handle_get_ranking(
         total_shows = stat["total_shows"]
 
         if total_count == 0:
-            raise ValueError("当前群组语录数为 0")
+            raise OperationError("当前群组语录数为 0")
 
         # 从消息队列获取待收集语录数
         pending_count = await collection_svc.get_queue_count(group_id)
@@ -127,7 +131,7 @@ async def handle_get_ranking(
         # 获取群组名称
         group_info = await group_svc.get_group(group_id)
         if group_info is None:
-            raise ValueError(f"无法在数据库中找到群组 {group_id}")
+            raise ResourceNotFoundError(f"无法在数据库中找到群组 {group_id}")
         group_name = group_info.name
 
         # 获取个人排行
@@ -152,7 +156,7 @@ async def handle_get_ranking(
             ))
 
         if not ranking_data:
-            raise ValueError("排行数据为空")
+            raise OperationError("排行数据为空")
 
         ranking_data.sort(key=lambda x: x.count, reverse=True)
         ranking_data = ranking_data[:max_showcase_number]

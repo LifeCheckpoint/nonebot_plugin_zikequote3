@@ -2,7 +2,7 @@
 random_quote_image_cmd 命令处理器单元测试。
 
 覆盖：
-- handle_random_quote_image：随机语录图（成功 / 无语录 / 关键词过滤 / 服务异常）
+- handle_random_quote_image：随机语录图（成功 / 发送后消息映射 / 无语录 / 关键词过滤 / 服务异常）
 """
 
 from __future__ import annotations
@@ -111,6 +111,57 @@ class TestHandleRandomQuoteImage:
         mock_read_svc.get_quotes_by_group.assert_awaited_once_with("123456")
         # send 被调用（发送图片）
         matcher_random_quote_image.send.assert_awaited()
+
+    async def test_mapping_uses_sent_message_id(
+        self,
+        patch_container,
+        mock_group_event: MagicMock,
+        mock_bot: MagicMock,
+    ) -> None:
+        """消息映射应绑定机器人发出的展示消息，而不是触发命令消息。"""
+        # Arrange
+        mock_quote = _make_quote(quote_id="Q-MAP", image_content_uuid="uuid-map")
+        mock_read_svc = AsyncMock(spec=QuoteReadService)
+        mock_read_svc.get_quotes_by_group = AsyncMock(return_value=[mock_quote])
+        mock_read_svc.increment_show_time = AsyncMock(return_value=None)
+
+        mock_write_svc = AsyncMock(spec=QuoteWriteService)
+        mock_write_svc.create_msg_quote_mapping = AsyncMock(return_value=None)
+
+        mock_user_svc = AsyncMock(spec=UserService)
+        mock_user_svc.search_users_by_name = AsyncMock(return_value=[])
+
+        mock_image_store = MagicMock(spec=ImageStore)
+        mock_path = MagicMock(spec=Path)
+        mock_path.read_bytes.return_value = b"\x89PNG_FAKE_IMAGE"
+        mock_image_store.get_path = MagicMock(return_value=mock_path)
+
+        patch_container({
+            QuoteReadService: mock_read_svc,
+            QuoteWriteService: mock_write_svc,
+            UserService: mock_user_svc,
+            ImageStore: mock_image_store,
+        })
+
+        mock_group_event.message_id = 99999
+        matcher_random_quote_image.send.return_value = {"message_id": 54321}
+
+        # Act
+        await handle_random_quote_image(
+            event=mock_group_event,
+            bot=mock_bot,
+            at_user=_make_match(),
+            text=_make_match(),
+            quote_read_svc=mock_read_svc,
+            quote_write_svc=mock_write_svc,
+            user_svc=mock_user_svc,
+            image_store=mock_image_store,
+        )
+
+        # Assert
+        mock_write_svc.create_msg_quote_mapping.assert_awaited_once_with(
+            "54321", "Q-MAP",
+        )
 
     async def test_no_image_quotes(
         self,

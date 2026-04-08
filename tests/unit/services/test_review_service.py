@@ -10,7 +10,11 @@ import pytest
 from nonebot_plugin_zikequote3.database.models.quotes import Quote
 from nonebot_plugin_zikequote3.database.models.reviews import Review
 from nonebot_plugin_zikequote3.exceptions import QuoteNotFoundError, ResourceNotFoundError
-from nonebot_plugin_zikequote3.services.review_service import ReviewService
+from nonebot_plugin_zikequote3.services.review_service import (
+    AUTHOR_AI,
+    AUTHOR_AI_NICKNAME,
+    ReviewService,
+)
 
 
 # ------------------------------------------------------------------ #
@@ -57,9 +61,12 @@ class TestAddReview:
         review_service: ReviewService,
         mock_quote_repo: AsyncMock,
         mock_review_repo: AsyncMock,
+        mock_user_repo: AsyncMock,
     ) -> None:
         mock_quote_repo.get_quote_by_id.return_value = _make_quote("q_001")
         mock_review_repo.create_review.return_value = _make_review()
+        mock_user_repo.get_by_qq_id.return_value = None
+        mock_user_repo.create_user.return_value = None
 
         review_id = await review_service.add_review(
             quote_id="q_001",
@@ -69,10 +76,49 @@ class TestAddReview:
 
         assert isinstance(review_id, str)
         assert len(review_id) == 11
+        mock_user_repo.get_by_qq_id.assert_awaited_once_with("20001")
+        mock_user_repo.create_user.assert_awaited_once_with("20001")
         mock_review_repo.create_review.assert_awaited_once()
         # 验证 content 被 strip
         call_kwargs = mock_review_repo.create_review.call_args.kwargs
         assert call_kwargs["content"] == "好评"
+
+    @pytest.mark.asyncio
+    async def test_add_review_creates_ai_author_and_stable_nickname(
+        self,
+        review_service: ReviewService,
+        mock_quote_repo: AsyncMock,
+        mock_review_repo: AsyncMock,
+        mock_user_repo: AsyncMock,
+        mock_user_nickname_repo: AsyncMock,
+    ) -> None:
+        mock_quote_repo.get_quote_by_id.return_value = _make_quote("q_ai")
+        mock_review_repo.create_review.return_value = _make_review(
+            review_id="r_ai",
+            quote_id="q_ai",
+            author_id=AUTHOR_AI,
+            content="AI 评论",
+        )
+        mock_user_repo.get_by_qq_id.return_value = None
+        mock_user_repo.create_user.return_value = None
+        mock_user_nickname_repo.get_current_nickname.return_value = None
+        mock_user_nickname_repo.set_current_nickname.return_value = True
+
+        review_id = await review_service.add_review(
+            quote_id="q_ai",
+            author_id=AUTHOR_AI,
+            content="AI 评论",
+        )
+
+        assert isinstance(review_id, str)
+        mock_user_repo.get_by_qq_id.assert_awaited_once_with(AUTHOR_AI)
+        mock_user_repo.create_user.assert_awaited_once_with(AUTHOR_AI)
+        mock_user_nickname_repo.set_current_nickname.assert_awaited_once_with(
+            AUTHOR_AI,
+            AUTHOR_AI_NICKNAME,
+        )
+        call_kwargs = mock_review_repo.create_review.call_args.kwargs
+        assert call_kwargs["author_id"] == AUTHOR_AI
 
     @pytest.mark.asyncio
     async def test_add_review_quote_not_found(

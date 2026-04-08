@@ -236,13 +236,6 @@ def build_default_help_data() -> TemplateHelpData:
                         permission="权限节点控制",
                     ),
                     HelpCommandItem(
-                        name="/停用语录",
-                        aliases=["停用zikequote3"],
-                        description="（即将启用）停用个人的语录功能",
-                        usage="/停用语录",
-                        permission="权限节点控制",
-                    ),
-                    HelpCommandItem(
                         name="/重建语录索引",
                         aliases=["语录重建索引", "重建索引"],
                         description="重建当前群的模糊搜索向量索引，模型切换后需执行",

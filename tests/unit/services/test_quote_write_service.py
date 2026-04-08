@@ -88,6 +88,33 @@ class TestAddQuote:
         mock_image_repo.image_exists.assert_awaited_once_with("img-uuid-001")
 
     @pytest.mark.asyncio
+    async def test_add_quote_image_only(
+        self, quote_write_service: QuoteWriteService,
+        mock_quote_repo: AsyncMock, mock_image_repo: AsyncMock,
+    ) -> None:
+        """纯图片语录添加成功。"""
+        mock_image_repo.image_exists.return_value = True
+        mock_quote_repo.create_quote.return_value = _make_quote(
+            content=None,
+            image_content_uuid="img-uuid-002",
+        )
+
+        quote_id = await quote_write_service.add_quote(
+            group_id="99999", author_id="12345",
+            content=None, image_content_uuid="img-uuid-002",
+        )
+
+        assert isinstance(quote_id, str)
+        mock_image_repo.image_exists.assert_awaited_once_with("img-uuid-002")
+        mock_quote_repo.create_quote.assert_awaited_once_with(
+            quote_id=quote_id,
+            author_id="12345",
+            group_id="99999",
+            content=None,
+            image_content_uuid="img-uuid-002",
+        )
+
+    @pytest.mark.asyncio
     async def test_add_quote_empty_content_and_image_raises(
         self, quote_write_service: QuoteWriteService,
     ) -> None:

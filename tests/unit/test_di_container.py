@@ -37,6 +37,7 @@ from nonebot_plugin_zikequote3.services.config_service import ConfigService
 from nonebot_plugin_zikequote3.services.group_service import GroupService
 from nonebot_plugin_zikequote3.services.migration_service import MigrationService
 from nonebot_plugin_zikequote3.services.quote_collection_service import (
+    CollectionLockManager,
     QuoteCollectionService,
 )
 from nonebot_plugin_zikequote3.services.quote_read_service import QuoteReadService
@@ -160,6 +161,18 @@ class TestInfraProvider:
             assert tm1 is tm2
         await container.close()
 
+    async def test_collection_lock_manager_is_singleton(self) -> None:
+        """同一 APP 作用域内获取的 CollectionLockManager 是同一实例。"""
+        container = create_container(
+            db_path=":memory:",
+            image_store_path=Path("__test_images_not_used__"),
+        )
+        async with container() as app_scope:
+            lock1 = await app_scope.get(CollectionLockManager)
+            lock2 = await app_scope.get(CollectionLockManager)
+            assert lock1 is lock2
+        await container.close()
+
 
 # ---------------------------------------------------------------------------
 # Container 组装测试
@@ -275,4 +288,21 @@ class TestServiceProvider:
         async with container() as request_scope:
             svc = await request_scope.get(service_type)
             assert isinstance(svc, service_type)
+        await container.close()
+
+    async def test_quote_collection_service_shares_lock_across_requests(self) -> None:
+        """不同 REQUEST 作用域中的 QuoteCollectionService 共享同一把收集锁。"""
+        container = create_container(
+            db_path=":memory:",
+            image_store_path=Path("__test_images_not_used__"),
+        )
+        async with container() as req1:
+            svc1 = await req1.get(QuoteCollectionService)
+            svc1.acquire_lock("group-1")
+            try:
+                async with container() as req2:
+                    svc2 = await req2.get(QuoteCollectionService)
+                    assert svc2.is_collecting("group-1") is True
+            finally:
+                svc1.release_lock("group-1")
         await container.close()

@@ -127,7 +127,7 @@ class TestHandleGetQuoteList:
         patch_container,
         mock_group_event: MagicMock,
     ) -> None:
-        """用户不存在：抛出 ValueError，被 command_error_handler 捕获。"""
+        """用户不存在：走资源未找到分支，而不是通用内部错误分支。"""
         # Arrange
         mock_stats_svc = AsyncMock(spec=StatisticsService)
         mock_user_svc = AsyncMock(spec=UserService)
@@ -164,9 +164,10 @@ class TestHandleGetQuoteList:
                 html_render_svc=mock_render_svc,
             )
 
-        # 验证 finish 包含错误消息
+        # 验证 finish 进入资源未找到分支，而不是通用内部错误分支
         finish_calls = matcher_get_quote_list.finish.call_args_list
-        assert any("发生错误" in str(c) or "没有找到" in str(c) for c in finish_calls)
+        assert any("未找到" in str(c) for c in finish_calls)
+        assert all("发生错误" not in str(c) for c in finish_calls)
 
     async def test_nickname_multiple_users(
         self,

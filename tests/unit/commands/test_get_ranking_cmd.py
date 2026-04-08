@@ -13,6 +13,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from nonebot.exception import FinishedException
 
+from nonebot_plugin_zikequote3.services.config_service import ConfigService
 from nonebot_plugin_zikequote3.services.group_service import GroupService
 from nonebot_plugin_zikequote3.services.html_render_service import HtmlRenderServiceBase
 from nonebot_plugin_zikequote3.services.quote_collection_service import QuoteCollectionService
@@ -95,12 +96,18 @@ class TestHandleGetRanking:
         mock_collection_svc = AsyncMock(spec=QuoteCollectionService)
         mock_collection_svc.get_queue_count = AsyncMock(return_value=3)
 
+        mock_config_svc = AsyncMock(spec=ConfigService)
+        mock_cfg = MagicMock()
+        mock_cfg.showcase.max_rank_user_num = 40
+        mock_config_svc.get_parsed_config = AsyncMock(return_value=mock_cfg)
+
         patch_container({
             StatisticsService: mock_stats_svc,
             UserService: mock_user_svc,
             GroupService: mock_group_svc,
             QuoteReadService: mock_read_svc,
             QuoteCollectionService: mock_collection_svc,
+            ConfigService: mock_config_svc,
             HtmlRenderServiceBase: mock_render_svc,
         })
 
@@ -129,7 +136,7 @@ class TestHandleGetRanking:
         patch_container,
         mock_group_event: MagicMock,
     ) -> None:
-        """语录数为 0：抛出 ValueError，被 command_error_handler 捕获。"""
+        """语录数为 0：走操作失败分支，而不是通用内部错误分支。"""
         # Arrange
         mock_stats_svc = AsyncMock(spec=StatisticsService)
         mock_stats_svc.get_group_statistics = AsyncMock(return_value={
@@ -145,12 +152,18 @@ class TestHandleGetRanking:
         mock_collection_svc = AsyncMock(spec=QuoteCollectionService)
         mock_collection_svc.get_queue_count = AsyncMock(return_value=0)
 
+        mock_config_svc = AsyncMock(spec=ConfigService)
+        mock_cfg = MagicMock()
+        mock_cfg.showcase.max_rank_user_num = 40
+        mock_config_svc.get_parsed_config = AsyncMock(return_value=mock_cfg)
+
         patch_container({
             StatisticsService: mock_stats_svc,
             UserService: mock_user_svc,
             GroupService: mock_group_svc,
             QuoteReadService: mock_read_svc,
             QuoteCollectionService: mock_collection_svc,
+            ConfigService: mock_config_svc,
             HtmlRenderServiceBase: mock_render_svc,
         })
 
@@ -170,12 +183,11 @@ class TestHandleGetRanking:
                 html_render_svc=mock_render_svc,
             )
 
-        # 验证 finish 包含错误消息
+        # 验证 finish 进入操作失败分支，而不是通用内部错误分支
         finish_calls = matcher_get_ranking.finish.call_args_list
-        assert any(
-            "语录数为 0" in str(c) or "发生错误" in str(c)
-            for c in finish_calls
-        )
+        assert any("操作失败" in str(c) for c in finish_calls)
+        assert any("语录数为 0" in str(c) for c in finish_calls)
+        assert all("发生错误" not in str(c) for c in finish_calls)
 
     async def test_render_failure(
         self,
@@ -218,12 +230,18 @@ class TestHandleGetRanking:
         mock_collection_svc = AsyncMock(spec=QuoteCollectionService)
         mock_collection_svc.get_queue_count = AsyncMock(return_value=0)
 
+        mock_config_svc = AsyncMock(spec=ConfigService)
+        mock_cfg = MagicMock()
+        mock_cfg.showcase.max_rank_user_num = 40
+        mock_config_svc.get_parsed_config = AsyncMock(return_value=mock_cfg)
+
         patch_container({
             StatisticsService: mock_stats_svc,
             UserService: mock_user_svc,
             GroupService: mock_group_svc,
             QuoteReadService: mock_read_svc,
             QuoteCollectionService: mock_collection_svc,
+            ConfigService: mock_config_svc,
             HtmlRenderServiceBase: mock_render_svc,
         })
 

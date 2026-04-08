@@ -26,6 +26,7 @@ from ..parse_helper.query_resolver import (
     extract_text,
 )
 from ...di import Inject, inject
+from ...exceptions import UserNotFoundError
 from ...services import ConfigService, QuoteReadService, StatisticsService, UserService
 from ...services.html_render_service import HtmlRenderServiceBase
 from ...database.image_store import ImageStore
@@ -113,7 +114,7 @@ async def handle_get_quote_list(
     async with command_error_handler(matcher_get_quote_list, "获取语录列表"):
         # 检查用户是否存在
         if not user_qq or not await user_svc.user_exists(user_qq):
-            raise ValueError("没有找到有效的用户哦.·´¯`(>▂<)´¯`·. ")
+            raise UserNotFoundError("没有找到有效的用户哦.·´¯`(>▂<)´¯`·. ")
 
         # 获取个人语录列表（分页）
         quotes, total_count, real_from, real_to = (

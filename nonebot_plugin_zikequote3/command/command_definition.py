@@ -10,8 +10,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from nonebot import on_command, on_message
 from nonebot_plugin_alconna import on_alconna
 from arclet.alconna import Alconna, Arg, Option, AllParam, store_true, store_false
@@ -26,16 +24,6 @@ from ..services.permission_management.permission_node_definition import (
 )
 
 perm_nodes = PermissionServiceNodes(create_plugin_service("zikequote3"))
-
-# ---------------------------------------------------------------------------
-# 默认配置 —— 仅加载本地 TOML 默认值，不依赖数据库
-# ---------------------------------------------------------------------------
-import tomlkit
-from ..config import parse_config_from_toml
-
-_default_cfg_path = Path(__file__).resolve().parent.parent / "config.toml"
-_default_cfg_toml = tomlkit.parse(_default_cfg_path.read_text(encoding="utf-8"))
-default_cfg = parse_config_from_toml(_default_cfg_toml)
 
 
 # ===================================================================
@@ -165,13 +153,11 @@ matcher_add_quote_comment = on_command(
 )
 perm_nodes.n_review_add.patch_matcher(matcher_add_quote_comment)
 
-# 允许不使用前缀直接评论
-matcher_add_quote_comment_no_prefix = None
-if default_cfg.comment.enable_comment_without_prefix:
-    matcher_add_quote_comment_no_prefix = on_message(
-        priority=15, block=False
-    )
-    perm_nodes.n_review_add.patch_matcher(matcher_add_quote_comment_no_prefix)
+# 允许不使用前缀直接评论（是否实际处理由运行时配置决定）
+matcher_add_quote_comment_no_prefix = on_message(
+    priority=15, block=False
+)
+perm_nodes.n_review_add.patch_matcher(matcher_add_quote_comment_no_prefix)
 
 
 cmdname_remove_quote_comment = ("删评论", "删除评论", "删除语录评论", "删除语录评价", "删语评")
@@ -392,18 +378,6 @@ matcher_get_privacy = on_command(
     priority=10, block=True
 )
 perm_nodes.n_perm_s.patch_matcher(matcher_get_privacy)
-
-
-cmdname_stop_using_zikequote3 = (
-    "停用语录", "停用zikequote3", "停用Zikequote3", "停用ZikeQuote3",
-    "停用语录功能",
-)
-matcher_stop_using_zikequote3 = on_command(
-    cmdname_stop_using_zikequote3[0],
-    aliases=set(cmdname_stop_using_zikequote3[1:]),
-    priority=10, block=True
-)
-perm_nodes.n_perm_s.patch_matcher(matcher_stop_using_zikequote3)
 
 
 cmdname_get_help = (

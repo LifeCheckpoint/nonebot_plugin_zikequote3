@@ -14,6 +14,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from nonebot.exception import FinishedException
 
+from nonebot_plugin_zikequote3.services.config_service import ConfigService
 from nonebot_plugin_zikequote3.services.group_service import GroupService
 from nonebot_plugin_zikequote3.services.quote_write_service import QuoteWriteService
 from nonebot_plugin_zikequote3.services.review_service import ReviewService
@@ -176,7 +177,7 @@ class TestHandleAddQuoteComment:
         mock_group_event: MagicMock,
         mock_bot: MagicMock,
     ) -> None:
-        """回复的消息不是语录：quote_id 为 None，抛出 ValueError。"""
+        """回复的消息不是语录：quote_id 为 None，走资源未找到分支。"""
         # Arrange
         mock_write_svc = AsyncMock(spec=QuoteWriteService)
         mock_write_svc.get_quote_id_by_msg_id = AsyncMock(return_value=None)
@@ -210,9 +211,10 @@ class TestHandleAddQuoteComment:
 
         # 验证 add_review 未被调用
         mock_review_svc.add_review.assert_not_awaited()
-        # 验证 finish 包含 "发生错误" 消息（ValueError 被 command_error_handler 捕获）
+        # 验证 finish 进入资源未找到分支，而不是通用内部错误分支
         finish_calls = matcher_add_quote_comment.finish.call_args_list
-        assert any("发生错误" in str(c) for c in finish_calls)
+        assert any("未找到" in str(c) for c in finish_calls)
+        assert all("发生错误" not in str(c) for c in finish_calls)
 
 
 # ===================================================================
@@ -235,10 +237,15 @@ class TestHandleAddQuoteCommentNoPrefix:
         mock_write_svc.get_quote_id_by_msg_id = AsyncMock(return_value="Q-200")
         mock_review_svc = AsyncMock(spec=ReviewService)
         mock_review_svc.add_review = AsyncMock(return_value=None)
+        mock_config_svc = AsyncMock(spec=ConfigService)
+        mock_cfg = MagicMock()
+        mock_cfg.comment.enable_comment_without_prefix = True
+        mock_config_svc.get_parsed_config = AsyncMock(return_value=mock_cfg)
 
         patch_container({
             QuoteWriteService: mock_write_svc,
             ReviewService: mock_review_svc,
+            ConfigService: mock_config_svc,
         })
 
         mock_reply = MagicMock()
@@ -271,10 +278,12 @@ class TestHandleAddQuoteCommentNoPrefix:
         # Arrange
         mock_write_svc = AsyncMock(spec=QuoteWriteService)
         mock_review_svc = AsyncMock(spec=ReviewService)
+        mock_config_svc = AsyncMock(spec=ConfigService)
 
         patch_container({
             QuoteWriteService: mock_write_svc,
             ReviewService: mock_review_svc,
+            ConfigService: mock_config_svc,
         })
 
         mock_group_event.reply = None
@@ -300,10 +309,15 @@ class TestHandleAddQuoteCommentNoPrefix:
         mock_write_svc = AsyncMock(spec=QuoteWriteService)
         mock_write_svc.get_quote_id_by_msg_id = AsyncMock(return_value=None)
         mock_review_svc = AsyncMock(spec=ReviewService)
+        mock_config_svc = AsyncMock(spec=ConfigService)
+        mock_cfg = MagicMock()
+        mock_cfg.comment.enable_comment_without_prefix = True
+        mock_config_svc.get_parsed_config = AsyncMock(return_value=mock_cfg)
 
         patch_container({
             QuoteWriteService: mock_write_svc,
             ReviewService: mock_review_svc,
+            ConfigService: mock_config_svc,
         })
 
         mock_reply = MagicMock()
@@ -316,6 +330,39 @@ class TestHandleAddQuoteCommentNoPrefix:
             event=mock_group_event,
             bot=mock_bot,
         )
+
+    async def test_no_prefix_disabled_returns_early(
+        self,
+        patch_container,
+        mock_group_event: MagicMock,
+        mock_bot: MagicMock,
+    ) -> None:
+        """运行时关闭无前缀评论时，matcher 常驻但 handler 应提前返回。"""
+        mock_write_svc = AsyncMock(spec=QuoteWriteService)
+        mock_review_svc = AsyncMock(spec=ReviewService)
+        mock_config_svc = AsyncMock(spec=ConfigService)
+        mock_cfg = MagicMock()
+        mock_cfg.comment.enable_comment_without_prefix = False
+        mock_config_svc.get_parsed_config = AsyncMock(return_value=mock_cfg)
+
+        patch_container({
+            QuoteWriteService: mock_write_svc,
+            ReviewService: mock_review_svc,
+            ConfigService: mock_config_svc,
+        })
+
+        mock_reply = MagicMock()
+        mock_reply.message_id = 55555
+        mock_group_event.reply = mock_reply
+        mock_group_event.get_plaintext = MagicMock(return_value="评论内容")
+
+        await handle_add_quote_comment_no_prefix(
+            event=mock_group_event,
+            bot=mock_bot,
+        )
+
+        mock_config_svc.get_parsed_config.assert_awaited_once_with("123456")
+        mock_write_svc.get_quote_id_by_msg_id.assert_not_awaited()
 
         # 验证 add_review 未被调用
         mock_review_svc.add_review.assert_not_awaited()

@@ -12,9 +12,11 @@ from nonebot_plugin_zikequote3.exceptions import ValidationException
 from nonebot_plugin_zikequote3.services.quote_collection_service import (
     CollectedQuote,
     CollectionLockError,
+    CollectionLockManager,
     QuoteCollectionService,
     SelectedQuote,
 )
+from nonebot_plugin_zikequote3.services.review_service import AUTHOR_AI, ReviewService
 
 
 # ------------------------------------------------------------------ #
@@ -33,6 +35,57 @@ def _make_msg(
         qq_id=qq_id,
         content=content,
         time_stamp=datetime.now(),
+    )
+
+
+def _build_collection_service(
+    *,
+    mock_msg_queue_repo: AsyncMock,
+    mock_quote_repo: AsyncMock,
+    mock_image_repo: AsyncMock,
+    mock_mapping_repo: AsyncMock,
+    mock_user_repo: AsyncMock,
+    mock_user_nickname_repo: AsyncMock,
+    mock_group_nickname_repo: AsyncMock,
+    mock_group_member_repo: AsyncMock,
+    mock_group_repo: AsyncMock,
+    message_filter: AsyncMock | None = None,
+    review_service: AsyncMock | ReviewService | None = None,
+    lock_manager: CollectionLockManager | None = None,
+) -> QuoteCollectionService:
+    from nonebot_plugin_zikequote3.services.config_service import ConfigService
+    from nonebot_plugin_zikequote3.services.group_service import GroupService
+    from nonebot_plugin_zikequote3.services.quote_write_service import QuoteWriteService
+    from nonebot_plugin_zikequote3.services.user_service import UserService
+
+    user_service = UserService(
+        user_repo=mock_user_repo,
+        user_nickname_repo=mock_user_nickname_repo,
+        group_nickname_repo=mock_group_nickname_repo,
+        group_member_repo=mock_group_member_repo,
+    )
+    config_service = AsyncMock(spec=ConfigService)
+    quote_write_service = QuoteWriteService(
+        quote_repo=mock_quote_repo,
+        image_repo=mock_image_repo,
+        mapping_repo=mock_mapping_repo,
+        user_service=user_service,
+        config_service=config_service,
+        group_repo=mock_group_repo,
+    )
+    group_service = GroupService(
+        group_repo=mock_group_repo,
+        group_member_repo=mock_group_member_repo,
+        group_nickname_repo=mock_group_nickname_repo,
+    )
+    return QuoteCollectionService(
+        msg_queue_repo=mock_msg_queue_repo,
+        quote_write_service=quote_write_service,
+        user_service=user_service,
+        group_service=group_service,
+        review_service=review_service or AsyncMock(spec=ReviewService),
+        lock_manager=lock_manager or CollectionLockManager(),
+        message_filter=message_filter,
     )
 
 
@@ -228,6 +281,58 @@ class TestCollectionLock:
         quote_collection_service.release_lock("22222")
 
 
+class TestCollectionLockAcrossInstances:
+    """测试共享锁跨服务实例生效。"""
+
+    @pytest.mark.asyncio
+    async def test_shared_lock_manager_prevents_cross_instance_collect(
+        self,
+        mock_msg_queue_repo: AsyncMock,
+        mock_quote_repo: AsyncMock,
+        mock_image_repo: AsyncMock,
+        mock_mapping_repo: AsyncMock,
+        mock_user_repo: AsyncMock,
+        mock_user_nickname_repo: AsyncMock,
+        mock_group_nickname_repo: AsyncMock,
+        mock_group_member_repo: AsyncMock,
+        mock_group_repo: AsyncMock,
+    ) -> None:
+        shared_lock = CollectionLockManager()
+        svc1 = _build_collection_service(
+            mock_msg_queue_repo=mock_msg_queue_repo,
+            mock_quote_repo=mock_quote_repo,
+            mock_image_repo=mock_image_repo,
+            mock_mapping_repo=mock_mapping_repo,
+            mock_user_repo=mock_user_repo,
+            mock_user_nickname_repo=mock_user_nickname_repo,
+            mock_group_nickname_repo=mock_group_nickname_repo,
+            mock_group_member_repo=mock_group_member_repo,
+            mock_group_repo=mock_group_repo,
+            lock_manager=shared_lock,
+        )
+        svc2 = _build_collection_service(
+            mock_msg_queue_repo=mock_msg_queue_repo,
+            mock_quote_repo=mock_quote_repo,
+            mock_image_repo=mock_image_repo,
+            mock_mapping_repo=mock_mapping_repo,
+            mock_user_repo=mock_user_repo,
+            mock_user_nickname_repo=mock_user_nickname_repo,
+            mock_group_nickname_repo=mock_group_nickname_repo,
+            mock_group_member_repo=mock_group_member_repo,
+            mock_group_repo=mock_group_repo,
+            lock_manager=shared_lock,
+        )
+
+        svc1.acquire_lock("12345")
+        assert svc2.is_collecting("12345")
+
+        with pytest.raises(CollectionLockError):
+            await svc2.collect_and_save("12345")
+
+        mock_msg_queue_repo.get_msgs_by_group.assert_not_awaited()
+        svc1.release_lock("12345")
+
+
 # ------------------------------------------------------------------ #
 #  收集保存流程
 # ------------------------------------------------------------------ #
@@ -303,6 +408,119 @@ class TestCollectAndSave:
         quote_collection_service.release_lock("12345")
 
 
+class TestCollectAndFinalize:
+    """测试 collect_and_finalize 方法。"""
+
+    @pytest.mark.asyncio
+    async def test_finalize_adds_ai_reviews_and_clears_queue(
+        self,
+        mock_msg_queue_repo: AsyncMock,
+        mock_quote_repo: AsyncMock,
+        mock_image_repo: AsyncMock,
+        mock_mapping_repo: AsyncMock,
+        mock_user_repo: AsyncMock,
+        mock_user_nickname_repo: AsyncMock,
+        mock_group_nickname_repo: AsyncMock,
+        mock_group_member_repo: AsyncMock,
+        mock_group_repo: AsyncMock,
+    ) -> None:
+        msg = _make_msg(content="这是一句名言")
+        mock_filter = AsyncMock()
+        mock_filter.filter_messages.return_value = [
+            SelectedQuote(
+                msg_id="msg_001",
+                content="这是一句名言",
+                comment="AI点评",
+            ),
+        ]
+        mock_review_service = AsyncMock(spec=ReviewService)
+        svc = _build_collection_service(
+            mock_msg_queue_repo=mock_msg_queue_repo,
+            mock_quote_repo=mock_quote_repo,
+            mock_image_repo=mock_image_repo,
+            mock_mapping_repo=mock_mapping_repo,
+            mock_user_repo=mock_user_repo,
+            mock_user_nickname_repo=mock_user_nickname_repo,
+            mock_group_nickname_repo=mock_group_nickname_repo,
+            mock_group_member_repo=mock_group_member_repo,
+            mock_group_repo=mock_group_repo,
+            message_filter=mock_filter,
+            review_service=mock_review_service,
+        )
+        mock_msg_queue_repo.get_msgs_by_group.return_value = [msg]
+        mock_user_repo.get_by_qq_id.return_value = None
+        mock_user_repo.create_user.return_value = None
+        mock_image_repo.image_exists.return_value = False
+
+        with patch(
+            "nonebot_plugin_zikequote3.services.quote_write_service._generate_quote_id",
+            return_value="66666666666",
+        ):
+            mock_quote_repo.create_quote.return_value = None
+            result = await svc.collect_and_finalize("12345")
+
+        assert len(result) == 1
+        mock_review_service.add_review.assert_awaited_once_with(
+            quote_id="66666666666",
+            author_id=AUTHOR_AI,
+            content="AI点评",
+        )
+        mock_msg_queue_repo.clear_group_queue.assert_awaited_once_with("12345")
+
+    @pytest.mark.asyncio
+    async def test_finalize_review_failure_keeps_queue_uncleared_and_releases_lock(
+        self,
+        mock_msg_queue_repo: AsyncMock,
+        mock_quote_repo: AsyncMock,
+        mock_image_repo: AsyncMock,
+        mock_mapping_repo: AsyncMock,
+        mock_user_repo: AsyncMock,
+        mock_user_nickname_repo: AsyncMock,
+        mock_group_nickname_repo: AsyncMock,
+        mock_group_member_repo: AsyncMock,
+        mock_group_repo: AsyncMock,
+    ) -> None:
+        msg = _make_msg(content="这是一句名言")
+        mock_filter = AsyncMock()
+        mock_filter.filter_messages.return_value = [
+            SelectedQuote(
+                msg_id="msg_001",
+                content="这是一句名言",
+                comment="AI点评",
+            ),
+        ]
+        mock_review_service = AsyncMock(spec=ReviewService)
+        mock_review_service.add_review.side_effect = RuntimeError("AI review failed")
+        svc = _build_collection_service(
+            mock_msg_queue_repo=mock_msg_queue_repo,
+            mock_quote_repo=mock_quote_repo,
+            mock_image_repo=mock_image_repo,
+            mock_mapping_repo=mock_mapping_repo,
+            mock_user_repo=mock_user_repo,
+            mock_user_nickname_repo=mock_user_nickname_repo,
+            mock_group_nickname_repo=mock_group_nickname_repo,
+            mock_group_member_repo=mock_group_member_repo,
+            mock_group_repo=mock_group_repo,
+            message_filter=mock_filter,
+            review_service=mock_review_service,
+        )
+        mock_msg_queue_repo.get_msgs_by_group.return_value = [msg]
+        mock_user_repo.get_by_qq_id.return_value = None
+        mock_user_repo.create_user.return_value = None
+        mock_image_repo.image_exists.return_value = False
+
+        with patch(
+            "nonebot_plugin_zikequote3.services.quote_write_service._generate_quote_id",
+            return_value="55555555555",
+        ):
+            mock_quote_repo.create_quote.return_value = None
+            with pytest.raises(RuntimeError, match="AI review failed"):
+                await svc.collect_and_finalize("12345")
+
+        mock_msg_queue_repo.clear_group_queue.assert_not_awaited()
+        assert not svc.is_collecting("12345")
+
+
 # ------------------------------------------------------------------ #
 #  CollectedQuote 数据类
 # ------------------------------------------------------------------ #
@@ -348,31 +566,6 @@ class TestCollectAndSaveWithComment:
     ) -> None:
         """当 MessageFilter 返回带 comment 的 SelectedQuote 时，
         collect_and_save 应返回含 comment 的 CollectedQuote。"""
-        from nonebot_plugin_zikequote3.services.user_service import UserService
-        from nonebot_plugin_zikequote3.services.quote_write_service import QuoteWriteService
-        from nonebot_plugin_zikequote3.services.group_service import GroupService
-        from nonebot_plugin_zikequote3.services.config_service import ConfigService
-
-        us = UserService(
-            user_repo=mock_user_repo,
-            user_nickname_repo=mock_user_nickname_repo,
-            group_nickname_repo=mock_group_nickname_repo,
-            group_member_repo=mock_group_member_repo,
-        )
-        cs = AsyncMock(spec=ConfigService)
-        qws = QuoteWriteService(
-            quote_repo=mock_quote_repo,
-            image_repo=mock_image_repo,
-            mapping_repo=mock_mapping_repo,
-            user_service=us,
-            config_service=cs,
-        )
-        gs = GroupService(
-            group_repo=mock_group_repo,
-            group_member_repo=mock_group_member_repo,
-            group_nickname_repo=mock_group_nickname_repo,
-        )
-
         # 构造 mock MessageFilter，返回带 comment 的 SelectedQuote
         mock_filter = AsyncMock()
         mock_filter.filter_messages.return_value = [
@@ -383,11 +576,16 @@ class TestCollectAndSaveWithComment:
             ),
         ]
 
-        svc = QuoteCollectionService(
-            msg_queue_repo=mock_msg_queue_repo,
-            quote_write_service=qws,
-            user_service=us,
-            group_service=gs,
+        svc = _build_collection_service(
+            mock_msg_queue_repo=mock_msg_queue_repo,
+            mock_quote_repo=mock_quote_repo,
+            mock_image_repo=mock_image_repo,
+            mock_mapping_repo=mock_mapping_repo,
+            mock_user_repo=mock_user_repo,
+            mock_user_nickname_repo=mock_user_nickname_repo,
+            mock_group_nickname_repo=mock_group_nickname_repo,
+            mock_group_member_repo=mock_group_member_repo,
+            mock_group_repo=mock_group_repo,
             message_filter=mock_filter,
         )
 
@@ -425,42 +623,22 @@ class TestCollectAndSaveWithComment:
     ) -> None:
         """当 SelectedQuote.comment 为空字符串时，
         CollectedQuote.comment 应为 None。"""
-        from nonebot_plugin_zikequote3.services.user_service import UserService
-        from nonebot_plugin_zikequote3.services.quote_write_service import QuoteWriteService
-        from nonebot_plugin_zikequote3.services.group_service import GroupService
-        from nonebot_plugin_zikequote3.services.config_service import ConfigService
-
-        us = UserService(
-            user_repo=mock_user_repo,
-            user_nickname_repo=mock_user_nickname_repo,
-            group_nickname_repo=mock_group_nickname_repo,
-            group_member_repo=mock_group_member_repo,
-        )
-        cs = AsyncMock(spec=ConfigService)
-        qws = QuoteWriteService(
-            quote_repo=mock_quote_repo,
-            image_repo=mock_image_repo,
-            mapping_repo=mock_mapping_repo,
-            user_service=us,
-            config_service=cs,
-        )
-        gs = GroupService(
-            group_repo=mock_group_repo,
-            group_member_repo=mock_group_member_repo,
-            group_nickname_repo=mock_group_nickname_repo,
-        )
-
         # comment 为空字符串（SelectedQuote 默认值）
         mock_filter = AsyncMock()
         mock_filter.filter_messages.return_value = [
             SelectedQuote(msg_id="msg_001", content="普通消息", comment=""),
         ]
 
-        svc = QuoteCollectionService(
-            msg_queue_repo=mock_msg_queue_repo,
-            quote_write_service=qws,
-            user_service=us,
-            group_service=gs,
+        svc = _build_collection_service(
+            mock_msg_queue_repo=mock_msg_queue_repo,
+            mock_quote_repo=mock_quote_repo,
+            mock_image_repo=mock_image_repo,
+            mock_mapping_repo=mock_mapping_repo,
+            mock_user_repo=mock_user_repo,
+            mock_user_nickname_repo=mock_user_nickname_repo,
+            mock_group_nickname_repo=mock_group_nickname_repo,
+            mock_group_member_repo=mock_group_member_repo,
+            mock_group_repo=mock_group_repo,
             message_filter=mock_filter,
         )
 

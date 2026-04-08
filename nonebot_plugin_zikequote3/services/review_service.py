@@ -16,8 +16,10 @@ from ..database.models.reviews import Review
 from ..database.repositories.quote_repository import QuoteRepository
 from ..database.repositories.review_repository import ReviewRepository
 from ..exceptions import QuoteNotFoundError, ResourceNotFoundError
+from .user_service import UserService
 
 AUTHOR_AI = "-1"
+AUTHOR_AI_NICKNAME = "AI"
 
 def _generate_review_id() -> str:
     """生成 11 位随机数字评论 ID。"""
@@ -44,9 +46,11 @@ class ReviewService:
         self,
         review_repo: ReviewRepository,
         quote_repo: QuoteRepository,
+        user_service: UserService,
     ) -> None:
         self._review_repo = review_repo
         self._quote_repo = quote_repo
+        self._user_service = user_service
 
     # ------------------------------------------------------------------ #
     #  添加评论
@@ -76,6 +80,8 @@ class ReviewService:
         if quote is None:
             raise QuoteNotFoundError(f"语录 {quote_id} 不存在")
 
+        await self._ensure_review_author_exists(author_id)
+
         review_id = _generate_review_id()
         await self._review_repo.create_review(
             review_id=review_id,
@@ -88,6 +94,12 @@ class ReviewService:
             review_id, quote_id, author_id,
         )
         return review_id
+
+    async def _ensure_review_author_exists(self, author_id: str) -> None:
+        """确保评论作者用户记录存在；AI 作者额外补稳定昵称。"""
+        await self._user_service.get_or_create_user(author_id)
+        if author_id == AUTHOR_AI:
+            await self._user_service.sync_nickname(author_id, AUTHOR_AI_NICKNAME)
 
     # ------------------------------------------------------------------ #
     #  查询评论

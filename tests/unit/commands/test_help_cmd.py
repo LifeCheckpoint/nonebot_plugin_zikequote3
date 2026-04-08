@@ -8,6 +8,7 @@ help_cmd 命令处理器单元测试。
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -129,3 +130,40 @@ class TestHandleGetHelp:
         mock_build.assert_called_once()
         mock_render_help.assert_called_once()
         mock_render_svc.render.assert_awaited_once()
+
+
+def test_disable_quote_contract_removed_from_public_surfaces() -> None:
+    """“停用语录”应已从公开命令契约、帮助与 README 中移除。"""
+    from nonebot_plugin_zikequote3.command.cmds._help_data import (
+        build_default_help_data,
+    )
+
+    help_data = build_default_help_data()
+    command_names = {
+        command.name
+        for category in help_data.categories
+        for command in category.commands
+    }
+    command_aliases = {
+        alias
+        for category in help_data.categories
+        for command in category.commands
+        for alias in command.aliases
+    }
+
+    assert "/停用语录" not in command_names
+    assert "停用zikequote3" not in command_aliases
+
+    project_root = Path(__file__).resolve().parents[3]
+    command_definition_text = (
+        project_root
+        / "nonebot_plugin_zikequote3"
+        / "command"
+        / "command_definition.py"
+    ).read_text(encoding="utf-8")
+    readme_text = (project_root / "README.md").read_text(encoding="utf-8")
+
+    assert "停用语录" not in command_definition_text
+    assert "停用zikequote3" not in command_definition_text
+    assert "停用语录" not in readme_text
+    assert "停用zikequote3" not in readme_text

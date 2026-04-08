@@ -20,10 +20,8 @@ from ...services import (
     ConfigService,
     QuoteCollectionService,
     GroupService,
-    ReviewService,
     UserService,
 )
-from ...services.review_service import AUTHOR_AI
 from ._error_handlers import silent_error_handler, suppress_error
 
 @matcher_collecting_listener.handle()
@@ -34,7 +32,6 @@ async def handle_collecting_listener(
     config_svc: ConfigService = Inject(ConfigService),
     collection_svc: QuoteCollectionService = Inject(QuoteCollectionService),
     group_svc: GroupService = Inject(GroupService),
-    review_svc: ReviewService = Inject(ReviewService),
     user_svc: UserService = Inject(UserService),
 ) -> None:
     """
@@ -52,8 +49,6 @@ async def handle_collecting_listener(
     :type collection_svc: QuoteCollectionService
     :param group_svc: 群组服务（DI 注入）
     :type group_svc: GroupService
-    :param review_svc: 评论服务（DI 注入）
-    :type review_svc: ReviewService
     :param user_svc: 用户服务（DI 注入）
     :type user_svc: UserService
     """
@@ -123,21 +118,7 @@ async def handle_collecting_listener(
         )
         return
 
-    # 执行收集流程
-    async with silent_error_handler("LLM 筛选"):
-        collected = await collection_svc.collect_and_save(group_id)
+    # 执行收集闭环（保存语录 → AI 评论 → 清理队列）
+    async with silent_error_handler("LLM 收集闭环"):
+        collected = await collection_svc.collect_and_finalize(group_id)
         logger.info("筛选到 {} 条语录", len(collected))
-
-    # 为每条语录添加 AI 评论
-    for item in collected:
-        if item.comment:
-            async with silent_error_handler("添加 AI 评论"):
-                await review_svc.add_review(
-                    quote_id=item.quote_id,
-                    author_id=AUTHOR_AI,
-                    content=item.comment,
-                )
-
-    # 清空队列
-    with suppress_error("清空队列"):
-        await collection_svc.clear_queue(group_id)

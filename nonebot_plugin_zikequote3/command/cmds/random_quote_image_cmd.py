@@ -73,6 +73,7 @@ async def handle_random_quote_image(
     :type image_store: ImageStore
     """
     group_id = str(event.group_id)
+    send_msg = None
     q_result = None
 
     async with command_error_handler(matcher_random_quote_image, "解析参数"):
@@ -104,7 +105,7 @@ async def handle_random_quote_image(
         # 发送语录图片
         img_path = image_store.get_path(q_result.image_content_uuid)
         image_data = img_path.read_bytes()
-        await matcher_random_quote_image.send(MsgSeg.image(image_data))
+        send_msg = await matcher_random_quote_image.send(MsgSeg.image(image_data))
 
     # 更新语录出现次数
     if q_result is not None:
@@ -112,10 +113,11 @@ async def handle_random_quote_image(
             await quote_read_svc.increment_show_time(q_result.quote_id)
 
         # 添加消息映射
-        with suppress_error("添加消息映射"):
-            await quote_write_svc.create_msg_quote_mapping(
-                str(event.message_id), q_result.quote_id,
-            )
+        if send_msg is not None:
+            with suppress_error("添加消息映射"):
+                await quote_write_svc.create_msg_quote_mapping(
+                    str(send_msg["message_id"]), q_result.quote_id,
+                )
 
 async def _pick_random_image_quote(
     resolved: ResolvedQuery,
