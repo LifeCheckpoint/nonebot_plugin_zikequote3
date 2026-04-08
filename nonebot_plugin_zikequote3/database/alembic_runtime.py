@@ -22,11 +22,20 @@ _QUOTE_SCHEMA_CHECK_NAME: Final[str] = "ck_quotes_content_or_image_present"
 _USER_NICKNAME_CURRENT_INDEX_NAME: Final[str] = "uq_user_nicknames_current_using"
 _GROUP_NICKNAME_CURRENT_INDEX_NAME: Final[str] = "uq_group_nicknames_current_using"
 _ALEMBIC_INI_PATH: Final[Path] = Path(__file__).resolve().parent.parent / "alembic.ini"
+_OFFICIAL_V1_TO_V2_MISSING_TABLES: Final[frozenset[str]] = frozenset(
+    {"queue_group_message_counts"}
+)
+_CURRENT_UNVERSIONED_SHAPE: Final[str] = "current_metadata"
+_OFFICIAL_V1_TO_V2_SHAPE: Final[str] = "official_v1_to_v2"
 _DatabaseState = Literal[
     "empty",
     "versioned",
     "unversioned_head",
     "unversioned_legacy",
+]
+_UnversionedShape = Literal[
+    "current_metadata",
+    "official_v1_to_v2",
 ]
 
 
@@ -45,6 +54,33 @@ def _expected_user_tables() -> set[str]:
     from .sa.base import Base
 
     return set(Base.metadata.tables.keys())
+
+
+def _supported_unversioned_table_shapes() -> dict[_UnversionedShape, set[str]]:
+    expected_tables = _expected_user_tables()
+    return {
+        _CURRENT_UNVERSIONED_SHAPE: expected_tables,
+        _OFFICIAL_V1_TO_V2_SHAPE: expected_tables - set(_OFFICIAL_V1_TO_V2_MISSING_TABLES),
+    }
+
+
+
+def _classify_unversioned_table_shape(user_tables: set[str]) -> _UnversionedShape:
+    supported_shapes = _supported_unversioned_table_shapes()
+    for shape_name, expected_tables in supported_shapes.items():
+        if user_tables == expected_tables:
+            return shape_name
+
+    supported_shapes_text = "; ".join(
+        f"{shape_name}={sorted(expected_tables)}"
+        for shape_name, expected_tables in supported_shapes.items()
+    )
+    raise DatabaseMigrationError(
+        "检测到未受 Alembic 管理的非空数据库，但表集合不属于受支持的历史形态，"
+        f"无法安全自动迁移。当前表集合={sorted(user_tables)}；"
+        f"受支持形态={supported_shapes_text}"
+    )
+
 
 
 def _is_quote_schema_aligned(connection: Connection) -> bool:
@@ -84,6 +120,23 @@ def _is_current_nickname_schema_aligned(connection: Connection) -> bool:
 
 
 
+def _prepare_supported_legacy_schema(connection: Connection) -> None:
+    inspector = sa_inspect(connection)
+    user_tables = set(inspector.get_table_names()) - {"alembic_version"}
+    shape = _classify_unversioned_table_shape(user_tables)
+    if shape != _OFFICIAL_V1_TO_V2_SHAPE:
+        return
+
+    from .sa import models as _models  # noqa: F401
+    from .sa.base import Base
+
+    Base.metadata.tables["queue_group_message_counts"].create(
+        bind=connection,
+        checkfirst=True,
+    )
+
+
+
 def _detect_database_state(connection: Connection) -> _DatabaseState:
     inspector = sa_inspect(connection)
     table_names = set(inspector.get_table_names())
@@ -95,15 +148,12 @@ def _detect_database_state(connection: Connection) -> _DatabaseState:
     if not user_tables:
         return "empty"
 
-    expected_tables = _expected_user_tables()
-    if user_tables != expected_tables:
-        raise DatabaseMigrationError(
-            "检测到未受 Alembic 管理的非空数据库，但表集合与插件已知 schema 不一致，"
-            f"无法安全自动迁移。当前表集合={sorted(user_tables)}；"
-            f"期望表集合={sorted(expected_tables)}"
-        )
-
-    if _is_quote_schema_aligned(connection) and _is_current_nickname_schema_aligned(connection):
+    shape = _classify_unversioned_table_shape(user_tables)
+    if (
+        shape == _CURRENT_UNVERSIONED_SHAPE
+        and _is_quote_schema_aligned(connection)
+        and _is_current_nickname_schema_aligned(connection)
+    ):
         return "unversioned_head"
 
     return "unversioned_legacy"
@@ -136,6 +186,7 @@ async def migrate_database_to_head(db_path: str | Path) -> None:
                 return
 
             if state == "unversioned_legacy":
+                await async_conn.run_sync(_prepare_supported_legacy_schema)
                 await async_conn.run_sync(_stamp_initial_revision)
                 await async_conn.commit()
 

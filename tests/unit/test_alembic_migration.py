@@ -290,6 +290,39 @@ class TestStartupMigrationCompatibility:
         assert "uq_user_nicknames_current_using" in user_indexes
         assert "uq_group_nicknames_current_using" in group_indexes
 
+    async def test_migrate_database_to_head_upgrades_official_v1_to_v2_shape(
+        self, tmp_path: Path
+    ) -> None:
+        db_path = tmp_path / "official_v1_to_v2_unversioned.db"
+        engine = create_async_engine_factory(db_path)
+
+        try:
+            async with engine.connect() as async_conn:
+                await async_conn.run_sync(_run_upgrade(_INITIAL_REVISION))
+                await async_conn.commit()
+                await async_conn.execute(text("DROP TABLE queue_group_message_counts"))
+                await async_conn.execute(text("DROP TABLE alembic_version"))
+                await async_conn.commit()
+        finally:
+            await engine.dispose()
+
+        await migrate_database_to_head(db_path)
+
+        engine = create_async_engine_factory(db_path)
+        try:
+            async with engine.connect() as async_conn:
+                version = (
+                    await async_conn.execute(text("SELECT version_num FROM alembic_version"))
+                ).scalar_one()
+                tables = await async_conn.run_sync(
+                    lambda connection: set(sa_inspect(connection).get_table_names())
+                )
+        finally:
+            await engine.dispose()
+
+        assert version == _get_head_revision()
+        assert "queue_group_message_counts" in tables
+
     async def test_migrate_database_to_head_rejects_unknown_unversioned_schema(
         self, tmp_path: Path
     ) -> None:

@@ -97,26 +97,27 @@ async def nonebug_init():
     yield
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 async def async_engine():
-    """创建 session 级别的异步内存数据库引擎（使用 SA 工厂，含 PRAGMA 监听器）。"""
+    """为每个测试创建独立的异步内存数据库引擎（使用 SA 工厂，含 PRAGMA 监听器）。"""
     engine = create_async_engine_factory(":memory:")
     yield engine
     await engine.dispose()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def async_session_factory(async_engine):
-    """创建 session 级别的异步 session 工厂（使用 SA 工厂）。"""
+    """为每个测试创建独立的异步 session 工厂（使用 SA 工厂）。"""
     return create_async_session_factory(async_engine)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 async def init_db(async_engine):
     """
-    初始化数据库表结构。
+    为每个测试初始化独立数据库表结构。
 
-    通过 ``Base.metadata.create_all`` 根据已注册的 ORM 模型创建所有表。
+    通过 ``Base.metadata.create_all`` 根据已注册的 ORM 模型创建所有表，
+    避免已提交状态在不同测试用例之间泄漏。
     """
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

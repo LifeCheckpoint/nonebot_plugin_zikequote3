@@ -168,7 +168,7 @@ class TestQuoteReadList:
         await _seed_user_and_group(user_repo, group_repo, "qt_u22", "qt_g22")
         await quote_repo.create_quote("qt_q22", "qt_u22", "qt_g22", content="作者语录")
         results = await quote_repo.get_quotes_by_author("qt_u22")
-        assert len(results) >= 1
+        assert [quote.quote_id for quote in results] == ["qt_q22"]
 
     async def test_get_quotes_by_group_and_author(
         self, quote_repo: QuoteRepository,
@@ -177,7 +177,7 @@ class TestQuoteReadList:
         await _seed_user_and_group(user_repo, group_repo, "qt_u23", "qt_g23")
         await quote_repo.create_quote("qt_q23", "qt_u23", "qt_g23", content="群+作者")
         results = await quote_repo.get_quotes_by_group_and_author("qt_g23", "qt_u23")
-        assert len(results) >= 1
+        assert [quote.quote_id for quote in results] == ["qt_q23"]
 
     async def test_get_quotes_by_group_and_author_with_pagination(
         self, quote_repo: QuoteRepository,

@@ -11,7 +11,7 @@ PRAGMA 配置沿用旧同步架构的最佳实践：
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Union
+from typing import Any, Union
 
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
@@ -35,6 +35,18 @@ def _register_pragma_listeners(engine: AsyncEngine) -> None:
         cursor.close()
 
 
+def _build_sqlite_engine_kwargs(path_str: str) -> dict[str, Any]:
+    """构造 SQLite 引擎参数。"""
+    if path_str == ":memory:":
+        # 内存库仍使用 StaticPool，保证同一引擎内的测试连接共享同一内存数据库。
+        return {"poolclass": StaticPool}
+
+    # 文件型 SQLite 使用默认队列池，让不同 session / request 可以获取独立物理连接。
+    # 显式启用 rollback reset，避免连接回到池中后残留事务状态。
+    return {"pool_reset_on_return": "rollback"}
+
+
+
 def create_async_engine_factory(
     db_path: Union[str, Path],
 ) -> AsyncEngine:
@@ -46,25 +58,20 @@ def create_async_engine_factory(
     :returns: 已注册 PRAGMA 监听器的 AsyncEngine
     :rtype: AsyncEngine
     """
-    # 处理 :memory: 特殊值
     path_str = str(db_path)
     if path_str == ":memory:":
         url = "sqlite+aiosqlite:///:memory:"
     else:
         url = f"sqlite+aiosqlite:///{path_str}"
 
-    # SQLite 使用 StaticPool 确保单连接，避免并发写入导致 database is locked
-    is_sqlite = url.startswith("sqlite")
-    pool_kwargs = {}
-    if is_sqlite:
-        pool_kwargs["poolclass"] = StaticPool
+    engine_kwargs: dict[str, Any] = {
+        "echo": False,
+        "pool_pre_ping": True,
+    }
+    if url.startswith("sqlite"):
+        engine_kwargs.update(_build_sqlite_engine_kwargs(path_str))
 
-    engine = create_async_engine(
-        url,
-        echo=False,
-        pool_pre_ping=True,
-        **pool_kwargs,
-    )
+    engine = create_async_engine(url, **engine_kwargs)
 
     _register_pragma_listeners(engine)
     return engine
