@@ -5,7 +5,6 @@ MigrationService 单元测试。
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List
 from unittest.mock import AsyncMock
 
 import pytest
@@ -46,6 +45,34 @@ def _make_nickname(
     )
 
 
+def _configure_snapshot_state(
+    mock_quote_repo: AsyncMock,
+    mock_group_member_repo: AsyncMock,
+    mock_group_nickname_repo: AsyncMock,
+    *,
+    source_quotes: list[Quote],
+    target_quotes: list[Quote],
+    source_members: list[GroupMember] | None = None,
+    target_members: list[GroupMember] | None = None,
+    source_nicknames: list[GroupNickname] | None = None,
+    target_nicknames: list[GroupNickname] | None = None,
+) -> None:
+    source_members = source_members or []
+    target_members = target_members or []
+    source_nicknames = source_nicknames or []
+    target_nicknames = target_nicknames or []
+
+    mock_quote_repo.get_quotes_by_group.side_effect = lambda gid: (
+        list(source_quotes) if gid == "src" else list(target_quotes)
+    )
+    mock_group_member_repo.get_members_by_group.side_effect = lambda gid: (
+        list(source_members) if gid == "src" else list(target_members)
+    )
+    mock_group_nickname_repo.get_nicknames_by_group.side_effect = lambda gid: (
+        list(source_nicknames) if gid == "src" else list(target_nicknames)
+    )
+
+
 # ---------------------------------------------------------------------------
 # _deduplicate_quotes (static)
 # ---------------------------------------------------------------------------
@@ -83,7 +110,7 @@ class TestResolveDuplicateIds:
         quotes = [_make_quote("1"), _make_quote("1")]
         result = MigrationService._resolve_duplicate_ids(quotes)
         ids = [q.quote_id for q in result]
-        assert len(set(ids)) == 2  # all unique
+        assert len(set(ids)) == 2
 
     def test_force_new_ids_for_source(self) -> None:
         quotes = [_make_quote("1"), _make_quote("2")]
@@ -91,8 +118,8 @@ class TestResolveDuplicateIds:
         result = MigrationService._resolve_duplicate_ids(
             quotes, force_new_ids_for_source=True, source_ids=source_ids
         )
-        assert result[0].quote_id != "1"  # source id replaced
-        assert result[1].quote_id == "2"  # non-source kept
+        assert result[0].quote_id != "1"
+        assert result[1].quote_id == "2"
 
 
 # ---------------------------------------------------------------------------
@@ -101,46 +128,75 @@ class TestResolveDuplicateIds:
 
 
 class TestPrepareMigration:
-    async def test_merge_mode(
+    async def test_merge_mode_builds_preview_snapshot(
         self,
         migration_service: MigrationService,
         mock_quote_repo: AsyncMock,
         mock_group_member_repo: AsyncMock,
+        mock_group_nickname_repo: AsyncMock,
     ) -> None:
-        mock_quote_repo.get_quotes_by_group.side_effect = lambda gid: (
-            [_make_quote("1", group="src")] if gid == "src"
-            else [_make_quote("2", group="tgt")]
+        source_quotes = [_make_quote("1", group="src")]
+        target_quotes = [_make_quote("2", group="tgt")]
+        _configure_snapshot_state(
+            mock_quote_repo,
+            mock_group_member_repo,
+            mock_group_nickname_repo,
+            source_quotes=source_quotes,
+            target_quotes=target_quotes,
+            source_members=[_make_member("111", "src")],
+            target_members=[_make_member("222", "tgt")],
         )
-        mock_group_member_repo.get_members_by_group.side_effect = lambda gid: (
-            [_make_member("111", "src")] if gid == "src"
-            else [_make_member("222", "tgt")]
-        )
+        mock_quote_repo.get_max_quote_id.return_value = 2
 
-        info = await migration_service.prepare_migration(
+        preview = await migration_service.prepare_migration(
             "src", "tgt", overwrite=False
         )
-        assert info["source_count"] == 1
-        assert info["target_count"] == 1
-        assert info["final_count"] == 2
-        assert info["before_members"] == 1
-        assert info["after_members"] == 2
 
-    async def test_overwrite_mode(
+        assert preview.source_count == 1
+        assert preview.target_count == 1
+        assert preview.final_count == 2
+        assert preview.before_members == 1
+        assert preview.after_members == 2
+        assert [quote.quote_id for quote in preview.final_quotes] == ["2", "3"]
+        assert [
+            candidate.origin for candidate in preview.snapshot.final_candidates
+        ] == ["target", "source"]
+        assert preview.snapshot.final_candidates[1].original_quote_id == "1"
+
+    async def test_overwrite_mode_marks_removed_target_quotes(
         self,
         migration_service: MigrationService,
         mock_quote_repo: AsyncMock,
         mock_group_member_repo: AsyncMock,
+        mock_group_nickname_repo: AsyncMock,
     ) -> None:
-        mock_quote_repo.get_quotes_by_group.side_effect = lambda gid: (
-            [_make_quote("1", group="src")] if gid == "src"
-            else [_make_quote("2", group="tgt"), _make_quote("3", group="tgt")]
+        _configure_snapshot_state(
+            mock_quote_repo,
+            mock_group_member_repo,
+            mock_group_nickname_repo,
+            source_quotes=[_make_quote("1", group="src")],
+            target_quotes=[
+                _make_quote("2", group="tgt"),
+                _make_quote("3", group="tgt"),
+            ],
         )
-        mock_group_member_repo.get_members_by_group.return_value = []
+        mock_quote_repo.get_max_quote_id.return_value = 3
 
-        info = await migration_service.prepare_migration(
+        preview = await migration_service.prepare_migration(
             "src", "tgt", overwrite=True
         )
-        assert info["final_count"] == 1  # only source
+
+        assert preview.final_count == 1
+        assert preview.snapshot.final_candidates[0].origin == "source"
+        assert preview.snapshot.final_candidates[0].original_quote_id == "1"
+        assert len(preview.snapshot.removed_candidates) == 2
+        assert {
+            removed.candidate.original_quote_id
+            for removed in preview.snapshot.removed_candidates
+        } == {"2", "3"}
+        assert {
+            removed.reason for removed in preview.snapshot.removed_candidates
+        } == {"overwrite"}
 
 
 # ---------------------------------------------------------------------------
@@ -149,32 +205,93 @@ class TestPrepareMigration:
 
 
 class TestExecuteMigration:
-    async def test_basic_migration_clones_source_quotes_without_group_wide_delete(
+    async def test_execute_migration_consumes_preview_snapshot_consistently(
         self,
         migration_service: MigrationService,
         mock_quote_repo: AsyncMock,
         mock_group_member_repo: AsyncMock,
         mock_group_nickname_repo: AsyncMock,
     ) -> None:
-        mock_quote_repo.get_quotes_by_group.side_effect = lambda gid: (
-            [_make_quote("1", group="src")] if gid == "src" else []
+        source_quotes = [_make_quote("1", group="src")]
+        target_quotes: list[Quote] = []
+        _configure_snapshot_state(
+            mock_quote_repo,
+            mock_group_member_repo,
+            mock_group_nickname_repo,
+            source_quotes=source_quotes,
+            target_quotes=target_quotes,
+            source_members=[_make_member("111", "src")],
+            target_members=[],
         )
         mock_quote_repo.get_max_quote_id.return_value = 9
         mock_quote_repo.batch_clone_quotes.return_value = True
-        mock_group_member_repo.get_members_by_group.side_effect = lambda gid: (
-            [_make_member("111", "src")] if gid == "src" else []
-        )
-        mock_group_nickname_repo.get_nicknames_by_group.return_value = []
         mock_group_member_repo.batch_add_members.return_value = True
 
-        result = await migration_service.execute_migration(
-            [_make_quote("10", group="tgt")], "src", "tgt"
-        )
+        preview = await migration_service.prepare_migration("src", "tgt")
+        result = await migration_service.execute_migration(preview.snapshot)
 
-        assert result["quotes_migrated"] == 1
+        assert result["quotes_migrated"] == preview.final_count == 1
         assert result["members_migrated"] == 1
-        mock_quote_repo.batch_clone_quotes.assert_awaited_once()
+        clone_quotes = mock_quote_repo.batch_clone_quotes.await_args.args[0]
+        assert [quote.quote_id for quote in clone_quotes] == [
+            quote.quote_id for quote in preview.final_quotes
+        ]
+        assert [quote.group_id for quote in clone_quotes] == ["tgt"]
         mock_quote_repo.delete_quotes_by_group.assert_not_awaited()
+
+    async def test_execute_migration_aborts_when_snapshot_drifted(
+        self,
+        migration_service: MigrationService,
+        mock_quote_repo: AsyncMock,
+        mock_group_member_repo: AsyncMock,
+        mock_group_nickname_repo: AsyncMock,
+    ) -> None:
+        source_quotes = [_make_quote("1", group="src")]
+        target_quotes: list[Quote] = []
+        _configure_snapshot_state(
+            mock_quote_repo,
+            mock_group_member_repo,
+            mock_group_nickname_repo,
+            source_quotes=source_quotes,
+            target_quotes=target_quotes,
+        )
+        mock_quote_repo.get_max_quote_id.return_value = 1
+
+        preview = await migration_service.prepare_migration("src", "tgt")
+        source_quotes.append(_make_quote("2", group="src", content="drift"))
+
+        with pytest.raises(OperationError, match="重新预览"):
+            await migration_service.execute_migration(preview.snapshot)
+
+        mock_quote_repo.batch_clone_quotes.assert_not_awaited()
+        mock_group_member_repo.batch_add_members.assert_not_awaited()
+
+    async def test_execute_migration_aborts_when_snapshot_drifted_with_equal_counts(
+        self,
+        migration_service: MigrationService,
+        mock_quote_repo: AsyncMock,
+        mock_group_member_repo: AsyncMock,
+        mock_group_nickname_repo: AsyncMock,
+    ) -> None:
+        source_quotes = [_make_quote("1", group="src", content="before")]
+        target_quotes = [_make_quote("2", group="tgt")]
+        _configure_snapshot_state(
+            mock_quote_repo,
+            mock_group_member_repo,
+            mock_group_nickname_repo,
+            source_quotes=source_quotes,
+            target_quotes=target_quotes,
+        )
+        mock_quote_repo.get_max_quote_id.return_value = 2
+
+        preview = await migration_service.prepare_migration("src", "tgt")
+        source_quotes[0].content = "after"
+
+        with pytest.raises(OperationError, match="重新预览"):
+            await migration_service.execute_migration(preview.snapshot)
+
+        mock_quote_repo.batch_clone_quotes.assert_not_awaited()
+        mock_group_member_repo.batch_add_members.assert_not_awaited()
 
     async def test_migration_with_clear_member_info(
         self,
@@ -183,13 +300,23 @@ class TestExecuteMigration:
         mock_group_member_repo: AsyncMock,
         mock_group_nickname_repo: AsyncMock,
     ) -> None:
-        mock_quote_repo.get_quotes_by_group.side_effect = lambda gid: []
-        mock_group_member_repo.get_members_by_group.return_value = []
-        mock_group_nickname_repo.get_nicknames_by_group.return_value = []
-
-        await migration_service.execute_migration(
-            [], "src", "tgt", clear_member_info=True
+        _configure_snapshot_state(
+            mock_quote_repo,
+            mock_group_member_repo,
+            mock_group_nickname_repo,
+            source_quotes=[],
+            target_quotes=[],
+            source_members=[_make_member("111", "src")],
+            source_nicknames=[_make_nickname("111", "src", "card")],
         )
+        mock_group_member_repo.batch_add_members.return_value = True
+
+        preview = await migration_service.prepare_migration("src", "tgt")
+        await migration_service.execute_migration(
+            preview.snapshot,
+            clear_member_info=True,
+        )
+
         mock_group_member_repo.delete_all_members_by_group.assert_awaited_with("src")
         mock_group_nickname_repo.clear_group_all_nicknames.assert_awaited_with("src")
 
@@ -201,22 +328,28 @@ class TestExecuteMigration:
         mock_group_nickname_repo: AsyncMock,
     ) -> None:
         source_quote = _make_quote("1", group="src")
-        mock_quote_repo.get_quotes_by_group.side_effect = lambda gid: (
-            [source_quote] if gid == "src" else []
+        _configure_snapshot_state(
+            mock_quote_repo,
+            mock_group_member_repo,
+            mock_group_nickname_repo,
+            source_quotes=[source_quote],
+            target_quotes=[],
         )
         mock_quote_repo.update_quote_migration_state.return_value = True
-        mock_group_member_repo.get_members_by_group.return_value = []
-        mock_group_nickname_repo.get_nicknames_by_group.return_value = []
 
-        await migration_service.execute_migration(
-            [_make_quote("1", group="tgt")], "src", "tgt", keep_source=False
+        preview = await migration_service.prepare_migration(
+            "src",
+            "tgt",
+            keep_source=False,
         )
+        await migration_service.execute_migration(preview.snapshot)
 
         mock_quote_repo.update_quote_migration_state.assert_awaited_once_with(
             quote_id="1",
             group_id="tgt",
             total_show_time=1,
         )
+        mock_quote_repo.batch_clone_quotes.assert_not_awaited()
         mock_quote_repo.delete_quotes_by_group.assert_not_awaited()
 
     async def test_migration_reassigns_reviews_and_mappings_when_deduplicate_removes_quote(
@@ -231,25 +364,29 @@ class TestExecuteMigration:
         source_quote = _make_quote("1", group="src", content="same")
         target_quote = _make_quote("2", group="tgt", content="same")
         target_quote.total_show_time = 4
-        mock_quote_repo.get_quotes_by_group.side_effect = lambda gid: (
-            [source_quote] if gid == "src" else [target_quote]
+        _configure_snapshot_state(
+            mock_quote_repo,
+            mock_group_member_repo,
+            mock_group_nickname_repo,
+            source_quotes=[source_quote],
+            target_quotes=[target_quote],
         )
         mock_quote_repo.update_quote_migration_state.return_value = True
         mock_quote_repo.delete_quote.return_value = True
-        mock_group_member_repo.get_members_by_group.return_value = []
-        mock_group_nickname_repo.get_nicknames_by_group.return_value = []
         mock_review_repo.reassign_reviews_by_quote.return_value = True
         mock_mapping_repo.reassign_mappings_by_quote.return_value = True
 
-        result = await migration_service.execute_migration(
-            [],
+        preview = await migration_service.prepare_migration(
             "src",
             "tgt",
             keep_source=False,
             deduplicate=True,
         )
+        result = await migration_service.execute_migration(preview.snapshot)
 
         assert result["quotes_migrated"] == 1
+        assert [quote.quote_id for quote in preview.final_quotes] == ["2"]
+        assert preview.final_quotes[0].total_show_time == 5
         mock_review_repo.reassign_reviews_by_quote.assert_awaited_once_with(
             old_quote_id="1",
             new_quote_id="2",
@@ -268,13 +405,17 @@ class TestExecuteMigration:
         mock_group_member_repo: AsyncMock,
         mock_group_nickname_repo: AsyncMock,
     ) -> None:
-        mock_quote_repo.get_quotes_by_group.side_effect = lambda gid: []
-        mock_group_member_repo.get_members_by_group.return_value = []
-        mock_group_nickname_repo.get_nicknames_by_group.side_effect = [
-            [_make_nickname("111", "src", "card")],
-            [],
-        ]
+        _configure_snapshot_state(
+            mock_quote_repo,
+            mock_group_member_repo,
+            mock_group_nickname_repo,
+            source_quotes=[],
+            target_quotes=[],
+            source_nicknames=[_make_nickname("111", "src", "card")],
+            target_nicknames=[],
+        )
         mock_group_nickname_repo.add_group_nickname.side_effect = RuntimeError("boom")
 
+        preview = await migration_service.prepare_migration("src", "tgt")
         with pytest.raises(OperationError, match="迁移群名片失败"):
-            await migration_service.execute_migration([], "src", "tgt")
+            await migration_service.execute_migration(preview.snapshot)

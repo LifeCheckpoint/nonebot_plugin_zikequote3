@@ -13,7 +13,8 @@ from __future__ import annotations
 
 import itertools
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Literal, Optional, Sequence
+from datetime import datetime
+from typing import Any, List, Literal, Optional, Sequence
 
 from nonebot import logger
 from sqlalchemy.exc import IntegrityError
@@ -51,6 +52,129 @@ class _QuoteMigrationPlan:
     @property
     def final_quotes(self) -> List[Quote]:
         return [candidate.quote for candidate in self.final_candidates]
+
+
+@dataclass(slots=True, frozen=True)
+class MigrationQuoteSnapshot:
+    quote_id: str
+    author_id: str
+    group_id: str
+    content: Optional[str]
+    image_content_uuid: Optional[str]
+    total_show_time: int
+    time_stamp: datetime
+
+    @classmethod
+    def from_quote(cls, quote: Quote) -> "MigrationQuoteSnapshot":
+        return cls(
+            quote_id=quote.quote_id,
+            author_id=quote.author_id,
+            group_id=quote.group_id,
+            content=quote.content,
+            image_content_uuid=quote.image_content_uuid,
+            total_show_time=quote.total_show_time,
+            time_stamp=quote.time_stamp,
+        )
+
+    def to_quote(self) -> Quote:
+        return Quote(
+            quote_id=self.quote_id,
+            author_id=self.author_id,
+            group_id=self.group_id,
+            content=self.content,
+            image_content_uuid=self.image_content_uuid,
+            total_show_time=self.total_show_time,
+            time_stamp=self.time_stamp,
+        )
+
+
+@dataclass(slots=True, frozen=True)
+class MigrationCandidateSnapshot:
+    quote: MigrationQuoteSnapshot
+    origin: Literal["source", "target"]
+    original_quote_id: str
+
+    @classmethod
+    def from_candidate(
+        cls, candidate: _QuoteCandidate,
+    ) -> "MigrationCandidateSnapshot":
+        return cls(
+            quote=MigrationQuoteSnapshot.from_quote(candidate.quote),
+            origin=candidate.origin,
+            original_quote_id=candidate.original_quote_id,
+        )
+
+    def to_candidate(self) -> _QuoteCandidate:
+        return _QuoteCandidate(
+            quote=self.quote.to_quote(),
+            origin=self.origin,
+            original_quote_id=self.original_quote_id,
+        )
+
+
+@dataclass(slots=True, frozen=True)
+class MigrationRemovedCandidateSnapshot:
+    candidate: MigrationCandidateSnapshot
+    reason: Literal["deduplicated", "overwrite", "exclude_non_member"]
+    winner_origin: Optional[Literal["source", "target"]] = None
+    winner_original_quote_id: Optional[str] = None
+
+    @classmethod
+    def from_removed_candidate(
+        cls, removed: _RemovedQuoteCandidate,
+    ) -> "MigrationRemovedCandidateSnapshot":
+        winner_origin: Optional[Literal["source", "target"]] = None
+        winner_original_quote_id: Optional[str] = None
+        if removed.winner is not None:
+            winner_origin = removed.winner.origin
+            winner_original_quote_id = removed.winner.original_quote_id
+        return cls(
+            candidate=MigrationCandidateSnapshot.from_candidate(removed.candidate),
+            reason=removed.reason,
+            winner_origin=winner_origin,
+            winner_original_quote_id=winner_original_quote_id,
+        )
+
+
+@dataclass(slots=True, frozen=True)
+class MigrationStateSnapshot:
+    source_quotes: tuple[MigrationQuoteSnapshot, ...]
+    target_quotes: tuple[MigrationQuoteSnapshot, ...]
+    source_member_ids: tuple[str, ...]
+    target_member_ids: tuple[str, ...]
+    source_nickname_keys: tuple[tuple[str, str], ...]
+    target_nickname_keys: tuple[tuple[str, str], ...]
+
+
+@dataclass(slots=True, frozen=True)
+class MigrationSnapshot:
+    source: str
+    target: str
+    overwrite: bool
+    deduplicate: bool
+    exclude_non_member: bool
+    keep_source: bool
+    state: MigrationStateSnapshot
+    final_candidates: tuple[MigrationCandidateSnapshot, ...]
+    removed_candidates: tuple[MigrationRemovedCandidateSnapshot, ...]
+
+    @property
+    def final_quotes(self) -> List[Quote]:
+        return [candidate.quote.to_quote() for candidate in self.final_candidates]
+
+
+@dataclass(slots=True, frozen=True)
+class MigrationPreview:
+    snapshot: MigrationSnapshot
+    source_count: int
+    target_count: int
+    final_count: int
+    before_members: int
+    after_members: int
+
+    @property
+    def final_quotes(self) -> List[Quote]:
+        return self.snapshot.final_quotes
 
 
 class MigrationService:
@@ -102,9 +226,9 @@ class MigrationService:
         deduplicate: bool = False,
         exclude_non_member: bool = False,
         keep_source: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> MigrationPreview:
         """
-        统计迁移所需的全部信息，返回比较结果。
+        统计迁移所需的全部信息，并生成执行阶段必须消费的显式快照。
 
         :param source: 源群号
         :type source: str
@@ -118,44 +242,44 @@ class MigrationService:
         :type exclude_non_member: bool
         :param keep_source: 是否保留源群语录
         :type keep_source: bool
-        :returns: 包含 ``source_quotes``, ``source_count``, ``target_count``,
-            ``final_quotes``, ``final_count``, ``before_members``,
-            ``after_members`` 的字典
-        :rtype: Dict[str, Any]
+        :returns: 包含展示统计与执行快照的预览对象
+        :rtype: MigrationPreview
         """
-        source_quotes = list(await self._quote_repo.get_quotes_by_group(source))
-        target_quotes = list(await self._quote_repo.get_quotes_by_group(target))
-
-        source_members = await self._group_member_repo.get_members_by_group(source)
-        target_members = await self._group_member_repo.get_members_by_group(target)
-        target_qq_ids = {member.qq_id for member in target_members}
+        state = await self._capture_migration_state(source, target)
+        source_quotes = [quote.to_quote() for quote in state.source_quotes]
+        target_quotes = [quote.to_quote() for quote in state.target_quotes]
 
         plan = await self._build_quote_migration_plan(
             source_quotes=source_quotes,
             target_quotes=target_quotes,
             target=target,
-            target_member_ids=target_qq_ids,
+            target_member_ids=set(state.target_member_ids),
             overwrite=overwrite,
             deduplicate=deduplicate,
             exclude_non_member=exclude_non_member,
             keep_source=keep_source,
         )
 
-        before_members = len(target_members)
-        all_member_ids = {member.qq_id for member in target_members} | {
-            member.qq_id for member in source_members
-        }
-        after_members = len(all_member_ids)
+        before_members = len(state.target_member_ids)
+        after_members = len(set(state.target_member_ids) | set(state.source_member_ids))
 
-        return {
-            "source_quotes": source_quotes,
-            "source_count": len(source_quotes),
-            "target_count": len(target_quotes),
-            "final_quotes": plan.final_quotes,
-            "final_count": len(plan.final_candidates),
-            "before_members": before_members,
-            "after_members": after_members,
-        }
+        return MigrationPreview(
+            snapshot=self._build_migration_snapshot(
+                source=source,
+                target=target,
+                overwrite=overwrite,
+                deduplicate=deduplicate,
+                exclude_non_member=exclude_non_member,
+                keep_source=keep_source,
+                state=state,
+                plan=plan,
+            ),
+            source_count=len(state.source_quotes),
+            target_count=len(state.target_quotes),
+            final_count=len(plan.final_candidates),
+            before_members=before_members,
+            after_members=after_members,
+        )
 
     # ------------------------------------------------------------------ #
     #  执行迁移
@@ -163,78 +287,168 @@ class MigrationService:
 
     async def execute_migration(
         self,
-        final_quotes: List[Quote],
-        source: str,
-        target: str,
+        snapshot: MigrationSnapshot,
         *,
-        overwrite: bool = False,
-        keep_source: bool = True,
         clear_member_info: bool = False,
-        deduplicate: bool = False,
-        exclude_non_member: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         执行群组数据迁移。
 
-        :param final_quotes: 经 :meth:`prepare_migration` 处理后的最终语录列表
-        :type final_quotes: List[Quote]
-        :param source: 源群号
-        :type source: str
-        :param target: 目标群号
-        :type target: str
-        :param overwrite: 是否覆写模式
-        :type overwrite: bool
-        :param keep_source: 是否保留源群语录
-        :type keep_source: bool
+        :param snapshot: 由 :meth:`prepare_migration` 生成并经用户确认的迁移快照
+        :type snapshot: MigrationSnapshot
         :param clear_member_info: 是否清除源群用户信息
         :type clear_member_info: bool
-        :param deduplicate: 是否对语录去重
-        :type deduplicate: bool
-        :param exclude_non_member: 是否排除非目标群成员的语录
-        :type exclude_non_member: bool
         :returns: 迁移结果摘要字典
-        :rtype: Dict[str, Any]
+        :rtype: dict[str, Any]
         """
-        target_members = await self._group_member_repo.get_members_by_group(target)
-        plan = await self._build_quote_migration_plan(
-            source_quotes=list(await self._quote_repo.get_quotes_by_group(source)),
-            target_quotes=list(await self._quote_repo.get_quotes_by_group(target)),
-            target=target,
-            target_member_ids={member.qq_id for member in target_members},
-            overwrite=overwrite,
-            deduplicate=deduplicate,
-            exclude_non_member=exclude_non_member,
-            keep_source=keep_source,
-        )
-
-        if final_quotes and len(final_quotes) != len(plan.final_candidates):
-            logger.warning(
-                "群迁移预览结果与执行时不一致: preview={}, execute={}",
-                len(final_quotes),
-                len(plan.final_candidates),
-            )
+        await self._assert_snapshot_is_current(snapshot)
+        plan = self._plan_from_snapshot(snapshot)
 
         migrated_count = await self._migrate_quotes(
             plan,
-            source,
-            target,
-            keep_source=keep_source,
+            snapshot.source,
+            snapshot.target,
+            keep_source=snapshot.keep_source,
         )
 
         members_migrated = await self._migrate_user_infos(
-            source,
-            target,
+            snapshot.source,
+            snapshot.target,
             clear_member_info=clear_member_info,
         )
 
         result = {
             "quotes_migrated": migrated_count,
             "members_migrated": members_migrated,
-            "source": source,
-            "target": target,
+            "source": snapshot.source,
+            "target": snapshot.target,
         }
-        logger.info("群组迁移完成: {} -> {}, 语录 {} 条", source, target, migrated_count)
+        logger.info(
+            "群组迁移完成: {} -> {}, 语录 {} 条",
+            snapshot.source,
+            snapshot.target,
+            migrated_count,
+        )
         return result
+
+    async def _capture_migration_state(
+        self,
+        source: str,
+        target: str,
+    ) -> MigrationStateSnapshot:
+        source_quotes = tuple(
+            self._quote_to_snapshot(quote)
+            for quote in await self._quote_repo.get_quotes_by_group(source)
+        )
+        target_quotes = tuple(
+            self._quote_to_snapshot(quote)
+            for quote in await self._quote_repo.get_quotes_by_group(target)
+        )
+        source_members = await self._group_member_repo.get_members_by_group(source)
+        target_members = await self._group_member_repo.get_members_by_group(target)
+        source_nicknames = await self._group_nickname_repo.get_nicknames_by_group(source)
+        target_nicknames = await self._group_nickname_repo.get_nicknames_by_group(target)
+
+        return MigrationStateSnapshot(
+            source_quotes=source_quotes,
+            target_quotes=target_quotes,
+            source_member_ids=tuple(sorted(member.qq_id for member in source_members)),
+            target_member_ids=tuple(sorted(member.qq_id for member in target_members)),
+            source_nickname_keys=tuple(
+                sorted((nickname.qq_id, nickname.name) for nickname in source_nicknames)
+            ),
+            target_nickname_keys=tuple(
+                sorted((nickname.qq_id, nickname.name) for nickname in target_nicknames)
+            ),
+        )
+
+    def _build_migration_snapshot(
+        self,
+        *,
+        source: str,
+        target: str,
+        overwrite: bool,
+        deduplicate: bool,
+        exclude_non_member: bool,
+        keep_source: bool,
+        state: MigrationStateSnapshot,
+        plan: _QuoteMigrationPlan,
+    ) -> MigrationSnapshot:
+        return MigrationSnapshot(
+            source=source,
+            target=target,
+            overwrite=overwrite,
+            deduplicate=deduplicate,
+            exclude_non_member=exclude_non_member,
+            keep_source=keep_source,
+            state=state,
+            final_candidates=tuple(
+                MigrationCandidateSnapshot.from_candidate(candidate)
+                for candidate in plan.final_candidates
+            ),
+            removed_candidates=tuple(
+                MigrationRemovedCandidateSnapshot.from_removed_candidate(removed)
+                for removed in plan.removed_candidates
+            ),
+        )
+
+    async def _assert_snapshot_is_current(
+        self, snapshot: MigrationSnapshot,
+    ) -> None:
+        current_state = await self._capture_migration_state(
+            snapshot.source, snapshot.target,
+        )
+        if current_state == snapshot.state:
+            return
+
+        logger.warning(
+            "群迁移预览快照已漂移: {} -> {}",
+            snapshot.source,
+            snapshot.target,
+        )
+        raise OperationError(
+            "迁移预览已过期，底层数据已发生变化，请重新预览后再执行"
+        )
+
+    def _plan_from_snapshot(
+        self, snapshot: MigrationSnapshot,
+    ) -> _QuoteMigrationPlan:
+        final_candidates = [
+            candidate_snapshot.to_candidate()
+            for candidate_snapshot in snapshot.final_candidates
+        ]
+        candidate_index = {
+            (candidate.origin, candidate.original_quote_id): candidate
+            for candidate in final_candidates
+        }
+        removed_candidates = [
+            _RemovedQuoteCandidate(
+                candidate=removed_snapshot.candidate.to_candidate(),
+                reason=removed_snapshot.reason,
+                winner=(
+                    candidate_index.get(
+                        (
+                            removed_snapshot.winner_origin,
+                            removed_snapshot.winner_original_quote_id,
+                        )
+                    )
+                    if removed_snapshot.winner_origin is not None
+                    and removed_snapshot.winner_original_quote_id is not None
+                    else None
+                ),
+            )
+            for removed_snapshot in snapshot.removed_candidates
+        ]
+        return _QuoteMigrationPlan(
+            source_quotes=[quote.to_quote() for quote in snapshot.state.source_quotes],
+            target_quotes=[quote.to_quote() for quote in snapshot.state.target_quotes],
+            final_candidates=final_candidates,
+            removed_candidates=removed_candidates,
+        )
+
+    @staticmethod
+    def _quote_to_snapshot(quote: Quote) -> MigrationQuoteSnapshot:
+        return MigrationQuoteSnapshot.from_quote(quote)
 
     # ------------------------------------------------------------------ #
     #  语录子迁移（原 quote_submigration_service）
