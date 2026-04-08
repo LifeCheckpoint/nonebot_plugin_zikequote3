@@ -167,7 +167,7 @@ async def handle_fuzzy_search_quote(
 
     if vector_search_svc is None:
         await matcher_fuzzy_search_quote.finish(
-            "向量搜索基础设施未就绪，请检查 Embedding 配置（model、base_url、api_key_path）"
+            "向量搜索基础设施未就绪，请检查启动期全局 Embedding 配置（model、base_url、api_key_path）"
         )
 
     await _do_fuzzy_search(

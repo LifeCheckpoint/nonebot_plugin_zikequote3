@@ -55,10 +55,18 @@ default_threshold = 0.5 # 默认相似度阈值，0 表示不过滤
 dsn_path = "utils/sentry_dsn" # Sentry DSN 文件路径，相对插件根目录或绝对路径，可留空表示不启用
 
 [configure]
-# 不允许进行热更新，并且应该全局应用的配置项
+# 不允许进行热更新，并且应该全局应用的配置项（Embedding 仅保留 enabled 支持群级运行时开关）
 nonreloadable_items = [
     "llm.api_key_path",
+    "embedding.model",
+    "embedding.dimensions",
+    "embedding.base_url",
+    "embedding.api_key_path",
+    "embedding.batch_size",
+    "embedding.max_retries",
+    "embedding.default_top_n",
+    "embedding.default_threshold",
     "sentry.dsn_path",
     "configure.nonreloadable_items",
 ]
-cfg_version = 5 # 当前配置版本
+cfg_version = 6 # 当前配置版本

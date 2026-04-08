@@ -185,6 +185,7 @@ async def _do_normal_search(
 
         cfg = await config_svc.get_parsed_config(group_id)
         max_content_length = cfg.showcase.quote_content_max_length
+        hitokoto_url = cfg.showcase.hitokoto_url
 
         quote_boxes = await transform_quotes_to_template_boxes(
             quotes, group_id,
@@ -206,7 +207,7 @@ async def _do_normal_search(
             f"共 {total_found} 条 (显示 {len(quote_boxes)} 条)",
         ])
 
-        hitokoto_text = _try_get_hitokoto()
+        hitokoto_text = _try_get_hitokoto(hitokoto_url)
 
         html = render_list(TemplateQuoteListData(
             title=title_text,
@@ -217,11 +218,14 @@ async def _do_normal_search(
         img = await html_render_svc.render(html, width=LISTING.width, height=LISTING.height)
         await matcher.finish(MsgSeg.image(img))
 
-def _try_get_hitokoto() -> Optional[str]:
-    """尝试获取一言，失败时返回 None。"""
+def _try_get_hitokoto(hitokoto_url: str) -> Optional[str]:
+    """尝试根据运行时配置获取一言，失败时返回 None。"""
+    if not hitokoto_url.strip():
+        return None
+
     try:
         from ...utils.hitokoto import get_hitokoto
-        content, author = get_hitokoto()
+        content, author = get_hitokoto(hitokoto_url=hitokoto_url)
         if content and author:
             return f"「{content}」 ——{author}"
         if content:
@@ -279,7 +283,7 @@ async def _do_fuzzy_search(
 
         if vector_search_svc is None:
             await matcher.finish(
-                "向量搜索基础设施未就绪，请检查 Embedding 配置（model、base_url、api_key_path）"
+                "向量搜索基础设施未就绪，请检查启动期全局 Embedding 配置（model、base_url、api_key_path）"
             )
             return
 
@@ -287,7 +291,7 @@ async def _do_fuzzy_search(
         available = await vector_search_svc.is_available()
         if not available:
             await matcher.finish(
-                "模糊搜索服务当前不可用，请确认已启用 embedding 配置。"
+                "模糊搜索服务当前不可用，请确认启动期全局 Embedding 配置可用。"
             )
 
         index_count = await vector_search_svc.get_index_count()
@@ -302,8 +306,12 @@ async def _do_fuzzy_search(
         if params.similarity is not None and not (0.0 <= params.similarity <= 1.0):
             await matcher.finish("相似度阈值（-s）必须在 0.0 到 1.0 之间哦~")
 
-        threshold = params.similarity if params.similarity is not None else 0.0
-        limit = params.top_n if params.top_n is not None else 10
+        threshold = (
+            params.similarity
+            if params.similarity is not None
+            else cfg.embedding.default_threshold
+        )
+        limit = params.top_n if params.top_n is not None else cfg.embedding.default_top_n
 
         results = await vector_search_svc.semantic_search(
             params.pattern, group_id,
@@ -320,7 +328,6 @@ async def _do_fuzzy_search(
         quotes = [q for q, _ in results]
         scores = [s for _, s in results]
 
-        cfg = await config_svc.get_parsed_config(group_id)
         max_content_length = cfg.showcase.quote_content_max_length
 
         quote_boxes = await transform_quotes_to_template_boxes(
@@ -346,12 +353,12 @@ async def _do_fuzzy_search(
             (f"筛选 QQ: {params.qq}" if params.qq else "不筛选 QQ"),
             f"{'' if params.search_with_image else '不'} 包含图片",
         ]
-        if params.similarity is not None:
-            desc_parts.append(f"阈值: {params.similarity}")
+        if threshold:
+            desc_parts.append(f"阈值: {threshold}")
         desc_parts.append(f"共 {len(quote_boxes)} 条")
         desc_text = " | ".join(desc_parts)
 
-        hitokoto_text = _try_get_hitokoto()
+        hitokoto_text = _try_get_hitokoto(cfg.showcase.hitokoto_url)
 
         html = render_list(TemplateQuoteListData(
             title=title_text,

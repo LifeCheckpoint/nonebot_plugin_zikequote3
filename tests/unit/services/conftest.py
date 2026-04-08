@@ -47,6 +47,7 @@ from nonebot_plugin_zikequote3.services.config_service import ConfigService
 from nonebot_plugin_zikequote3.services.group_service import GroupService
 from nonebot_plugin_zikequote3.services.migration_service import MigrationService
 from nonebot_plugin_zikequote3.services.quote_collection_service import (
+    CollectionLockManager,
     QuoteCollectionService,
 )
 from nonebot_plugin_zikequote3.services.quote_read_service import QuoteReadService
@@ -180,17 +181,24 @@ def quote_read_service(
 
 
 @pytest.fixture
+def collection_lock_manager() -> CollectionLockManager:
+    return CollectionLockManager()
+
+
+@pytest.fixture
 def quote_collection_service(
     mock_msg_queue_repo: AsyncMock,
     mock_quote_repo: AsyncMock,
     mock_image_repo: AsyncMock,
     mock_mapping_repo: AsyncMock,
+    mock_review_repo: AsyncMock,
     mock_user_repo: AsyncMock,
     mock_user_nickname_repo: AsyncMock,
     mock_group_nickname_repo: AsyncMock,
     mock_group_member_repo: AsyncMock,
     mock_group_repo: AsyncMock,
     mock_group_config_repo: AsyncMock,
+    collection_lock_manager: CollectionLockManager,
 ) -> QuoteCollectionService:
     us = UserService(
         user_repo=mock_user_repo,
@@ -215,11 +223,18 @@ def quote_collection_service(
         group_member_repo=mock_group_member_repo,
         group_nickname_repo=mock_group_nickname_repo,
     )
+    rs = ReviewService(
+        review_repo=mock_review_repo,
+        quote_repo=mock_quote_repo,
+        user_service=us,
+    )
     return QuoteCollectionService(
         msg_queue_repo=mock_msg_queue_repo,
         quote_write_service=qws,
         user_service=us,
         group_service=gs,
+        review_service=rs,
+        lock_manager=collection_lock_manager,
     )
 
 
@@ -227,10 +242,12 @@ def quote_collection_service(
 def review_service(
     mock_review_repo: AsyncMock,
     mock_quote_repo: AsyncMock,
+    user_service: UserService,
 ) -> ReviewService:
     return ReviewService(
         review_repo=mock_review_repo,
         quote_repo=mock_quote_repo,
+        user_service=user_service,
     )
 
 
@@ -261,11 +278,15 @@ def migration_service(
     mock_quote_repo: AsyncMock,
     mock_group_member_repo: AsyncMock,
     mock_group_nickname_repo: AsyncMock,
+    mock_review_repo: AsyncMock,
+    mock_mapping_repo: AsyncMock,
 ) -> MigrationService:
     return MigrationService(
         quote_repo=mock_quote_repo,
         group_member_repo=mock_group_member_repo,
         group_nickname_repo=mock_group_nickname_repo,
+        review_repo=mock_review_repo,
+        mapping_repo=mock_mapping_repo,
     )
 
 

@@ -14,6 +14,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from nonebot.exception import FinishedException
 
+from nonebot_plugin_zikequote3.exceptions import ValidationException
 from nonebot_plugin_zikequote3.services.config_service import ConfigService
 from nonebot_plugin_zikequote3.services.html_render_service import HtmlRenderServiceBase
 
@@ -232,3 +233,32 @@ class TestHandleModifyConfig:
         # 验证 finish 包含解析错误信息
         finish_calls = matcher_modify_config.finish.call_args_list
         assert any("奇怪" in str(c) for c in finish_calls)
+
+    async def test_modify_schema_validation_error(
+        self,
+        patch_container,
+        mock_group_event: MagicMock,
+    ) -> None:
+        """非法在线配置在写入阶段失败，并走 schema 校验提示。"""
+        mock_config_svc = AsyncMock(spec=ConfigService)
+        mock_config_svc.parse_config_param = MagicMock(
+            return_value=("collecting.pickup_interval", "oops")
+        )
+        mock_config_svc.modify_single_value = AsyncMock(
+            side_effect=ValidationException("配置项 'collecting.pickup_interval' 不符合配置 schema")
+        )
+        patch_container({ConfigService: mock_config_svc})
+
+        mock_arg = MagicMock()
+        mock_arg.extract_plain_text.return_value = "collecting.pickup_interval 'oops'"
+
+        with pytest.raises(FinishedException):
+            await handle_modify_config(
+                event=mock_group_event,
+                arg=mock_arg,
+                config_svc=mock_config_svc,
+            )
+
+        finish_calls = matcher_modify_config.finish.call_args_list
+        assert any("输入有误" in str(c) for c in finish_calls)
+        assert any("schema" in str(c) for c in finish_calls)

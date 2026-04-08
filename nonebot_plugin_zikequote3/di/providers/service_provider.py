@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dishka import Provider, Scope, provide
 
+from ...config import ConfigSchema
 from ...vector_search.search_service import VectorSearchService
 from ...database.repositories.group_config_repository import GroupConfigRepository
 from ...database.repositories.group_member_repository import GroupMemberRepository
@@ -24,7 +25,11 @@ from ...database.repositories.user_repository import UserRepository
 from ...services.config_service import ConfigService
 from ...services.group_service import GroupService
 from ...services.migration_service import MigrationService
-from ...services.quote_collection_service import QuoteCollectionService, MessageFilter
+from ...services.quote_collection_service import (
+    CollectionLockManager,
+    QuoteCollectionService,
+    MessageFilter,
+)
 from ...llm_services.llm_message_filter import LLMMessageFilter
 from ...services.quote_read_service import QuoteReadService
 from ...services.quote_write_service import QuoteWriteService
@@ -50,6 +55,10 @@ class ServiceProvider(Provider):
     """
 
     scope = Scope.REQUEST
+
+    def __init__(self, default_config: ConfigSchema | None = None) -> None:
+        super().__init__()
+        self._default_config = default_config
 
     # ---- 无服务间依赖的 Service ---- #
 
@@ -112,6 +121,7 @@ class ServiceProvider(Provider):
         self,
         review_repo: ReviewRepository,
         quote_repo: QuoteRepository,
+        user_service: UserService,
     ) -> ReviewService:
         """
         提供审核服务实例。
@@ -126,6 +136,7 @@ class ServiceProvider(Provider):
         return ReviewService(
             review_repo=review_repo,
             quote_repo=quote_repo,
+            user_service=user_service,
         )
 
     @provide
@@ -168,6 +179,7 @@ class ServiceProvider(Provider):
         return ConfigService(
             group_config_repo=group_config_repo,
             group_repo=group_repo,
+            default_config=self._default_config,
         )
 
     @provide
@@ -176,6 +188,8 @@ class ServiceProvider(Provider):
         quote_repo: QuoteRepository,
         group_member_repo: GroupMemberRepository,
         group_nickname_repo: GroupNicknameRepository,
+        review_repo: ReviewRepository,
+        mapping_repo: MappingRepository,
     ) -> MigrationService:
         """
         提供迁移服务实例。
@@ -186,6 +200,10 @@ class ServiceProvider(Provider):
         :type group_member_repo: GroupMemberRepository
         :param group_nickname_repo: 群昵称仓库
         :type group_nickname_repo: GroupNicknameRepository
+        :param review_repo: 评论仓库
+        :type review_repo: ReviewRepository
+        :param mapping_repo: 消息映射仓库
+        :type mapping_repo: MappingRepository
         :returns: 迁移服务实例
         :rtype: MigrationService
         """
@@ -193,6 +211,8 @@ class ServiceProvider(Provider):
             quote_repo=quote_repo,
             group_member_repo=group_member_repo,
             group_nickname_repo=group_nickname_repo,
+            review_repo=review_repo,
+            mapping_repo=mapping_repo,
         )
 
     # ---- 依赖其他 Service 的 Service ---- #
@@ -289,6 +309,8 @@ class ServiceProvider(Provider):
         quote_write_service: QuoteWriteService,
         user_service: UserService,
         group_service: GroupService,
+        review_service: ReviewService,
+        lock_manager: CollectionLockManager,
         message_filter: LLMMessageFilter,
     ) -> QuoteCollectionService:
         """
@@ -312,5 +334,7 @@ class ServiceProvider(Provider):
             quote_write_service=quote_write_service,
             user_service=user_service,
             group_service=group_service,
+            review_service=review_service,
+            lock_manager=lock_manager,
             message_filter=message_filter,
         )

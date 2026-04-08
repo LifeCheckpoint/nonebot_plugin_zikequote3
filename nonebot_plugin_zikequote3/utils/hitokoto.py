@@ -23,6 +23,10 @@ def get_hitokoto(
     :returns: ``(名言内容, 名言作者)`` 元组，请求失败时返回 ``(None, None)``
     :rtype: Tuple[Optional[str], Optional[str]]
     """
+    hitokoto_url = hitokoto_url.strip()
+    if not hitokoto_url:
+        return None, None
+
     try:
         response = requests.get(hitokoto_url, timeout=3)
         response.raise_for_status()

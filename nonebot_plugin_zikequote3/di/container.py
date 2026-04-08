@@ -12,7 +12,7 @@ from typing import Optional, Union
 
 from dishka import AsyncContainer, make_async_container
 
-from ..config import EmbeddingConfig, LLMConfig
+from ..config import ConfigSchema, EmbeddingConfig, LLMConfig
 from .providers.database_provider import DatabaseProvider
 from .providers.infra_provider import InfraProvider
 from .providers.repository_provider import RepositoryProvider
@@ -25,6 +25,7 @@ def create_container(
     image_store_path: Union[str, Path],
     render_device_factor: float = 2.0,
     *,
+    default_config: Optional[ConfigSchema] = None,
     embedding_config: Optional[EmbeddingConfig] = None,
     llm_config: Optional[LLMConfig] = None,
     vector_db_path: Optional[Union[str, Path]] = None,
@@ -38,6 +39,8 @@ def create_container(
     :type image_store_path: Union[str, Path]
     :param render_device_factor: HTML 截图设备缩放因子，默认 2.0
     :type render_device_factor: float
+    :param default_config: 启动期加载的全局配置真源
+    :type default_config: Optional[ConfigSchema]
     :param embedding_config: Embedding 配置，为 None 或未启用时不注册向量搜索
     :type embedding_config: Optional[EmbeddingConfig]
     :param llm_config: LLM 配置，向量搜索需要
@@ -51,7 +54,7 @@ def create_container(
         DatabaseProvider(db_path),
         InfraProvider(image_store_path, render_device_factor=render_device_factor),
         RepositoryProvider(),
-        ServiceProvider(),
+        ServiceProvider(default_config=default_config),
         # 始终注册 VectorProvider；disabled 时各 provide 方法返回 None
         VectorProvider(embedding_config, llm_config, vector_db_path),
     ]

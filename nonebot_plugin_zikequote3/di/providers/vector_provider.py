@@ -2,7 +2,8 @@
 
 注册 :class:`EmbeddingClient`、:class:`VectorStore` 和
 :class:`VectorSearchService` 到 dishka 依赖注入容器中。
-始终尝试创建基础设施；"是否启用"的判断推迟到命令运行时检查群组配置。
+Embedding 的连接参数统一来自启动期全局配置；群级运行时仅通过
+``embedding.enabled`` 决定是否实际使用这些基础设施。
 当基础设施创建失败（如 API key 文件不存在）时，各 provide 方法返回 ``None``。
 """
 from __future__ import annotations
@@ -23,6 +24,7 @@ class VectorProvider(Provider):
     """向量搜索 DI Provider。
 
     始终注册到容器中，始终尝试创建基础设施。
+    连接参数只读取启动期全局配置，不接受群级热更新覆盖；
     当配置不完整或创建失败时，各 provide 方法返回 ``None``。
 
     :param embedding_config: Embedding 服务配置，默认为 ``None``。

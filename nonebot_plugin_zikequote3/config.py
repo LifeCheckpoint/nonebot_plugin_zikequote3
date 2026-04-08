@@ -6,10 +6,18 @@
 如有修改，注意同步 `config.toml` 中的配置模型
 """
 
+from __future__ import annotations
+
 from pathlib import Path
-from pydantic import BaseModel, Field
 from typing import List, Literal
+
 import tomlkit
+from pydantic import BaseModel, Field, ValidationError
+from tomlkit.exceptions import TOMLKitError
+
+
+class ConfigLoadError(RuntimeError):
+    """启动阶段读取外部配置文件失败。"""
 
 
 class ConfigPath(BaseModel):
@@ -22,8 +30,9 @@ class ConfigPath(BaseModel):
 
     config_toml: str = Field(
         default_factory=lambda: str(Path(__file__).parent / "config.toml"),
-        description="配置文件路径"
+        description="配置文件路径",
     )
+
 
 class GeneralConfig(BaseModel):
     """通用配置（预留扩展）。"""
@@ -42,6 +51,7 @@ class CollectingConfig(BaseModel):
     img_max_sidelength: int = 3840
     img_max_size_mb: float = 5
     update_personal_info_probability: float = 0.05
+
 
 class FetchingConfig(BaseModel):
     """语录抽取算法相关配置。"""
@@ -66,6 +76,7 @@ class CommentConfig(BaseModel):
     """语录评论相关配置。"""
 
     enable_comment_without_prefix: bool = True
+
 
 class LLMConfig(BaseModel):
     """LLM 服务相关配置。"""
@@ -134,12 +145,21 @@ class ConfigureConfig(BaseModel):
     nonreloadable_items: List[str] = Field(
         default_factory=lambda: [
             "llm.api_key_path",
+            "embedding.model",
+            "embedding.dimensions",
+            "embedding.base_url",
+            "embedding.api_key_path",
+            "embedding.batch_size",
+            "embedding.max_retries",
+            "embedding.default_top_n",
+            "embedding.default_threshold",
             "sentry.dsn_path",
             "configure.nonreloadable_items",
         ]
     )
     cfg_version: int = 6
     """配置版本号，配置变更需要递增以触发自动更新"""
+
 
 class ConfigSchema(BaseModel):
     """
@@ -170,3 +190,35 @@ def parse_config_from_toml(toml_doc: tomlkit.TOMLDocument) -> ConfigSchema:
     """
     return ConfigSchema.model_validate(toml_doc)
 
+
+def resolve_config_path(config_path: str | Path) -> Path:
+    """解析配置文件路径，保留可诊断的边界错误。"""
+    raw_path = Path(config_path)
+    return raw_path if raw_path.is_absolute() else (Path.cwd() / raw_path).resolve()
+
+
+def load_config_from_path(config_path: str | Path) -> ConfigSchema:
+    """从配置文件路径加载并校验插件配置。"""
+    resolved_path = resolve_config_path(config_path)
+
+    if not resolved_path.exists():
+        raise ConfigLoadError(f"配置文件不存在: {resolved_path}")
+    if not resolved_path.is_file():
+        raise ConfigLoadError(f"配置文件路径不是普通文件: {resolved_path}")
+
+    try:
+        raw_text = resolved_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise ConfigLoadError(f"读取配置文件失败: {resolved_path}: {exc}") from exc
+
+    try:
+        toml_doc = tomlkit.parse(raw_text)
+    except TOMLKitError as exc:
+        raise ConfigLoadError(f"配置文件 TOML 解析失败: {resolved_path}: {exc}") from exc
+
+    try:
+        return parse_config_from_toml(toml_doc)
+    except ValidationError as exc:
+        raise ConfigLoadError(
+            f"配置文件内容不符合配置 schema: {resolved_path}: {exc}"
+        ) from exc

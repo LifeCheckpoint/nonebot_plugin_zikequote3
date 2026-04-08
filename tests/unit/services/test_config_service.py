@@ -8,9 +8,42 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from nonebot_plugin_zikequote3.config import (
+    ConfigLoadError,
+    ConfigSchema,
+    load_config_from_path,
+)
 from nonebot_plugin_zikequote3.database.models.group_configs import GroupConfigs
 from nonebot_plugin_zikequote3.exceptions import ResourceNotFoundError, ValidationException
 from nonebot_plugin_zikequote3.services.config_service import ConfigService
+
+
+# ---------------------------------------------------------------------------
+# load_config_from_path
+# ---------------------------------------------------------------------------
+
+
+class TestLoadConfigFromPath:
+    def test_missing_file_raises_diagnostic_error(self, tmp_path) -> None:
+        with pytest.raises(ConfigLoadError, match="配置文件不存在"):
+            load_config_from_path(tmp_path / "missing.toml")
+
+    def test_invalid_toml_raises_diagnostic_error(self, tmp_path) -> None:
+        config_path = tmp_path / "invalid.toml"
+        config_path.write_text("[collecting\npickup_interval = 1", encoding="utf-8")
+
+        with pytest.raises(ConfigLoadError, match="TOML 解析失败"):
+            load_config_from_path(config_path)
+
+    def test_invalid_schema_raises_diagnostic_error(self, tmp_path) -> None:
+        config_path = tmp_path / "invalid_schema.toml"
+        config_path.write_text(
+            "[showcase]\ncomment_show_method = \"invalid\"\n",
+            encoding="utf-8",
+        )
+
+        with pytest.raises(ConfigLoadError, match="不符合配置 schema"):
+            load_config_from_path(config_path)
 
 
 # ---------------------------------------------------------------------------
@@ -60,21 +93,35 @@ class TestSetGroupConfig:
     async def test_set_valid_config(
         self, config_service: ConfigService, mock_group_config_repo: AsyncMock
     ) -> None:
-        toml_str = '[section]\nkey = "value"'
+        import tomlkit
+
+        toml_str = "[collecting]\npickup_interval = 120"
         fake = GroupConfigs(group_id="g1", toml_config=toml_str)
         mock_group_config_repo.update_or_create_group_config.return_value = fake
 
         result = await config_service.set_group_config("g1", toml_str)
         assert result.group_id == "g1"
-        mock_group_config_repo.update_or_create_group_config.assert_awaited_once_with(
-            "g1", toml_str
+        mock_group_config_repo.update_or_create_group_config.assert_awaited_once()
+        written_toml = (
+            mock_group_config_repo.update_or_create_group_config.call_args.args[1]
         )
+        written_doc = tomlkit.parse(written_toml)
+        assert written_doc["collecting"]["pickup_interval"] == 120  # type: ignore[index]
+        assert written_doc["configure"]["cfg_version"] == ConfigSchema().configure.cfg_version  # type: ignore[index]
 
     async def test_set_invalid_toml_raises(
         self, config_service: ConfigService
     ) -> None:
         with pytest.raises(ValidationException, match="TOML 配置格式无效"):
             await config_service.set_group_config("g1", "[invalid toml =")
+
+    async def test_set_invalid_schema_raises(
+        self, config_service: ConfigService
+    ) -> None:
+        with pytest.raises(ValidationException, match="schema"):
+            await config_service.set_group_config(
+                "g1", '[collecting]\npickup_interval = "abc"'
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -190,6 +237,74 @@ class TestGetParsedConfig:
         # 解析失败应回退到默认值
         assert result.collecting.pickup_interval == 80
 
+    async def test_returns_startup_default_when_no_group_config(
+        self,
+        mock_group_config_repo: AsyncMock,
+        mock_group_repo: AsyncMock,
+    ) -> None:
+        startup_cfg = ConfigSchema()
+        startup_cfg.collecting.pickup_interval = 123
+        startup_cfg.showcase.hitokoto_url = "https://example.com/hitokoto"
+        svc = ConfigService(
+            group_config_repo=mock_group_config_repo,
+            group_repo=mock_group_repo,
+            default_config=startup_cfg,
+        )
+        mock_group_config_repo.get_toml_config_by_group_id.return_value = None
+
+        result = await svc.get_parsed_config("g1")
+
+        assert result.collecting.pickup_interval == 123
+        assert result.showcase.hitokoto_url == "https://example.com/hitokoto"
+
+    async def test_invalid_group_config_falls_back_to_startup_default(
+        self,
+        mock_group_config_repo: AsyncMock,
+        mock_group_repo: AsyncMock,
+    ) -> None:
+        startup_cfg = ConfigSchema()
+        startup_cfg.collecting.pickup_interval = 234
+        svc = ConfigService(
+            group_config_repo=mock_group_config_repo,
+            group_repo=mock_group_repo,
+            default_config=startup_cfg,
+        )
+        mock_group_config_repo.get_toml_config_by_group_id.return_value = "[broken ="
+
+        result = await svc.get_parsed_config("g1")
+
+        assert result.collecting.pickup_interval == 234
+
+    async def test_group_embedding_connection_items_do_not_override_startup_default(
+        self,
+        mock_group_config_repo: AsyncMock,
+        mock_group_repo: AsyncMock,
+    ) -> None:
+        startup_cfg = ConfigSchema()
+        startup_cfg.embedding.enabled = False
+        startup_cfg.embedding.model = "startup-model"
+        startup_cfg.embedding.default_top_n = 7
+        startup_cfg.embedding.default_threshold = 0.61
+        svc = ConfigService(
+            group_config_repo=mock_group_config_repo,
+            group_repo=mock_group_repo,
+            default_config=startup_cfg,
+        )
+        mock_group_config_repo.get_toml_config_by_group_id.return_value = (
+            "[embedding]\n"
+            "enabled = true\n"
+            'model = "group-model"\n'
+            "default_top_n = 99\n"
+            "default_threshold = 0.9\n"
+        )
+
+        result = await svc.get_parsed_config("g1")
+
+        assert result.embedding.enabled is True
+        assert result.embedding.model == "startup-model"
+        assert result.embedding.default_top_n == 7
+        assert result.embedding.default_threshold == pytest.approx(0.61)
+
 
 # ---------------------------------------------------------------------------
 # get_config_value
@@ -286,6 +401,28 @@ class TestModifySingleValue:
     ) -> None:
         with pytest.raises(ValidationException, match="不可修改"):
             await config_service.modify_single_value("g1", "llm.api_key_path", "new")
+
+    async def test_embedding_connection_item_rejected_for_group_reload(
+        self, config_service: ConfigService
+    ) -> None:
+        with pytest.raises(ValidationException, match="仅支持启动期全局配置"):
+            await config_service.modify_single_value("g1", "embedding.model", "group-model")
+
+    async def test_invalid_value_rejected_before_write(
+        self,
+        config_service: ConfigService,
+        mock_group_config_repo: AsyncMock,
+        mock_group_repo: AsyncMock,
+    ) -> None:
+        mock_group_config_repo.get_toml_config_by_group_id.return_value = None
+
+        with pytest.raises(ValidationException, match="schema"):
+            await config_service.modify_single_value(
+                "g1", "collecting.pickup_interval", "not-an-int"
+            )
+
+        mock_group_repo.ensure_group_exists.assert_not_awaited()
+        mock_group_config_repo.update_or_create_group_config.assert_not_awaited()
 
 
 # ---------------------------------------------------------------------------

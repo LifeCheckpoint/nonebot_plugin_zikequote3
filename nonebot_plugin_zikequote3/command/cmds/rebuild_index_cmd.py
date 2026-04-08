@@ -84,7 +84,7 @@ async def handle_rebuild_index(
 
     if vector_search_svc is None:
         await matcher_rebuild_index.finish(
-            "向量搜索基础设施未就绪，请检查 Embedding 配置（model、base_url、api_key_path）"
+            "向量搜索基础设施未就绪，请检查启动期全局 Embedding 配置（model、base_url、api_key_path）"
         )
 
     do_all = rebuild_all.result if rebuild_all.available else False
