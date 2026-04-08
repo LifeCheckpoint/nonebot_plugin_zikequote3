@@ -66,6 +66,7 @@ async def handle_collecting_listener(
     max_length: int = parsed_cfg.collecting.msg_max_length
     update_prob: float = parsed_cfg.collecting.update_personal_info_probability
     pickup_interval: int = parsed_cfg.collecting.pickup_interval
+    allow_duplicate: bool = parsed_cfg.collecting.enable_duplicate
 
     # 验证收录条件
     if not msg or msg == "" or len(msg) > max_length:
@@ -120,5 +121,8 @@ async def handle_collecting_listener(
 
     # 执行收集闭环（保存语录 → AI 评论 → 清理队列）
     async with silent_error_handler("LLM 收集闭环"):
-        collected = await collection_svc.collect_and_finalize(group_id)
+        collected = await collection_svc.collect_and_finalize(
+            group_id,
+            allow_duplicate=allow_duplicate,
+        )
         logger.info("筛选到 {} 条语录", len(collected))

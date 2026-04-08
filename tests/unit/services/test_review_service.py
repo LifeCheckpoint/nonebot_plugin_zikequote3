@@ -9,7 +9,11 @@ import pytest
 
 from nonebot_plugin_zikequote3.database.models.quotes import Quote
 from nonebot_plugin_zikequote3.database.models.reviews import Review
-from nonebot_plugin_zikequote3.exceptions import QuoteNotFoundError, ResourceNotFoundError
+from nonebot_plugin_zikequote3.exceptions import (
+    PermissionDeniedError,
+    QuoteNotFoundError,
+    ResourceNotFoundError,
+)
 from nonebot_plugin_zikequote3.services.review_service import (
     AUTHOR_AI,
     AUTHOR_AI_NICKNAME,
@@ -178,17 +182,84 @@ class TestDeleteReview:
     """测试 delete_review 方法。"""
 
     @pytest.mark.asyncio
-    async def test_delete_success(
+    async def test_delete_self_success(
         self,
         review_service: ReviewService,
         mock_review_repo: AsyncMock,
     ) -> None:
-        mock_review_repo.get_review_by_id.return_value = _make_review("r_001")
+        mock_review_repo.get_review_by_id.return_value = _make_review(
+            "r_001",
+            author_id="20001",
+        )
         mock_review_repo.delete_review.return_value = True
 
-        await review_service.delete_review("r_001")
+        await review_service.delete_review(
+            "r_001",
+            operator_id="20001",
+            allow_delete_others=False,
+        )
 
         mock_review_repo.delete_review.assert_awaited_once_with("r_001")
+
+    @pytest.mark.asyncio
+    async def test_delete_others_success_when_allowed(
+        self,
+        review_service: ReviewService,
+        mock_review_repo: AsyncMock,
+    ) -> None:
+        mock_review_repo.get_review_by_id.return_value = _make_review(
+            "r_002",
+            author_id="99999",
+        )
+        mock_review_repo.delete_review.return_value = True
+
+        await review_service.delete_review(
+            "r_002",
+            operator_id="20001",
+            allow_delete_others=True,
+        )
+
+        mock_review_repo.delete_review.assert_awaited_once_with("r_002")
+
+    @pytest.mark.asyncio
+    async def test_delete_other_author_without_permission_raises(
+        self,
+        review_service: ReviewService,
+        mock_review_repo: AsyncMock,
+    ) -> None:
+        mock_review_repo.get_review_by_id.return_value = _make_review(
+            "r_003",
+            author_id="99999",
+        )
+
+        with pytest.raises(PermissionDeniedError, match="仅可删除自己的评论"):
+            await review_service.delete_review(
+                "r_003",
+                operator_id="20001",
+                allow_delete_others=False,
+            )
+
+        mock_review_repo.delete_review.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_delete_missing_operator_context_raises(
+        self,
+        review_service: ReviewService,
+        mock_review_repo: AsyncMock,
+    ) -> None:
+        mock_review_repo.get_review_by_id.return_value = _make_review(
+            "r_004",
+            author_id="20001",
+        )
+
+        with pytest.raises(PermissionDeniedError, match="缺少操作者上下文"):
+            await review_service.delete_review(
+                "r_004",
+                operator_id="",
+                allow_delete_others=False,
+            )
+
+        mock_review_repo.delete_review.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_delete_not_found(
@@ -199,7 +270,11 @@ class TestDeleteReview:
         mock_review_repo.get_review_by_id.return_value = None
 
         with pytest.raises(ResourceNotFoundError, match="评论不存在"):
-            await review_service.delete_review("r_999")
+            await review_service.delete_review(
+                "r_999",
+                operator_id="20001",
+                allow_delete_others=False,
+            )
 
 
 # ------------------------------------------------------------------ #

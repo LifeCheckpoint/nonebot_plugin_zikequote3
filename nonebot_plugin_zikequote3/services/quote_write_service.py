@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from nonebot import logger
 import random
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
 from ..database.models.quotes import Quote
 from ..database.repositories.group_repository import GroupRepository
@@ -23,14 +23,16 @@ from ..database.repositories.quote_repository import QuoteRepository
 from ..exceptions import (
     DatabaseOperationError,
     ImageNotFoundError,
+    PermissionDeniedError,
     QuoteNotFoundError,
     ValidationException,
 )
+from ..vector_search.capability import (
+    UnavailableVectorSearchService,
+    VectorSearchCapability,
+)
 from .config_service import ConfigService
 from .user_service import UserService
-
-if TYPE_CHECKING:
-    from ..vector_search.search_service import VectorSearchService
 
 def _generate_quote_id() -> str:
     """
@@ -63,7 +65,7 @@ class QuoteWriteService:
         user_service: UserService,
         config_service: ConfigService,
         group_repo: GroupRepository | None = None,
-        vector_search_svc: VectorSearchService | None = None,
+        vector_search_svc: VectorSearchCapability | None = None,
     ) -> None:
         self._quote_repo = quote_repo
         self._image_repo = image_repo
@@ -71,7 +73,9 @@ class QuoteWriteService:
         self._user_service = user_service
         self._config_service = config_service
         self._group_repo = group_repo
-        self._vector_search_svc = vector_search_svc
+        self._vector_search_svc = vector_search_svc or UnavailableVectorSearchService(
+            "未提供向量搜索能力"
+        )
 
     # ------------------------------------------------------------------ #
     #  添加语录
@@ -239,17 +243,39 @@ class QuoteWriteService:
     #  删除语录
     # ------------------------------------------------------------------ #
 
-    async def delete_quote(self, quote_id: str) -> None:
+    async def get_quote_by_id(self, quote_id: str) -> Optional[Quote]:
+        """按语录 ID 查询语录对象。"""
+        return await self._quote_repo.get_quote_by_id(quote_id)
+
+    async def delete_quote(
+        self,
+        quote_id: str,
+        *,
+        operator_id: str,
+        allow_delete_others: bool = False,
+    ) -> None:
         """
         删除语录。
 
         :param quote_id: 语录 ID
         :type quote_id: str
+        :param operator_id: 执行删除的操作者 ID
+        :type operator_id: str
+        :param allow_delete_others: 是否允许删除他人语录
+        :type allow_delete_others: bool
         :raises QuoteNotFoundError: 语录不存在
+        :raises PermissionDeniedError: 操作者无权删除该语录
         """
         existing = await self._quote_repo.get_quote_by_id(quote_id)
         if existing is None:
             raise QuoteNotFoundError(f"语录不存在: {quote_id}")
+
+        self._ensure_delete_permission(
+            quote_id=quote_id,
+            owner_id=existing.author_id,
+            operator_id=operator_id,
+            allow_delete_others=allow_delete_others,
+        )
 
         deleted = await self._quote_repo.delete_quote(quote_id)
         if not deleted:
@@ -262,6 +288,31 @@ class QuoteWriteService:
 
         # 异步删除向量索引（不影响主流程）
         await self._try_remove_quote(quote_id, existing.group_id)
+
+    def _ensure_delete_permission(
+        self,
+        *,
+        quote_id: str,
+        owner_id: str,
+        operator_id: str,
+        allow_delete_others: bool,
+    ) -> None:
+        """校验删除语录时的操作者归属约束。"""
+        if not operator_id:
+            raise PermissionDeniedError(
+                f"删除语录缺少操作者上下文（quote_id={quote_id}）"
+            )
+        if owner_id == operator_id or allow_delete_others:
+            return
+
+        logger.warning(
+            "越权删除语录被拒绝: quote_id={}, owner={}, operator={}, allow_delete_others={}",
+            quote_id,
+            owner_id,
+            operator_id,
+            allow_delete_others,
+        )
+        raise PermissionDeniedError(f"仅可删除自己的语录（quote_id={quote_id}）")
 
     # ------------------------------------------------------------------ #
     #  消息ID → 语录ID 映射（原 mapping_service.py）
@@ -298,12 +349,12 @@ class QuoteWriteService:
     async def _try_index_quote(self, quote: Quote) -> None:
         """尝试为语录建立向量索引，失败仅记录日志。
 
-        当向量搜索服务未注入或群组未启用 embedding 时静默跳过。
+        当向量能力不可用或群组未启用 embedding 时静默跳过。
 
         :param quote: 待索引的语录对象。
         :type quote: Quote
         """
-        if self._vector_search_svc is None:
+        if not self._vector_search_svc.get_status().available:
             return
         try:
             cfg = await self._config_service.get_parsed_config(quote.group_id)
@@ -316,14 +367,14 @@ class QuoteWriteService:
     async def _try_remove_quote(self, quote_id: str, group_id: str) -> None:
         """尝试删除语录的向量索引，失败仅记录日志。
 
-        当向量搜索服务未注入或群组未启用 embedding 时静默跳过。
+        当向量能力不可用或群组未启用 embedding 时静默跳过。
 
         :param quote_id: 待删除索引的语录 ID。
         :type quote_id: str
         :param group_id: 群组 ID。
         :type group_id: str
         """
-        if self._vector_search_svc is None:
+        if not self._vector_search_svc.get_status().available:
             return
         try:
             cfg = await self._config_service.get_parsed_config(group_id)

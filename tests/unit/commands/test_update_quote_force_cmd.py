@@ -5,6 +5,7 @@ update_quote_force_cmd 命令处理器单元测试。
 - handle_update_quote_force：强制更新语录
   - 成功 / 已有任务进行中 / 收集闭环异常 / 无新语录
   - 命令层仅依赖 collect_and_finalize，不再手工编排评论与清队列
+  - 显式透传重复策略配置
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from nonebot.exception import FinishedException
 
+from nonebot_plugin_zikequote3.services.config_service import ConfigService
 from nonebot_plugin_zikequote3.services.quote_collection_service import (
     CollectedQuote,
     QuoteCollectionService,
@@ -32,6 +34,12 @@ matcher_update_quote_force: MagicMock = getattr(
 from nonebot_plugin_zikequote3.command.cmds.update_quote_force_cmd import (  # noqa: E402
     handle_update_quote_force,
 )
+
+
+def _make_config(enable_duplicate: bool) -> MagicMock:
+    cfg = MagicMock()
+    cfg.collecting.enable_duplicate = enable_duplicate
+    return cfg
 
 
 class TestHandleUpdateQuoteForce:
@@ -53,7 +61,13 @@ class TestHandleUpdateQuoteForce:
         mock_collection_svc.collect_and_save = AsyncMock(return_value=collected)
         mock_collection_svc.clear_queue = AsyncMock(return_value=None)
 
-        patch_container({QuoteCollectionService: mock_collection_svc})
+        mock_config_svc = AsyncMock(spec=ConfigService)
+        mock_config_svc.get_parsed_config = AsyncMock(return_value=_make_config(False))
+
+        patch_container({
+            QuoteCollectionService: mock_collection_svc,
+            ConfigService: mock_config_svc,
+        })
 
         with pytest.raises(FinishedException):
             await handle_update_quote_force(
@@ -61,7 +75,11 @@ class TestHandleUpdateQuoteForce:
                 state={},
             )
 
-        mock_collection_svc.collect_and_finalize.assert_awaited_once_with("123456")
+        mock_config_svc.get_parsed_config.assert_awaited_once_with("123456")
+        mock_collection_svc.collect_and_finalize.assert_awaited_once_with(
+            "123456",
+            allow_duplicate=False,
+        )
         mock_collection_svc.collect_and_save.assert_not_awaited()
         mock_collection_svc.clear_queue.assert_not_awaited()
         finish_calls = matcher_update_quote_force.finish.call_args_list
@@ -75,7 +93,13 @@ class TestHandleUpdateQuoteForce:
         mock_collection_svc = AsyncMock(spec=QuoteCollectionService)
         mock_collection_svc.is_collecting = MagicMock(return_value=True)
 
-        patch_container({QuoteCollectionService: mock_collection_svc})
+        mock_config_svc = AsyncMock(spec=ConfigService)
+        mock_config_svc.get_parsed_config = AsyncMock(return_value=_make_config(False))
+
+        patch_container({
+            QuoteCollectionService: mock_collection_svc,
+            ConfigService: mock_config_svc,
+        })
 
         with pytest.raises(FinishedException):
             await handle_update_quote_force(
@@ -98,7 +122,13 @@ class TestHandleUpdateQuoteForce:
             side_effect=RuntimeError("LLM service unavailable")
         )
 
-        patch_container({QuoteCollectionService: mock_collection_svc})
+        mock_config_svc = AsyncMock(spec=ConfigService)
+        mock_config_svc.get_parsed_config = AsyncMock(return_value=_make_config(False))
+
+        patch_container({
+            QuoteCollectionService: mock_collection_svc,
+            ConfigService: mock_config_svc,
+        })
 
         with pytest.raises(FinishedException):
             await handle_update_quote_force(
@@ -120,7 +150,13 @@ class TestHandleUpdateQuoteForce:
         mock_collection_svc.collect_and_save = AsyncMock(return_value=[])
         mock_collection_svc.clear_queue = AsyncMock(return_value=None)
 
-        patch_container({QuoteCollectionService: mock_collection_svc})
+        mock_config_svc = AsyncMock(spec=ConfigService)
+        mock_config_svc.get_parsed_config = AsyncMock(return_value=_make_config(False))
+
+        patch_container({
+            QuoteCollectionService: mock_collection_svc,
+            ConfigService: mock_config_svc,
+        })
 
         with pytest.raises(FinishedException):
             await handle_update_quote_force(
@@ -128,8 +164,39 @@ class TestHandleUpdateQuoteForce:
                 state={},
             )
 
-        mock_collection_svc.collect_and_finalize.assert_awaited_once_with("123456")
+        mock_collection_svc.collect_and_finalize.assert_awaited_once_with(
+            "123456",
+            allow_duplicate=False,
+        )
         mock_collection_svc.collect_and_save.assert_not_awaited()
         mock_collection_svc.clear_queue.assert_not_awaited()
         finish_calls = matcher_update_quote_force.finish.call_args_list
         assert any("0" in str(c) for c in finish_calls)
+
+    async def test_collect_passes_duplicate_enabled_from_config(
+        self,
+        patch_container,
+        mock_group_event: MagicMock,
+    ) -> None:
+        mock_collection_svc = AsyncMock(spec=QuoteCollectionService)
+        mock_collection_svc.is_collecting = MagicMock(return_value=False)
+        mock_collection_svc.collect_and_finalize = AsyncMock(return_value=[])
+
+        mock_config_svc = AsyncMock(spec=ConfigService)
+        mock_config_svc.get_parsed_config = AsyncMock(return_value=_make_config(True))
+
+        patch_container({
+            QuoteCollectionService: mock_collection_svc,
+            ConfigService: mock_config_svc,
+        })
+
+        with pytest.raises(FinishedException):
+            await handle_update_quote_force(
+                event=mock_group_event,
+                state={},
+            )
+
+        mock_collection_svc.collect_and_finalize.assert_awaited_once_with(
+            "123456",
+            allow_duplicate=True,
+        )

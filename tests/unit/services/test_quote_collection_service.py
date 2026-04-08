@@ -327,7 +327,7 @@ class TestCollectionLockAcrossInstances:
         assert svc2.is_collecting("12345")
 
         with pytest.raises(CollectionLockError):
-            await svc2.collect_and_save("12345")
+            await svc2.collect_and_save("12345", allow_duplicate=False)
 
         mock_msg_queue_repo.get_msgs_by_group.assert_not_awaited()
         svc1.release_lock("12345")
@@ -349,7 +349,10 @@ class TestCollectAndSave:
         mock_msg_queue_repo.get_msgs_by_group.return_value = []
 
         with pytest.raises(ValidationException, match="队列为空"):
-            await quote_collection_service.collect_and_save("12345")
+            await quote_collection_service.collect_and_save(
+                "12345",
+                allow_duplicate=False,
+            )
 
     @pytest.mark.asyncio
     async def test_collect_saves_quotes(
@@ -372,12 +375,68 @@ class TestCollectAndSave:
             return_value="99999999999",
         ):
             mock_quote_repo.create_quote.return_value = None
-            result = await quote_collection_service.collect_and_save("12345")
+            result = await quote_collection_service.collect_and_save(
+                "12345",
+                allow_duplicate=True,
+            )
 
         assert len(result) == 1
         assert isinstance(result[0], CollectedQuote)
         assert result[0].quote_id == "99999999999"
         assert result[0].comment is None
+
+    @pytest.mark.asyncio
+    async def test_collect_skips_duplicates_when_disabled(
+        self,
+        quote_collection_service: QuoteCollectionService,
+        mock_msg_queue_repo: AsyncMock,
+        mock_quote_repo: AsyncMock,
+        mock_user_repo: AsyncMock,
+    ) -> None:
+        msg = _make_msg(content="重复内容")
+        mock_msg_queue_repo.get_msgs_by_group.return_value = [msg]
+        mock_user_repo.get_by_qq_id.return_value = None
+        mock_user_repo.create_user.return_value = None
+        mock_quote_repo.check_quote_exists_by_author_content.return_value = True
+
+        result = await quote_collection_service.collect_and_save(
+            "12345",
+            allow_duplicate=False,
+        )
+
+        assert result == []
+        mock_quote_repo.check_quote_exists_by_author_content.assert_awaited_once_with(
+            "10001",
+            "重复内容",
+        )
+        mock_quote_repo.create_quote.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_collect_allows_duplicates_when_enabled(
+        self,
+        quote_collection_service: QuoteCollectionService,
+        mock_msg_queue_repo: AsyncMock,
+        mock_quote_repo: AsyncMock,
+        mock_user_repo: AsyncMock,
+    ) -> None:
+        msg = _make_msg(content="重复内容")
+        mock_msg_queue_repo.get_msgs_by_group.return_value = [msg]
+        mock_user_repo.get_by_qq_id.return_value = None
+        mock_user_repo.create_user.return_value = None
+        mock_quote_repo.check_quote_exists_by_author_content.return_value = True
+
+        with patch(
+            "nonebot_plugin_zikequote3.services.quote_write_service._generate_quote_id",
+            return_value="12345678901",
+        ):
+            mock_quote_repo.create_quote.return_value = None
+            result = await quote_collection_service.collect_and_save(
+                "12345",
+                allow_duplicate=True,
+            )
+
+        assert [item.quote_id for item in result] == ["12345678901"]
+        mock_quote_repo.check_quote_exists_by_author_content.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_collect_releases_lock_on_error(
@@ -388,7 +447,10 @@ class TestCollectAndSave:
         mock_msg_queue_repo.get_msgs_by_group.return_value = []
 
         with pytest.raises(ValidationException):
-            await quote_collection_service.collect_and_save("12345")
+            await quote_collection_service.collect_and_save(
+                "12345",
+                allow_duplicate=False,
+            )
 
         # 锁应该已释放
         assert not quote_collection_service.is_collecting("12345")
@@ -403,7 +465,10 @@ class TestCollectAndSave:
         quote_collection_service.acquire_lock("12345")
 
         with pytest.raises(CollectionLockError):
-            await quote_collection_service.collect_and_save("12345")
+            await quote_collection_service.collect_and_save(
+                "12345",
+                allow_duplicate=False,
+            )
 
         quote_collection_service.release_lock("12345")
 
@@ -457,7 +522,10 @@ class TestCollectAndFinalize:
             return_value="66666666666",
         ):
             mock_quote_repo.create_quote.return_value = None
-            result = await svc.collect_and_finalize("12345")
+            result = await svc.collect_and_finalize(
+                "12345",
+                allow_duplicate=True,
+            )
 
         assert len(result) == 1
         mock_review_service.add_review.assert_awaited_once_with(
@@ -515,7 +583,10 @@ class TestCollectAndFinalize:
         ):
             mock_quote_repo.create_quote.return_value = None
             with pytest.raises(RuntimeError, match="AI review failed"):
-                await svc.collect_and_finalize("12345")
+                await svc.collect_and_finalize(
+                    "12345",
+                    allow_duplicate=True,
+                )
 
         mock_msg_queue_repo.clear_group_queue.assert_not_awaited()
         assert not svc.is_collecting("12345")
@@ -601,7 +672,10 @@ class TestCollectAndSaveWithComment:
             return_value="88888888888",
         ):
             mock_quote_repo.create_quote.return_value = None
-            result = await svc.collect_and_save("12345")
+            result = await svc.collect_and_save(
+                "12345",
+                allow_duplicate=True,
+            )
 
         assert len(result) == 1
         assert isinstance(result[0], CollectedQuote)
@@ -654,7 +728,10 @@ class TestCollectAndSaveWithComment:
             return_value="77777777777",
         ):
             mock_quote_repo.create_quote.return_value = None
-            result = await svc.collect_and_save("12345")
+            result = await svc.collect_and_save(
+                "12345",
+                allow_duplicate=True,
+            )
 
         assert len(result) == 1
         assert result[0].quote_id == "77777777777"

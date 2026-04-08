@@ -343,8 +343,8 @@ class QuoteCollectionService:
         self,
         group_id: str,
         *,
+        allow_duplicate: bool,
         limit: Optional[int] = None,
-        allow_duplicate: bool = True,
     ) -> list[CollectedQuote]:
         """
         执行收集流程：从队列取出消息 → 筛选 → 保存为语录。
@@ -374,8 +374,8 @@ class QuoteCollectionService:
         self,
         group_id: str,
         *,
+        allow_duplicate: bool,
         limit: Optional[int] = None,
-        allow_duplicate: bool = True,
     ) -> list[CollectedQuote]:
         """
         执行完整收集闭环：保存语录 → 追加 AI 评论 → 清理队列。
@@ -400,8 +400,8 @@ class QuoteCollectionService:
         self,
         group_id: str,
         *,
+        allow_duplicate: bool,
         limit: Optional[int] = None,
-        allow_duplicate: bool = True,
     ) -> list[CollectedQuote]:
         """
         收集流程内部实现。

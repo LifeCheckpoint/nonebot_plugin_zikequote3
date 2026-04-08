@@ -161,7 +161,10 @@ class TestQuoteCollectionConsistency:
                 return_value=quote_id,
             ):
                 with pytest.raises(RuntimeError, match="review failed"):
-                    await failing_stack.collection_service.collect_and_finalize(group_id)
+                    await failing_stack.collection_service.collect_and_finalize(
+                        group_id,
+                        allow_duplicate=False,
+                    )
                 await failing_session.rollback()
 
         # 回滚后：语录未落库，原队列仍保留，不会形成“已存语录 + 脏队列”窗口。
@@ -194,7 +197,10 @@ class TestQuoteCollectionConsistency:
                 "nonebot_plugin_zikequote3.services.quote_write_service._generate_quote_id",
                 return_value=quote_id,
             ):
-                collected = await success_stack.collection_service.collect_and_finalize(group_id)
+                collected = await success_stack.collection_service.collect_and_finalize(
+                    group_id,
+                    allow_duplicate=False,
+                )
             await success_session.commit()
 
         assert [item.quote_id for item in collected] == [quote_id]

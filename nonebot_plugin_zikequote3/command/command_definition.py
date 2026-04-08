@@ -129,7 +129,8 @@ matcher_remove_quote = on_command(
     aliases=set(cmdname_remove_quote[1:]),
     priority=10, block=True
 )
-perm_nodes.n_quote_delete.patch_matcher(matcher_remove_quote)
+# 删除权限需要在命令处理阶段依据资源归属细分到 self / others 节点，
+# 因此此处不再绑定粗粒度 delete 节点。
 
 
 cmdname_remove_quote_image = (
@@ -166,7 +167,8 @@ matcher_remove_quote_comment = on_command(
     aliases=set(cmdname_remove_quote_comment[1:]),
     priority=10, block=True
 )
-perm_nodes.n_review_delete.patch_matcher(matcher_remove_quote_comment)
+# 删除权限需要在命令处理阶段依据资源归属细分到 self / others 节点，
+# 因此此处不再绑定粗粒度 delete 节点。
 
 
 # endregion

@@ -15,7 +15,11 @@ from typing import Optional, Sequence
 from ..database.models.reviews import Review
 from ..database.repositories.quote_repository import QuoteRepository
 from ..database.repositories.review_repository import ReviewRepository
-from ..exceptions import QuoteNotFoundError, ResourceNotFoundError
+from ..exceptions import (
+    PermissionDeniedError,
+    QuoteNotFoundError,
+    ResourceNotFoundError,
+)
 from .user_service import UserService
 
 AUTHOR_AI = "-1"
@@ -131,23 +135,66 @@ class ReviewService:
     #  删除评论
     # ------------------------------------------------------------------ #
 
-    async def delete_review(self, review_id: str) -> None:
+    async def delete_review(
+        self,
+        review_id: str,
+        *,
+        operator_id: str,
+        allow_delete_others: bool = False,
+    ) -> None:
         """
         删除评论。
 
         :param review_id: 评论 ID
         :type review_id: str
+        :param operator_id: 执行删除的操作者 ID
+        :type operator_id: str
+        :param allow_delete_others: 是否允许删除他人评论
+        :type allow_delete_others: bool
         :raises ResourceNotFoundError: 评论不存在
+        :raises PermissionDeniedError: 操作者无权删除该评论
         """
         existing = await self._review_repo.get_review_by_id(review_id)
         if existing is None:
             raise ResourceNotFoundError(f"评论不存在: {review_id}")
+
+        self._ensure_delete_permission(
+            review_id=review_id,
+            owner_id=existing.author_id,
+            operator_id=operator_id,
+            allow_delete_others=allow_delete_others,
+        )
 
         deleted = await self._review_repo.delete_review(review_id)
         if not deleted:
             raise ResourceNotFoundError(f"删除评论失败: {review_id}")
 
         logger.info("评论已删除: review_id={}", review_id)
+
+    def _ensure_delete_permission(
+        self,
+        *,
+        review_id: str,
+        owner_id: str,
+        operator_id: str,
+        allow_delete_others: bool,
+    ) -> None:
+        """校验删除评论时的操作者归属约束。"""
+        if not operator_id:
+            raise PermissionDeniedError(
+                f"删除评论缺少操作者上下文（review_id={review_id}）"
+            )
+        if owner_id == operator_id or allow_delete_others:
+            return
+
+        logger.warning(
+            "越权删除评论被拒绝: review_id={}, owner={}, operator={}, allow_delete_others={}",
+            review_id,
+            owner_id,
+            operator_id,
+            allow_delete_others,
+        )
+        raise PermissionDeniedError(f"仅可删除自己的评论（review_id={review_id}）")
 
     # ------------------------------------------------------------------ #
     #  统计

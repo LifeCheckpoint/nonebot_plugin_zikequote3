@@ -15,8 +15,9 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot.adapters import Message
 from nonebot.params import CommandArg
 
-from ..command_definition import matcher_remove_quote_comment
+from ..command_definition import matcher_remove_quote_comment, perm_nodes
 from ...di import Inject, inject
+from ...exceptions import PermissionDeniedError
 from ...services import ReviewService
 from ._error_handlers import command_error_handler
 
@@ -48,9 +49,40 @@ async def handle_remove_quote_comment(
             "请提供要删除的评论 ID 哦~\n用法：/删评论 评论ID"
         )
 
+    operator_id = str(event.user_id)
+
     async with command_error_handler(
         matcher_remove_quote_comment, "删除评论"
     ):
-        await review_svc.delete_review(review_id)
+        allow_delete_others = False
+        review = await review_svc.get_review_by_id(review_id)
+        if review is not None:
+            if review.author_id == operator_id:
+                allowed = await perm_nodes.n_review_delete_self.check(
+                    bot,
+                    event,
+                    throw_on_fail=False,
+                )
+                if not allowed:
+                    raise PermissionDeniedError(
+                        f"缺少删除自己评论权限（review_id={review_id}）"
+                    )
+            else:
+                allowed = await perm_nodes.n_review_delete_others.check(
+                    bot,
+                    event,
+                    throw_on_fail=False,
+                )
+                if not allowed:
+                    raise PermissionDeniedError(
+                        f"缺少删除他人评论权限（review_id={review_id}）"
+                    )
+                allow_delete_others = True
+
+        await review_svc.delete_review(
+            review_id,
+            operator_id=operator_id,
+            allow_delete_others=allow_delete_others,
+        )
 
     await matcher_remove_quote_comment.finish("评论删除成功~(≧▽≦)")

@@ -47,10 +47,12 @@ if "nonebot_plugin_zikequote3.di" not in sys.modules:
 
 # di.inject 和 di.nonebot_integration 可安全导入（仅依赖 dishka）
 from nonebot_plugin_zikequote3.di.inject import Inject, inject  # noqa: E402
+from nonebot_plugin_zikequote3.di.nonebot_integration import get_container  # noqa: E402
 
 _di_mod = sys.modules["nonebot_plugin_zikequote3.di"]
 _di_mod.Inject = Inject  # type: ignore[attr-defined]
 _di_mod.inject = inject  # type: ignore[attr-defined]
+_di_mod.get_container = get_container  # type: ignore[attr-defined]
 
 # ---------------------------------------------------------------------------
 # 2) 填充 services stub —— 使 handler 的 from ...services import XxxService 可用
@@ -137,6 +139,7 @@ _ALL_MATCHER_NAMES = [
     "matcher_batch_modify_config",
     "matcher_reset_config",
     "matcher_reload_config",
+    "matcher_rebuild_index",
     "matcher_group_migration",
     "matcher_get_privacy",
     "matcher_get_help",
@@ -164,6 +167,24 @@ _stub_default_cfg.showcase.max_rank_user_num = 40
 _stub_default_cfg.comment.enable_comment_without_prefix = False
 _stub_cmd_def.default_cfg = _stub_default_cfg  # type: ignore[attr-defined]
 
+
+class _StubPermNode:
+    """最小权限节点 stub，仅暴露命令测试所需的 `check()`。"""
+
+    def __init__(self) -> None:
+        self.check = AsyncMock(return_value=True)
+
+
+class _StubPermNodes:
+    def __init__(self) -> None:
+        self.n_quote_delete_self = _StubPermNode()
+        self.n_quote_delete_others = _StubPermNode()
+        self.n_review_delete_self = _StubPermNode()
+        self.n_review_delete_others = _StubPermNode()
+
+
+_stub_cmd_def.perm_nodes = _StubPermNodes()  # type: ignore[attr-defined]
+
 sys.modules[
     "nonebot_plugin_zikequote3.command.command_definition"
 ] = _stub_cmd_def
@@ -188,10 +209,20 @@ def make_mock_container(
         ``mock_container()`` 作为 async context manager 返回 ``mock_scope``，
         ``mock_scope.get(service_type)`` 从 *service_map* 中查找并返回实例。
     """
+    def _resolve_service(svc_type: type) -> Any:
+        if svc_type in service_map:
+            return service_map[svc_type]
+
+        for registered_type, instance in service_map.items():
+            if not isinstance(registered_type, type) or not isinstance(svc_type, type):
+                continue
+            if issubclass(registered_type, svc_type) or issubclass(svc_type, registered_type):
+                return instance
+
+        raise KeyError(svc_type)
+
     mock_scope = AsyncMock()
-    mock_scope.get = AsyncMock(
-        side_effect=lambda svc_type: service_map[svc_type]
-    )
+    mock_scope.get = AsyncMock(side_effect=_resolve_service)
 
     # scope 需要支持 async with
     mock_scope.__aenter__ = AsyncMock(return_value=mock_scope)
@@ -231,13 +262,24 @@ def create_mock_matcher() -> MagicMock:
 
 @pytest.fixture(autouse=True)
 def _reset_stub_matchers():
-    """每个测试前重置所有 stub matcher 的调用记录。"""
+    """每个测试前重置所有 stub matcher 与权限节点的调用记录。"""
     for name in _ALL_MATCHER_NAMES:
         matcher = getattr(_stub_cmd_def, name)
         matcher.finish.reset_mock()
         matcher.finish.side_effect = FinishedException
         matcher.send.reset_mock()
         matcher.send.return_value = {"message_id": 12345}
+
+    for node_name in (
+        "n_quote_delete_self",
+        "n_quote_delete_others",
+        "n_review_delete_self",
+        "n_review_delete_others",
+    ):
+        node = getattr(_stub_cmd_def.perm_nodes, node_name)
+        node.check.reset_mock()
+        node.check.return_value = True
+        node.check.side_effect = None
     yield
 
 

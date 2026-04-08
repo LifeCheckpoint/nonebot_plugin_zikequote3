@@ -14,7 +14,7 @@ from nonebot.typing import T_State
 
 from ..command_definition import matcher_update_quote_force
 from ...di import Inject, inject
-from ...services import QuoteCollectionService
+from ...services import ConfigService, QuoteCollectionService
 from ._error_handlers import command_error_handler
 
 @matcher_update_quote_force.handle()
@@ -23,6 +23,7 @@ async def handle_update_quote_force(
     event: GroupMessageEvent,
     state: T_State,
     collection_svc: QuoteCollectionService = Inject(QuoteCollectionService),
+    config_svc: ConfigService = Inject(ConfigService),
 ) -> None:
     """
     处理强制更新语录命令。
@@ -37,6 +38,8 @@ async def handle_update_quote_force(
     :type collection_svc: QuoteCollectionService
     """
     group_id = str(event.group_id)
+    parsed_cfg = await config_svc.get_parsed_config(group_id)
+    allow_duplicate = parsed_cfg.collecting.enable_duplicate
 
     # 检查是否已有收集任务在进行中
     if collection_svc.is_collecting(group_id):
@@ -48,7 +51,10 @@ async def handle_update_quote_force(
         matcher_update_quote_force, "语录强制更新"
     ):
         # 执行收集闭环（包含锁、队列取出、筛选、保存、AI 评论与清队列）
-        collected = await collection_svc.collect_and_finalize(group_id)
+        collected = await collection_svc.collect_and_finalize(
+            group_id,
+            allow_duplicate=allow_duplicate,
+        )
 
     num_quotes = len(collected)
     await matcher_update_quote_force.finish(

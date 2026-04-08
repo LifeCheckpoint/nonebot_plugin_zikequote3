@@ -14,6 +14,7 @@ from nonebot_plugin_zikequote3.database.models.quotes import Quote
 from nonebot_plugin_zikequote3.exceptions import (
     DatabaseOperationError,
     ImageNotFoundError,
+    PermissionDeniedError,
     QuoteNotFoundError,
     ValidationException,
 )
@@ -244,20 +245,75 @@ class TestDeleteQuote:
     """测试 delete_quote 方法。"""
 
     @pytest.mark.asyncio
-    async def test_delete_success(
+    async def test_delete_self_success(
         self, quote_write_service: QuoteWriteService,
         mock_quote_repo: AsyncMock, mock_mapping_repo: AsyncMock,
     ) -> None:
-        """删除语录成功，同时清理映射。"""
-        mock_quote_repo.get_quote_by_id.return_value = _make_quote()
+        """删除自己的语录成功，同时清理映射。"""
+        mock_quote_repo.get_quote_by_id.return_value = _make_quote(author_id="12345")
         mock_quote_repo.delete_quote.return_value = True
 
-        await quote_write_service.delete_quote("10000000001")
+        await quote_write_service.delete_quote(
+            "10000000001",
+            operator_id="12345",
+            allow_delete_others=False,
+        )
 
         mock_quote_repo.delete_quote.assert_awaited_once_with("10000000001")
         mock_mapping_repo.delete_mappings_by_quote_id.assert_awaited_once_with(
             "10000000001",
         )
+
+    @pytest.mark.asyncio
+    async def test_delete_others_success_when_allowed(
+        self, quote_write_service: QuoteWriteService,
+        mock_quote_repo: AsyncMock,
+    ) -> None:
+        """显式放行时允许删除他人语录。"""
+        mock_quote_repo.get_quote_by_id.return_value = _make_quote(author_id="99999")
+        mock_quote_repo.delete_quote.return_value = True
+
+        await quote_write_service.delete_quote(
+            "10000000001",
+            operator_id="12345",
+            allow_delete_others=True,
+        )
+
+        mock_quote_repo.delete_quote.assert_awaited_once_with("10000000001")
+
+    @pytest.mark.asyncio
+    async def test_delete_other_author_without_permission_raises(
+        self, quote_write_service: QuoteWriteService,
+        mock_quote_repo: AsyncMock,
+    ) -> None:
+        """即使命令层被绕过，服务层仍应阻止越权删除。"""
+        mock_quote_repo.get_quote_by_id.return_value = _make_quote(author_id="99999")
+
+        with pytest.raises(PermissionDeniedError, match="仅可删除自己的语录"):
+            await quote_write_service.delete_quote(
+                "10000000001",
+                operator_id="12345",
+                allow_delete_others=False,
+            )
+
+        mock_quote_repo.delete_quote.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_delete_missing_operator_context_raises(
+        self, quote_write_service: QuoteWriteService,
+        mock_quote_repo: AsyncMock,
+    ) -> None:
+        """缺少操作者上下文时应返回可诊断的权限错误。"""
+        mock_quote_repo.get_quote_by_id.return_value = _make_quote(author_id="12345")
+
+        with pytest.raises(PermissionDeniedError, match="缺少操作者上下文"):
+            await quote_write_service.delete_quote(
+                "10000000001",
+                operator_id="",
+                allow_delete_others=False,
+            )
+
+        mock_quote_repo.delete_quote.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_delete_nonexistent_raises(
@@ -268,7 +324,11 @@ class TestDeleteQuote:
         mock_quote_repo.get_quote_by_id.return_value = None
 
         with pytest.raises(QuoteNotFoundError):
-            await quote_write_service.delete_quote("nonexistent")
+            await quote_write_service.delete_quote(
+                "nonexistent",
+                operator_id="12345",
+                allow_delete_others=False,
+            )
 
     @pytest.mark.asyncio
     async def test_delete_repo_failure_raises(
@@ -276,11 +336,15 @@ class TestDeleteQuote:
         mock_quote_repo: AsyncMock,
     ) -> None:
         """Repository 删除返回 False 时抛出 DatabaseOperationError。"""
-        mock_quote_repo.get_quote_by_id.return_value = _make_quote()
+        mock_quote_repo.get_quote_by_id.return_value = _make_quote(author_id="12345")
         mock_quote_repo.delete_quote.return_value = False
 
         with pytest.raises(DatabaseOperationError):
-            await quote_write_service.delete_quote("10000000001")
+            await quote_write_service.delete_quote(
+                "10000000001",
+                operator_id="12345",
+                allow_delete_others=False,
+            )
 
 
 # ================================================================== #

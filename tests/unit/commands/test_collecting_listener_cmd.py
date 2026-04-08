@@ -52,6 +52,7 @@ def _make_parsed_cfg(
     update_prob: float = 0.0,
     pickup_interval: int = 50,
     enable_auto_collect: bool = True,
+    enable_duplicate: bool = False,
 ) -> MagicMock:
     """创建模拟的 parsed config 对象。"""
     cfg = MagicMock()
@@ -59,6 +60,7 @@ def _make_parsed_cfg(
     cfg.collecting.msg_max_length = msg_max_length
     cfg.collecting.update_personal_info_probability = update_prob
     cfg.collecting.pickup_interval = pickup_interval
+    cfg.collecting.enable_duplicate = enable_duplicate
     return cfg
 
 
@@ -261,7 +263,7 @@ class TestHandleCollectingListenerCollection:
             CollectedQuote(quote_id="Q-1", comment="好语录"),
             CollectedQuote(quote_id="Q-2", comment=None),
         ]
-        svcs = _build_services()
+        svcs = _build_services(parsed_cfg=_make_parsed_cfg(enable_duplicate=False))
         svcs["collection_svc"].should_trigger_collection = AsyncMock(return_value=True)
         svcs["collection_svc"].is_collecting = MagicMock(return_value=False)
         svcs["collection_svc"].collect_and_finalize = AsyncMock(return_value=collected)
@@ -272,7 +274,10 @@ class TestHandleCollectingListenerCollection:
             bot=mock_bot,
         )
 
-        svcs["collection_svc"].collect_and_finalize.assert_awaited_once_with("123456")
+        svcs["collection_svc"].collect_and_finalize.assert_awaited_once_with(
+            "123456",
+            allow_duplicate=False,
+        )
         svcs["collection_svc"].collect_and_save.assert_not_awaited()
         svcs["collection_svc"].clear_queue.assert_not_awaited()
 
@@ -281,7 +286,7 @@ class TestHandleCollectingListenerCollection:
         patch_container,
         mock_bot: MagicMock,
     ) -> None:
-        svcs = _build_services()
+        svcs = _build_services(parsed_cfg=_make_parsed_cfg(enable_duplicate=False))
         svcs["collection_svc"].should_trigger_collection = AsyncMock(return_value=True)
         svcs["collection_svc"].is_collecting = MagicMock(return_value=False)
         svcs["collection_svc"].collect_and_finalize = AsyncMock(return_value=[])
@@ -292,8 +297,32 @@ class TestHandleCollectingListenerCollection:
             bot=mock_bot,
         )
 
-        svcs["collection_svc"].collect_and_finalize.assert_awaited_once_with("123456")
+        svcs["collection_svc"].collect_and_finalize.assert_awaited_once_with(
+            "123456",
+            allow_duplicate=False,
+        )
         svcs["collection_svc"].clear_queue.assert_not_awaited()
+
+    async def test_collect_passes_duplicate_enabled_from_config(
+        self,
+        patch_container,
+        mock_bot: MagicMock,
+    ) -> None:
+        svcs = _build_services(parsed_cfg=_make_parsed_cfg(enable_duplicate=True))
+        svcs["collection_svc"].should_trigger_collection = AsyncMock(return_value=True)
+        svcs["collection_svc"].is_collecting = MagicMock(return_value=False)
+        svcs["collection_svc"].collect_and_finalize = AsyncMock(return_value=[])
+        _patch_services(patch_container, svcs)
+
+        await handle_collecting_listener(
+            event=_make_event(plaintext="正常消息"),
+            bot=mock_bot,
+        )
+
+        svcs["collection_svc"].collect_and_finalize.assert_awaited_once_with(
+            "123456",
+            allow_duplicate=True,
+        )
 
     async def test_collect_finalize_error_raises_finished(
         self,
