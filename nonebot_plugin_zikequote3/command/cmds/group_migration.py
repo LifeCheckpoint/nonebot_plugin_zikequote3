@@ -209,7 +209,6 @@ async def handle_group_migration(
     exclude_member: Query[bool] = Query("exclude_member.value", False),
     clear_member_info: Query[bool] = Query("clear_member_info.value", False),
     keep_source: Query[bool] = Query("keep_source.value", False),
-    **_unused: Any,
 ) -> None:
     """
     处理群语录迁移命令。
@@ -217,7 +216,6 @@ async def handle_group_migration(
     批量迁移一个群的语录到另一个群，支持覆写、去重、排除非成员等选项。
     迁移前生成确认卡片，需用户输入 Token 确认后执行。
 
-    ``_unused`` 仅用于兼容直接调用测试中传入的旧 DI 参数；
     实际依赖在各阶段内部通过 ``@inject`` 单独解析。
 
     :param event: 群消息事件

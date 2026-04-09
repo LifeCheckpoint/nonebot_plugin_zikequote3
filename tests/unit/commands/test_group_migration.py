@@ -146,10 +146,6 @@ class TestHandleGroupMigrationValidation:
                 exclude_member=_make_query(result=False),
                 clear_member_info=_make_query(result=False),
                 keep_source=_make_query(result=False),
-                migration_svc=svcs["migration_svc"],
-                group_svc=svcs["group_svc"],
-                token_mgr=svcs["token_mgr"],
-                html_render_svc=svcs["html_render_svc"],
             )
 
         finish_calls = matcher_group_migration.finish.call_args_list
@@ -173,10 +169,6 @@ class TestHandleGroupMigrationValidation:
                 exclude_member=_make_query(result=False),
                 clear_member_info=_make_query(result=False),
                 keep_source=_make_query(result=False),
-                migration_svc=svcs["migration_svc"],
-                group_svc=svcs["group_svc"],
-                token_mgr=svcs["token_mgr"],
-                html_render_svc=svcs["html_render_svc"],
             )
 
         finish_calls = matcher_group_migration.finish.call_args_list
@@ -203,10 +195,6 @@ class TestHandleGroupMigrationValidation:
                 exclude_member=_make_query(result=False),
                 clear_member_info=_make_query(result=False),
                 keep_source=_make_query(result=False),
-                migration_svc=svcs["migration_svc"],
-                group_svc=svcs["group_svc"],
-                token_mgr=svcs["token_mgr"],
-                html_render_svc=svcs["html_render_svc"],
             )
 
         finish_calls = matcher_group_migration.finish.call_args_list
@@ -233,10 +221,6 @@ class TestHandleGroupMigrationValidation:
                 exclude_member=_make_query(result=False),
                 clear_member_info=_make_query(result=False),
                 keep_source=_make_query(result=False),
-                migration_svc=svcs["migration_svc"],
-                group_svc=svcs["group_svc"],
-                token_mgr=svcs["token_mgr"],
-                html_render_svc=svcs["html_render_svc"],
             )
 
         finish_calls = matcher_group_migration.finish.call_args_list
@@ -261,10 +245,6 @@ class TestHandleGroupMigrationValidation:
                 exclude_member=_make_query(result=False),
                 clear_member_info=_make_query(result=False),
                 keep_source=_make_query(result=False),
-                migration_svc=svcs["migration_svc"],
-                group_svc=svcs["group_svc"],
-                token_mgr=svcs["token_mgr"],
-                html_render_svc=svcs["html_render_svc"],
             )
 
         finish_calls = matcher_group_migration.finish.call_args_list
@@ -301,10 +281,6 @@ class TestHandleGroupMigrationPrepare:
                 exclude_member=_make_query(result=False),
                 clear_member_info=_make_query(result=False),
                 keep_source=_make_query(result=False),
-                migration_svc=svcs["migration_svc"],
-                group_svc=svcs["group_svc"],
-                token_mgr=svcs["token_mgr"],
-                html_render_svc=svcs["html_render_svc"],
             )
 
         finish_calls = matcher_group_migration.finish.call_args_list
@@ -346,10 +322,6 @@ class TestHandleGroupMigrationConfirm:
                 exclude_member=_make_query(result=False),
                 clear_member_info=_make_query(result=False),
                 keep_source=_make_query(result=False),
-                migration_svc=svcs["migration_svc"],
-                group_svc=svcs["group_svc"],
-                token_mgr=svcs["token_mgr"],
-                html_render_svc=svcs["html_render_svc"],
             )
 
         svcs["migration_svc"].execute_migration.assert_not_awaited()
@@ -385,10 +357,6 @@ class TestHandleGroupMigrationConfirm:
                 exclude_member=_make_query(result=False),
                 clear_member_info=_make_query(result=False),
                 keep_source=_make_query(result=False),
-                migration_svc=svcs["migration_svc"],
-                group_svc=svcs["group_svc"],
-                token_mgr=svcs["token_mgr"],
-                html_render_svc=svcs["html_render_svc"],
             )
 
         svcs["migration_svc"].execute_migration.assert_not_awaited()
@@ -427,10 +395,6 @@ class TestHandleGroupMigrationConfirm:
                 exclude_member=_make_query(result=False),
                 clear_member_info=_make_query(result=False),
                 keep_source=_make_query(result=False),
-                migration_svc=svcs["migration_svc"],
-                group_svc=svcs["group_svc"],
-                token_mgr=svcs["token_mgr"],
-                html_render_svc=svcs["html_render_svc"],
             )
 
         svcs["migration_svc"].execute_migration.assert_not_awaited()
@@ -476,10 +440,6 @@ class TestHandleGroupMigrationExecute:
                 exclude_member=_make_query(result=False),
                 clear_member_info=_make_query(result=False),
                 keep_source=_make_query(result=False),
-                migration_svc=svcs["migration_svc"],
-                group_svc=svcs["group_svc"],
-                token_mgr=svcs["token_mgr"],
-                html_render_svc=svcs["html_render_svc"],
             )
 
         svcs["migration_svc"].execute_migration.assert_awaited_once_with(
@@ -520,10 +480,6 @@ class TestHandleGroupMigrationExecute:
                 exclude_member=_make_query(result=True),
                 clear_member_info=_make_query(result=True),
                 keep_source=_make_query(result=True),
-                migration_svc=svcs["migration_svc"],
-                group_svc=svcs["group_svc"],
-                token_mgr=svcs["token_mgr"],
-                html_render_svc=svcs["html_render_svc"],
             )
 
         svcs["migration_svc"].prepare_migration.assert_awaited_once_with(
@@ -573,10 +529,6 @@ class TestHandleGroupMigrationExecute:
                 exclude_member=_make_query(result=False),
                 clear_member_info=_make_query(result=False),
                 keep_source=_make_query(result=False),
-                migration_svc=svcs["migration_svc"],
-                group_svc=svcs["group_svc"],
-                token_mgr=svcs["token_mgr"],
-                html_render_svc=svcs["html_render_svc"],
             )
 
         finish_calls = matcher_group_migration.finish.call_args_list
@@ -614,10 +566,6 @@ class TestHandleGroupMigrationExecute:
                 exclude_member=_make_query(result=False),
                 clear_member_info=_make_query(result=False),
                 keep_source=_make_query(result=False),
-                migration_svc=svcs["migration_svc"],
-                group_svc=svcs["group_svc"],
-                token_mgr=svcs["token_mgr"],
-                html_render_svc=svcs["html_render_svc"],
             )
 
         finish_calls = matcher_group_migration.finish.call_args_list
@@ -655,10 +603,6 @@ class TestHandleGroupMigrationExecute:
                 exclude_member=_make_query(result=False),
                 clear_member_info=_make_query(result=False),
                 keep_source=_make_query(result=False),
-                migration_svc=svcs["migration_svc"],
-                group_svc=svcs["group_svc"],
-                token_mgr=svcs["token_mgr"],
-                html_render_svc=svcs["html_render_svc"],
             )
 
         waiter_prompt_args = waiter_mod.prompt.await_args.args
