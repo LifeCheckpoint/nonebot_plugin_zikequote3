@@ -18,6 +18,7 @@ from nonebot.params import CommandArg
 from ..command_definition import matcher_remove_quote, perm_nodes
 from ...di import Inject, inject
 from ...exceptions import PermissionDeniedError
+from ...msgtexts import quote_write
 from ...services import QuoteWriteService
 from ._error_handlers import command_error_handler, suppress_error
 
@@ -64,7 +65,7 @@ async def handle_remove_quote(
 
     if not quote_id:
         await matcher_remove_quote.finish(
-            "请回复一条语录消息或提供语录 ID 来删除哦~"
+            quote_write.remove_quote_target_required()
         )
 
     operator_id = str(event.user_id)
@@ -101,4 +102,4 @@ async def handle_remove_quote(
             allow_delete_others=allow_delete_others,
         )
 
-    await matcher_remove_quote.finish("语录删除成功~(≧▽≦)")
+    await matcher_remove_quote.finish(quote_write.remove_quote_success())

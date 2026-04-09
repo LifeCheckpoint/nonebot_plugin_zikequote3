@@ -14,9 +14,10 @@ from nonebot.adapters.onebot.v11 import (
 )
 
 from ..command_definition import matcher_add_quote
-from ...di import Inject, inject
-from ...services import QuoteWriteService, GroupService
 from ...database.image_store import ImageStore
+from ...di import Inject, inject
+from ...msgtexts import quote_write
+from ...services import GroupService, QuoteWriteService
 from ._error_handlers import command_error_handler, suppress_error
 
 async def _fetch_image_from_url_or_file(url_or_file: str) -> bytes:
@@ -67,13 +68,13 @@ async def handle_add_quote(
     """
     reply = event.reply
     if reply is None:
-        await matcher_add_quote.finish("您还没有回复想要加的语录呢(^///^)")
+        await matcher_add_quote.finish(quote_write.add_quote_reply_required())
 
     if reply.sender.user_id == bot.self_id:
-        await matcher_add_quote.finish("呀呀呀，怎么在添加我的语录呢？(>_<)")
+        await matcher_add_quote.finish(quote_write.add_quote_reply_to_self())
 
     if reply.message.extract_plain_text().strip() == "" and reply.message.count("image") == 0:
-        await matcher_add_quote.finish("语录内容不能为空哦~")
+        await matcher_add_quote.finish(quote_write.add_quote_empty_content())
 
     group_id = str(event.group_id)
 
@@ -121,7 +122,7 @@ async def handle_add_quote(
                 image_content_uuid=None,
             )
 
-    await matcher_add_quote.send("语录添加成功~(≧▽≦)")
+    await matcher_add_quote.send(quote_write.add_quote_success())
 
     # 检查用户-群映射存在性
     with suppress_error("检查用户-群映射"):

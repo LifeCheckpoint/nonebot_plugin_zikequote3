@@ -26,6 +26,7 @@ from ...exceptions import (
     ResourceNotFoundError,
     ValidationException,
 )
+from ...msgtexts import general
 
 async def handle_command_error(matcher: type[Matcher], error: Exception) -> None:
     """
@@ -37,17 +38,17 @@ async def handle_command_error(matcher: type[Matcher], error: Exception) -> None
     :type error: Exception
     """
     if isinstance(error, ValidationException):
-        await matcher.finish(f"输入有误：{error}")
+        await matcher.finish(general.validation_error(str(error)))
     elif isinstance(error, ResourceNotFoundError):
-        await matcher.finish(f"未找到：{error}")
+        await matcher.finish(general.resource_not_found_error(str(error)))
     elif isinstance(error, PermissionDeniedError):
-        await matcher.finish(f"权限不足：{error}")
+        await matcher.finish(general.permission_denied_error(str(error)))
     elif isinstance(error, OperationError):
-        await matcher.finish(f"操作失败：{error}")
+        await matcher.finish(general.operation_error(str(error)))
     else:
         # 非业务异常，上报 Sentry 并使用通用失败消息
         sentry_sdk.capture_exception(error)
-        await matcher.finish(f"发生错误：{error}")
+        await matcher.finish(general.unexpected_error(str(error)))
 
 @asynccontextmanager
 async def command_error_handler(

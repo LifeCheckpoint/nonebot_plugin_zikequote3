@@ -1,0 +1,24 @@
+{%- if message_key == "add_quote_reply_required" -%}
+您还没有回复想要加的语录呢(^///^)
+{%- elif message_key == "add_quote_reply_to_self" -%}
+呀呀呀，怎么在添加我的语录呢？(>_<)
+{%- elif message_key == "add_quote_empty_content" -%}
+语录内容不能为空哦~
+{%- elif message_key == "add_quote_success" -%}
+语录添加成功~(≧▽≦)
+{%- elif message_key == "remove_quote_target_required" -%}
+请回复一条语录消息或提供语录 ID 来删除哦~
+{%- elif message_key == "remove_quote_success" -%}
+语录删除成功~(≧▽≦)
+{%- elif message_key == "add_quote_comment_required" -%}
+请回复一条语录并输入评论内容哦~
+{%- elif message_key == "add_quote_comment_quote_not_found" -%}
+未找到对应语录，无法评论呢~
+{%- elif message_key == "add_quote_comment_success" -%}
+评论添加成功~(≧▽≦)
+{%- elif message_key == "remove_quote_comment_required" -%}
+请提供要删除的评论 ID 哦~
+用法：/删评论 评论ID
+{%- elif message_key == "remove_quote_comment_success" -%}
+评论删除成功~(≧▽≦)
+{%- endif -%}

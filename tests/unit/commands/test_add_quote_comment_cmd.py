@@ -14,6 +14,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from nonebot.exception import FinishedException
 
+from nonebot_plugin_zikequote3.msgtexts import quote_write
 from nonebot_plugin_zikequote3.services.config_service import ConfigService
 from nonebot_plugin_zikequote3.services.group_service import GroupService
 from nonebot_plugin_zikequote3.services.quote_write_service import QuoteWriteService
@@ -92,6 +93,9 @@ class TestHandleAddQuoteComment:
             author_id="654321",
             content="这条语录太棒了",
         )
+        matcher_add_quote_comment.send.assert_awaited_once_with(
+            quote_write.add_quote_comment_success()
+        )
 
     async def test_no_reply_or_empty_content(
         self,
@@ -128,9 +132,7 @@ class TestHandleAddQuoteComment:
 
         # 验证 get_quote_id_by_msg_id 未被调用
         mock_write_svc.get_quote_id_by_msg_id.assert_not_awaited()
-        # 验证 finish 包含提示
-        finish_calls = matcher_add_quote_comment.finish.call_args_list
-        assert any("回复" in str(c) for c in finish_calls)
+        assert matcher_add_quote_comment.finish.call_args.args[0] == quote_write.add_quote_comment_required()
 
     async def test_empty_content(
         self,
@@ -170,6 +172,7 @@ class TestHandleAddQuoteComment:
 
         # 验证 get_quote_id_by_msg_id 未被调用
         mock_write_svc.get_quote_id_by_msg_id.assert_not_awaited()
+        assert matcher_add_quote_comment.finish.call_args.args[0] == quote_write.add_quote_comment_required()
 
     async def test_quote_not_found(
         self,
@@ -211,10 +214,7 @@ class TestHandleAddQuoteComment:
 
         # 验证 add_review 未被调用
         mock_review_svc.add_review.assert_not_awaited()
-        # 验证 finish 进入资源未找到分支，而不是通用内部错误分支
-        finish_calls = matcher_add_quote_comment.finish.call_args_list
-        assert any("未找到" in str(c) for c in finish_calls)
-        assert all("发生错误" not in str(c) for c in finish_calls)
+        assert matcher_add_quote_comment.finish.call_args.args[0] == quote_write.add_quote_comment_quote_not_found()
 
 
 # ===================================================================

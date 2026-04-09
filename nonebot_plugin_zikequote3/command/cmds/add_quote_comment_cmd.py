@@ -20,7 +20,7 @@ from ..command_definition import (
     matcher_add_quote_comment_no_prefix,
 )
 from ...di import Inject, inject
-from ...exceptions import ResourceNotFoundError
+from ...msgtexts import quote_write
 from ...services import ConfigService, QuoteWriteService, ReviewService, GroupService
 from ._error_handlers import command_error_handler, suppress_error
 
@@ -55,7 +55,7 @@ async def handle_add_quote_comment(
     reply = event.reply
     content = arg.extract_plain_text().strip()
     if reply is None or content == "":
-        await matcher_add_quote_comment.finish("请回复一条语录并输入评论内容哦~")
+        await matcher_add_quote_comment.finish(quote_write.add_quote_comment_required())
 
     group_id = str(event.group_id)
 
@@ -63,7 +63,9 @@ async def handle_add_quote_comment(
         # 获取语录 ID
         quote_id = await quote_write_svc.get_quote_id_by_msg_id(str(reply.message_id))
         if quote_id is None:
-            raise ResourceNotFoundError("未找到对应语录，无法评论呢~")
+            await matcher_add_quote_comment.finish(
+                quote_write.add_quote_comment_quote_not_found()
+            )
 
         # 添加评论
         await review_svc.add_review(
@@ -72,7 +74,7 @@ async def handle_add_quote_comment(
             content=content,
         )
 
-        await matcher_add_quote_comment.send("评论添加成功~(≧▽≦)")
+        await matcher_add_quote_comment.send(quote_write.add_quote_comment_success())
 
     # 检查用户-群映射存在性
     with suppress_error("检查用户-群映射"):

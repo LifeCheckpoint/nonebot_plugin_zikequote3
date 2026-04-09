@@ -33,9 +33,11 @@ def render_template(template_name: str, **kwargs) -> str:
 
 from . import general
 from . import quote_read
+from . import quote_write
 
 
 __all__ = [
     'general',
     'quote_read',
+    'quote_write',
 ]

@@ -14,6 +14,7 @@ import pytest
 from nonebot.exception import FinishedException
 
 from nonebot_plugin_zikequote3.database.image_store import ImageStore
+from nonebot_plugin_zikequote3.msgtexts import general, quote_write
 from nonebot_plugin_zikequote3.services.group_service import GroupService
 from nonebot_plugin_zikequote3.services.quote_write_service import QuoteWriteService
 
@@ -86,6 +87,7 @@ class TestHandleAddQuote:
             content="这是一条经典语录",
             image_content_uuid=None,
         )
+        matcher_add_quote.send.assert_awaited_once_with(quote_write.add_quote_success())
 
     async def test_no_reply(
         self,
@@ -119,9 +121,7 @@ class TestHandleAddQuote:
 
         # 验证 add_quote 未被调用
         mock_write_svc.add_quote.assert_not_awaited()
-        # 验证 finish 包含提示
-        finish_calls = matcher_add_quote.finish.call_args_list
-        assert any("回复" in str(c) for c in finish_calls)
+        assert matcher_add_quote.finish.call_args.args[0] == quote_write.add_quote_reply_required()
 
     async def test_reply_to_bot_self(
         self,
@@ -157,6 +157,7 @@ class TestHandleAddQuote:
 
         # 验证 add_quote 未被调用
         mock_write_svc.add_quote.assert_not_awaited()
+        assert matcher_add_quote.finish.call_args.args[0] == quote_write.add_quote_reply_to_self()
 
     async def test_empty_content(
         self,
@@ -192,9 +193,7 @@ class TestHandleAddQuote:
 
         # 验证 add_quote 未被调用
         mock_write_svc.add_quote.assert_not_awaited()
-        # 验证 finish 包含 "空" 提示
-        finish_calls = matcher_add_quote.finish.call_args_list
-        assert any("空" in str(c) for c in finish_calls)
+        assert matcher_add_quote.finish.call_args.args[0] == quote_write.add_quote_empty_content()
 
     async def test_add_quote_service_error(
         self,
@@ -231,9 +230,7 @@ class TestHandleAddQuote:
                 image_store=mock_image_store,
             )
 
-        # 验证 finish 包含 "发生错误" 通用消息
-        finish_calls = matcher_add_quote.finish.call_args_list
-        assert any("发生错误" in str(c) for c in finish_calls)
+        assert matcher_add_quote.finish.call_args.args[0] == general.unexpected_error("database error")
 
     async def test_add_image_quote_success(
         self,
@@ -303,6 +300,7 @@ class TestHandleAddQuote:
             checksum_sha256="deadbeef" * 8,
         )
         mock_write_svc.add_quote.assert_not_awaited()
+        matcher_add_quote.send.assert_awaited_once_with(quote_write.add_quote_success())
 
     async def test_add_image_only_quote_success(
         self,
@@ -370,3 +368,4 @@ class TestHandleAddQuote:
             file_path=str(Path("/fake/de/f4/def456uuid.jpg")),
             checksum_sha256="cafebabe" * 8,
         )
+        matcher_add_quote.send.assert_awaited_once_with(quote_write.add_quote_success())

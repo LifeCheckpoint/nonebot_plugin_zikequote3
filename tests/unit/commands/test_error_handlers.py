@@ -22,6 +22,7 @@ from nonebot_plugin_zikequote3.exceptions import (
     ResourceNotFoundError,
     ValidationException,
 )
+from nonebot_plugin_zikequote3.msgtexts import general
 
 
 def _make_matcher() -> MagicMock:
@@ -42,7 +43,7 @@ class TestHandleCommandError:
             await handle_command_error(matcher, ValidationException("参数格式不正确"))
 
         assert matcher.finish.await_count == 1
-        assert matcher.finish.call_args.args[0] == "输入有误：参数格式不正确"
+        assert matcher.finish.call_args.args[0] == general.validation_error("参数格式不正确")
 
     async def test_resource_not_found_error(self) -> None:
         """[`ResourceNotFoundError`](nonebot_plugin_zikequote3/exceptions/resource.py:10) 应映射为未找到提示。"""
@@ -52,7 +53,7 @@ class TestHandleCommandError:
             await handle_command_error(matcher, ResourceNotFoundError("没有找到对应语录"))
 
         assert matcher.finish.await_count == 1
-        assert matcher.finish.call_args.args[0] == "未找到：没有找到对应语录"
+        assert matcher.finish.call_args.args[0] == general.resource_not_found_error("没有找到对应语录")
 
     async def test_permission_denied_error(self) -> None:
         """[`PermissionDeniedError`](nonebot_plugin_zikequote3/exceptions/permission.py:10) 应映射为权限不足提示。"""
@@ -62,7 +63,7 @@ class TestHandleCommandError:
             await handle_command_error(matcher, PermissionDeniedError("仅管理员可执行"))
 
         assert matcher.finish.await_count == 1
-        assert matcher.finish.call_args.args[0] == "权限不足：仅管理员可执行"
+        assert matcher.finish.call_args.args[0] == general.permission_denied_error("仅管理员可执行")
 
     async def test_operation_error(self) -> None:
         """[`OperationError`](nonebot_plugin_zikequote3/exceptions/operations.py:10) 应映射为操作失败提示。"""
@@ -72,7 +73,7 @@ class TestHandleCommandError:
             await handle_command_error(matcher, OperationError("当前群组语录数为 0"))
 
         assert matcher.finish.await_count == 1
-        assert matcher.finish.call_args.args[0] == "操作失败：当前群组语录数为 0"
+        assert matcher.finish.call_args.args[0] == general.operation_error("当前群组语录数为 0")
 
     async def test_unexpected_error(self) -> None:
         """未知异常应继续走内部错误分支并触发 Sentry 上报。"""
@@ -87,4 +88,4 @@ class TestHandleCommandError:
 
         mock_capture.assert_called_once_with(error)
         assert matcher.finish.await_count == 1
-        assert matcher.finish.call_args.args[0] == "发生错误：database crashed"
+        assert matcher.finish.call_args.args[0] == general.unexpected_error("database crashed")

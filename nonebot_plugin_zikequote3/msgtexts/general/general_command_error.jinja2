@@ -1,0 +1,5 @@
+{%- if error_type == "validation" -%}输入有误：{{ error }}
+{%- elif error_type == "resource_not_found" -%}未找到：{{ error }}
+{%- elif error_type == "permission_denied" -%}权限不足：{{ error }}
+{%- elif error_type == "operation" -%}操作失败：{{ error }}
+{%- elif error_type == "unexpected" -%}发生错误：{{ error }}{%- endif -%}

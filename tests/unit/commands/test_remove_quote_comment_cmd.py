@@ -21,6 +21,7 @@ from nonebot_plugin_zikequote3.exceptions import (
     PermissionDeniedError,
     ResourceNotFoundError,
 )
+from nonebot_plugin_zikequote3.msgtexts import general, quote_write
 from nonebot_plugin_zikequote3.services.review_service import ReviewService
 
 # 运行时从 stub 模块获取 mock matcher / 权限节点
@@ -77,7 +78,7 @@ class TestHandleRemoveQuoteComment:
             operator_id="654321",
             allow_delete_others=False,
         )
-        assert any("删除成功" in str(call) for call in matcher_remove_quote_comment.finish.call_args_list)
+        assert matcher_remove_quote_comment.finish.call_args.args[0] == quote_write.remove_quote_comment_success()
 
     async def test_delete_others_success_uses_others_permission(
         self,
@@ -115,6 +116,7 @@ class TestHandleRemoveQuoteComment:
             operator_id="654321",
             allow_delete_others=True,
         )
+        assert matcher_remove_quote_comment.finish.call_args.args[0] == quote_write.remove_quote_comment_success()
 
     async def test_no_review_id_provided(
         self,
@@ -138,7 +140,7 @@ class TestHandleRemoveQuoteComment:
             )
 
         mock_review_svc.delete_review.assert_not_awaited()
-        assert any("评论 ID" in str(call) for call in matcher_remove_quote_comment.finish.call_args_list)
+        assert matcher_remove_quote_comment.finish.call_args.args[0] == quote_write.remove_quote_comment_required()
 
     async def test_review_not_found(
         self,
@@ -172,7 +174,7 @@ class TestHandleRemoveQuoteComment:
             operator_id="654321",
             allow_delete_others=False,
         )
-        assert any("未找到" in str(call) for call in matcher_remove_quote_comment.finish.call_args_list)
+        assert matcher_remove_quote_comment.finish.call_args.args[0] == general.resource_not_found_error("评论 R-999 不存在")
 
     async def test_command_layer_blocks_without_others_permission(
         self,
@@ -201,7 +203,9 @@ class TestHandleRemoveQuoteComment:
             )
 
         mock_review_svc.delete_review.assert_not_awaited()
-        assert any("权限不足" in str(call) for call in matcher_remove_quote_comment.finish.call_args_list)
+        assert matcher_remove_quote_comment.finish.call_args.args[0] == general.permission_denied_error(
+            "缺少删除他人评论权限（review_id=R-no-perm）"
+        )
 
     async def test_service_layer_still_blocks_after_command_allows(
         self,
@@ -240,4 +244,6 @@ class TestHandleRemoveQuoteComment:
             operator_id="654321",
             allow_delete_others=False,
         )
-        assert any("权限不足" in str(call) for call in matcher_remove_quote_comment.finish.call_args_list)
+        assert matcher_remove_quote_comment.finish.call_args.args[0] == general.permission_denied_error(
+            "仅可删除自己的评论（review_id=R-race）"
+        )

@@ -21,6 +21,7 @@ from nonebot_plugin_zikequote3.exceptions import (
     PermissionDeniedError,
     QuoteNotFoundError,
 )
+from nonebot_plugin_zikequote3.msgtexts import general, quote_write
 from nonebot_plugin_zikequote3.services.quote_write_service import (
     QuoteWriteService,
 )
@@ -75,7 +76,7 @@ class TestRemoveQuoteByArg:
             operator_id="654321",
             allow_delete_others=False,
         )
-        assert "删除成功" in str(matcher_remove_quote.finish.call_args)
+        assert matcher_remove_quote.finish.call_args.args[0] == quote_write.remove_quote_success()
 
     async def test_delete_others_success_uses_others_permission(
         self,
@@ -112,6 +113,7 @@ class TestRemoveQuoteByArg:
             operator_id="654321",
             allow_delete_others=True,
         )
+        assert matcher_remove_quote.finish.call_args.args[0] == quote_write.remove_quote_success()
 
     async def test_no_quote_id_provided(
         self,
@@ -135,8 +137,7 @@ class TestRemoveQuoteByArg:
             )
 
         mock_write_svc.delete_quote.assert_not_awaited()
-        first_call_args = matcher_remove_quote.finish.call_args_list[0]
-        assert "请回复一条语录消息或提供语录 ID" in str(first_call_args)
+        assert matcher_remove_quote.finish.call_args.args[0] == quote_write.remove_quote_target_required()
 
 
 class TestRemoveQuoteErrorHandling:
@@ -173,7 +174,7 @@ class TestRemoveQuoteErrorHandling:
             operator_id="654321",
             allow_delete_others=False,
         )
-        assert "未找到" in str(matcher_remove_quote.finish.call_args_list[0])
+        assert matcher_remove_quote.finish.call_args.args[0] == general.resource_not_found_error("语录 Q-99999 不存在")
 
     async def test_command_layer_blocks_without_others_permission(
         self,
@@ -201,7 +202,9 @@ class TestRemoveQuoteErrorHandling:
             )
 
         mock_write_svc.delete_quote.assert_not_awaited()
-        assert any("权限不足" in str(call) for call in matcher_remove_quote.finish.call_args_list)
+        assert matcher_remove_quote.finish.call_args.args[0] == general.permission_denied_error(
+            "缺少删除他人语录权限（quote_id=Q-no-perm）"
+        )
 
     async def test_service_layer_still_blocks_after_command_allows(
         self,
@@ -239,4 +242,6 @@ class TestRemoveQuoteErrorHandling:
             operator_id="654321",
             allow_delete_others=False,
         )
-        assert any("权限不足" in str(call) for call in matcher_remove_quote.finish.call_args_list)
+        assert matcher_remove_quote.finish.call_args.args[0] == general.permission_denied_error(
+            "仅可删除自己的语录（quote_id=Q-race）"
+        )
