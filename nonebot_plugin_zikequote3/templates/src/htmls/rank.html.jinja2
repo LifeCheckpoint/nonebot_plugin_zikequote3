@@ -1,17 +1,14 @@
 {#
     语录排行榜 HTML 模板
-    该模板模板定义排行榜页面布局，包含左侧的贡献排行榜、中间的趋势分析图表和右侧的整体统计信息。
-
+    该模板模板定义排行榜页面布局，采用垂直布局：走势图、统计数据、排行榜依次向下排列。
 
     echarts_js: echarts 库绝对路径
     rank_css: 排行榜样式绝对路径
     rank_js: 排行榜脚本绝对路径
     color_thief_js: color-thief 库绝对路径
 
-
     group_name: 群组名称字符串
     date_time: 时间字符串
-
 
     max_avatar_threshold: 整数，当排行榜用户数超过该值时，不显示头像以节省空间
     basic_ranking_data: 排行榜基本数据字典
@@ -64,22 +61,15 @@
     <script src="{{ color_thief_js | safe }}"></script>
     <link href="{{ rank_css | safe }}" rel="stylesheet">
 
-    <!-- 排行榜基本数据 Json -->
     <script type="application/json" id="leaderboard-data">
     {{ basic_ranking_data | tojson }}
     </script>
-
-    <!-- 统计数据 Json -->
     <script type="application/json" id="stats-data">
     {{ stat_data | tojson }}
     </script>
-
-    <!-- 折线图 Json -->
     <script type="application/json" id="chart-config">
     {{ line_chart_data | tojson }}
     </script>
-
-    <!-- 其他配置 Json -->
     <script type="application/json" id="app-config">
     {% raw %} { {% endraw %}
         "maxAvatarThreshold": {{ max_avatar_threshold }}
@@ -89,21 +79,29 @@
 <body>
 
     <div class="dashboard-window">
-        <aside class="sidebar-left">
-            <h2>贡献排行</h2>
-            <ol class="leaderboard-list" id="leaderboard"></ol>
-        </aside>
-        <main class="main-content">
-            <h2>排行走势 (To {{ date_time }})</h2>
+        <header class="page-header">
+            <div class="header-content">
+                <h1>语录数据看板</h1>
+                <p class="subtitle"><span class="group-name">{{ group_name }}</span> &bull; 截至 {{ date_time }}</p>
+            </div>
+        </header>
+
+        <section class="stats-section">
+            <div id="stats-container" class="stats-container"></div>
+        </section>
+
+        <section class="chart-section card-view">
+            <h2>排行走势</h2>
             <div class="chart-wrapper">
                 <div id="main-chart"></div>
                 <div id="endpoints-panel"></div>
             </div>
-        </main>
-        <aside class="sidebar-right">
-            <h2>整体统计</h2>
-            <div id="stats-container" class="stats-container"></div>
-        </aside>
+        </section>
+
+        <section class="leaderboard-section card-view">
+            <h2>贡献排行</h2>
+            <ol class="leaderboard-list" id="leaderboard"></ol>
+        </section>
     </div>
 
     <script src="{{ rank_js | safe }}"></script>

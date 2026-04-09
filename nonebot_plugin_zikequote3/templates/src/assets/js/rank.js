@@ -138,17 +138,21 @@ async function initChart(chartId, topNParam = topN) {
     const yAxisMin = Math.floor((dataMin - range * 0.1) / 10) * 10;
     const yAxisMax = Math.ceil((dataMax + range * 0.1) / 10) * 10;
 
+    const isMobile = window.innerWidth <= 768;
+    const gridRight = isMobile ? '20' : '260';
+
     const option = {
         animation: false,
         tooltip: { show: false },
         legend: {
             data: topUsers.map(u => u.name),
             bottom: 10,
-            textStyle: { color: textSecondaryColor }
+            textStyle: { color: textSecondaryColor },
+            type: 'scroll'
         },
         grid: {
             left: '40', 
-            right: '300',
+            right: gridRight,
             top: '40', 
             bottom: '80'
         },
@@ -183,6 +187,12 @@ async function initChart(chartId, topNParam = topN) {
     // 处理窗口大小变化，重新定位HTML组件
     window.addEventListener('resize', () => {
         if (myChart) {
+            const isMob = window.innerWidth <= 768;
+            myChart.setOption({
+                grid: {
+                    right: isMob ? '20' : '260'
+                }
+            });
             myChart.resize();
             createHTMLEndpoints(myChart, validSeriesData, topUsers, userColors);
         }
