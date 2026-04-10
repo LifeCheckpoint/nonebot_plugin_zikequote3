@@ -51,8 +51,8 @@ RANK = TemplateSpec(
     name="rank",
     template="htmls/rank.html.jinja2",
     css_files=("css/rank.css",),
-    width=1920,
-    height=1080,
+    width=1300,
+    height=400,
     wait=3000,
 )
 
