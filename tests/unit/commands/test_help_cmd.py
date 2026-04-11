@@ -132,6 +132,30 @@ class TestHandleGetHelp:
         mock_render_svc.render.assert_awaited_once()
 
 
+def test_help_data_includes_recent_quotes_command() -> None:
+    """帮助数据应包含最近语录命令，且用法保持 v1 边界。"""
+    from nonebot_plugin_zikequote3.command.cmds._help_data import (
+        build_default_help_data,
+    )
+
+    help_data = build_default_help_data()
+    recent_command = next(
+        command
+        for category in help_data.categories
+        for command in category.commands
+        if command.name == "/最近语录"
+    )
+
+    assert recent_command.description == "浏览当前群最近新增的语录，只支持数量参数"
+    assert recent_command.usage == "/最近语录 [数量]"
+    assert recent_command.query_support is False
+    assert recent_command.examples == [
+        "/最近语录 → 默认展示最近 3 条",
+        "/最近语录 6 → 展示最近 6 条",
+        "/最近语录 20 → 实际展示最近 10 条",
+    ]
+
+
 def test_disable_quote_contract_removed_from_public_surfaces() -> None:
     """“停用语录”应已从公开命令契约、帮助与 README 中移除。"""
     from nonebot_plugin_zikequote3.command.cmds._help_data import (

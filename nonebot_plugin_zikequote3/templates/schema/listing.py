@@ -21,6 +21,8 @@ class TemplateQuoteBoxData(BaseModel):
     :type quote_image: Optional[str]
     :param quote_author: 语录作者
     :type quote_author: Optional[str]
+    :param quote_time: 语录时间（用于最近语录场景等需要展示时间的场合）
+    :type quote_time: Optional[str]
     :param quote_comment: 语录评论
     :type quote_comment: Optional[str]
     """
@@ -29,6 +31,7 @@ class TemplateQuoteBoxData(BaseModel):
     quote_text: Optional[str] = None
     quote_image: Optional[str] = None
     quote_author: Optional[str] = None
+    quote_time: Optional[str] = None
     quote_comment: Optional[str] = None
 
 
@@ -42,6 +45,8 @@ class TemplateQuoteListData(BaseModel):
     :type desc: Optional[str]
     :param addition: 附加信息
     :type addition: Optional[str]
+    :param clamp_hint: 可选，上限截断时的轻提示（用于最近语录场景）
+    :type clamp_hint: Optional[str]
     :param quotes: 语录列表
     :type quotes: List[TemplateQuoteBoxData]
     """
@@ -49,6 +54,7 @@ class TemplateQuoteListData(BaseModel):
     title: str
     desc: Optional[str] = None
     addition: Optional[str] = None
+    clamp_hint: Optional[str] = None
     quotes: List[TemplateQuoteBoxData] = []
 
 

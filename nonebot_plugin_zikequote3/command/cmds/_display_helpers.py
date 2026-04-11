@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import base64
+from datetime import datetime
 from nonebot import logger
 from typing import Sequence
 
@@ -30,6 +31,17 @@ def _to_data_uri(data: bytes, mime: str = "image/png") -> str:
     """
     return f"data:{mime};base64,{base64.b64encode(data).decode()}"
 
+
+def _format_quote_time(time_value: datetime) -> str:
+    """格式化语录创建时间，优先转为本地时区显示。"""
+    if time_value.tzinfo is not None:
+        try:
+            time_value = time_value.astimezone()
+        except ValueError:
+            pass
+    return time_value.strftime("%Y-%m-%d %H:%M")
+
+
 async def transform_quotes_to_template_boxes(
     quotes: Sequence[Quote],
     group_id: str,
@@ -40,6 +52,7 @@ async def transform_quotes_to_template_boxes(
     show_id: bool = True,
     show_image: bool = True,
     show_author: bool = False,
+    show_time: bool = False,
     show_comment: bool = True,
     max_content_length: int = 0,
 ) -> list[TemplateQuoteBoxData]:
@@ -62,6 +75,8 @@ async def transform_quotes_to_template_boxes(
     :type show_image: bool
     :param show_author: 是否显示作者，默认为 ``False``
     :type show_author: bool
+    :param show_time: 是否显示语录创建时间，默认为 ``False``
+    :type show_time: bool
     :param show_comment: 是否显示评论，默认为 ``True``
     :type show_comment: bool
     :param max_content_length: 单条语录内容的最大显示字符数，超过则截断并显示 ``"..."``，``0`` 表示不限制
@@ -108,11 +123,14 @@ async def transform_quotes_to_template_boxes(
         if max_content_length > 0 and text and len(text) > max_content_length:
             text = text[:max_content_length] + "..."
 
+        quote_time = _format_quote_time(qd.time_stamp) if show_time else None
+
         boxes.append(TemplateQuoteBoxData(
             quote_id=qd.quote_id if show_id else None,
             quote_text=text,
             quote_image=image_uri,
             quote_author=author_name,
+            quote_time=quote_time,
             quote_comment=review_text,
         ))
 

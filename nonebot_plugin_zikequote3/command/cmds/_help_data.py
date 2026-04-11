@@ -102,6 +102,18 @@ def build_default_help_data() -> TemplateHelpData:
                         ],
                         query_support=True,
                     ),
+                    HelpCommandItem(
+                        name="/最近语录",
+                        aliases=[],
+                        description="浏览当前群最近新增的语录，只支持数量参数",
+                        usage="/最近语录 [数量]",
+                        examples=[
+                            "/最近语录 → 默认展示最近 3 条",
+                            "/最近语录 6 → 展示最近 6 条",
+                            "/最近语录 20 → 实际展示最近 10 条",
+                        ],
+                        query_support=False,
+                    ),
                 ],
             ),
             HelpCategoryData(

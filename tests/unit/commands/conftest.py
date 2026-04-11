@@ -120,6 +120,7 @@ _ALL_MATCHER_NAMES = [
     "matcher_collecting_listener",
     "matcher_get_ranking",
     "matcher_get_quote_list",
+    "matcher_recent_quotes",
     "matcher_get_user_info",
     "matcher_add_quote",
     "matcher_add_quote_image",

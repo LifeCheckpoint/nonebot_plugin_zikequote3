@@ -74,6 +74,15 @@ matcher_get_quote_list = on_alconna(
 perm_nodes.n_listing.patch_matcher(matcher_get_quote_list)
 
 
+cmdname_recent_quotes = ("最近语录",)
+matcher_recent_quotes = on_command(
+    cmdname_recent_quotes[0],
+    aliases=set(cmdname_recent_quotes[1:]),
+    priority=10, block=True,
+)
+perm_nodes.n_listing.patch_matcher(matcher_recent_quotes)
+
+
 cmdname_get_user_info = (
     "语录用户信息", "语录用户", "用户语录信息", "语录作者",
     "查看用户信息", "语录作者信息", "查看语录用户信息", "查看语录作者信息", "用户作者信息",

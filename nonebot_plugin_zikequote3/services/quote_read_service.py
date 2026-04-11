@@ -161,6 +161,27 @@ class QuoteReadService:
             group_id, author_id, limit=limit, offset=offset,
         )
 
+    async def get_recent_quotes_by_group(
+        self,
+        group_id: str,
+        *,
+        limit: Optional[int] = None,
+    ) -> Sequence[Quote]:
+        """
+        获取当前群最近语录（按创建时间倒序）。
+
+        :param group_id: 群组 ID
+        :type group_id: str
+        :param limit: 最大返回条数，``None`` 表示不限
+        :type limit: Optional[int]
+        :returns: 最近语录列表
+        :rtype: Sequence[Quote]
+        """
+        return await self._quote_repo.get_recent_quotes(
+            group_id=group_id,
+            limit=limit,
+        )
+
     # ------------------------------------------------------------------ #
     #  搜索
     # ------------------------------------------------------------------ #

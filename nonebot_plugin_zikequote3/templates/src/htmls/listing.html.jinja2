@@ -6,11 +6,13 @@
     - title: 标题
     - desc: 可选，标题描述
     - addition: 可选，附加信息
+    - clamp_hint: 可选，上限截断时的轻提示
     - quotes: 全量语录列表
         - quote_id: 可选，语录 ID
         - quote_text: 可选，语录内容
         - quote_image: 可选，语录图片 URI
         - quote_author: 可选，语录作者
+        - quote_time: 可选，语录时间
         - quote_comment: 可选，一条评论
 #}
 
@@ -24,14 +26,21 @@
     <div class="top-info-title">{{ title }}</div>
     {% if desc %}<div class="top-info-desc">{{ desc }}</div> {% endif %}
     {% if addition %}<div class="top-info-additional">{{ addition }}</div>{% endif %}
+    {% if clamp_hint %}<div class="top-info-clamp">{{ clamp_hint }}</div>{% endif %}
   </div>
   <div class="masonry-container">
     {% for q in quotes %}
     <div class="quote-card">
-      {% if q.quote_id %}<span class="quote-id">{{ q.quote_id }}</span>{% endif %}
+      <div class="quote-card-header">
+        {% if q.quote_id %}<span class="quote-id">{{ q.quote_id }}</span>{% endif %}
+        {% if q.quote_image and not q.quote_text %}<span class="quote-image-hint">[图片]</span>{% endif %}
+      </div>
       {% if q.quote_text %}<div class="quote-text">{{ q.quote_text }}</div>{% endif %}
       {% if q.quote_image %}<img class="quote-img" src="{{ q.quote_image }}" alt="Quote Image"/>{% endif %}
-      {% if q.quote_author %}<div class="quote-author">{{ q.quote_author }}</div>{% endif %}
+      <div class="quote-meta">
+        {% if q.quote_author %}<span class="quote-author">{{ q.quote_author }}</span>{% endif %}
+        {% if q.quote_time %}<span class="quote-time">{{ q.quote_time }}</span>{% endif %}
+      </div>
       {% if q.quote_comment %}<div class="quote-comment">{{ q.quote_comment }}</div>{% endif %}
     </div>
     {% endfor %}

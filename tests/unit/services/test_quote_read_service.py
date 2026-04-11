@@ -160,6 +160,33 @@ class TestListQuotes:
 
         assert len(result) == 1
 
+    @pytest.mark.asyncio
+    async def test_get_recent_quotes_by_group_calls_repository_recent(
+        self, quote_read_service: QuoteReadService, mock_quote_repo: AsyncMock,
+    ) -> None:
+        quotes = [_make_quote(quote_id="q3"), _make_quote(quote_id="q4")]
+        mock_quote_repo.get_recent_quotes.return_value = quotes
+
+        result = await quote_read_service.get_recent_quotes_by_group("99999", limit=6)
+
+        assert result == quotes
+        mock_quote_repo.get_recent_quotes.assert_awaited_once_with(
+            group_id="99999", limit=6,
+        )
+
+    @pytest.mark.asyncio
+    async def test_get_recent_quotes_by_group_returns_empty_list_when_no_result(
+        self, quote_read_service: QuoteReadService, mock_quote_repo: AsyncMock,
+    ) -> None:
+        mock_quote_repo.get_recent_quotes.return_value = []
+
+        result = await quote_read_service.get_recent_quotes_by_group("99999", limit=3)
+
+        assert result == []
+        mock_quote_repo.get_recent_quotes.assert_awaited_once_with(
+            group_id="99999", limit=3,
+        )
+
 
 # ================================================================== #
 #  搜索

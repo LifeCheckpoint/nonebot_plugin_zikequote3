@@ -10,6 +10,7 @@ from .collecting_listener_cmd import *
 from .config_cmd import *
 from .get_privacy_cmd import *
 from .get_quote_list_cmd import *
+from .recent_quotes_cmd import *
 from .get_ranking_cmd import *
 from .random_quote_card_cmd import *
 from .random_quote_cmd import *
