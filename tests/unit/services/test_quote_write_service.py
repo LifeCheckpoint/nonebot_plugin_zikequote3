@@ -6,6 +6,8 @@ QuoteWriteService 单元测试。
 
 from __future__ import annotations
 
+from pathlib import Path
+import sqlite3
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -345,6 +347,102 @@ class TestDeleteQuote:
                 operator_id="12345",
                 allow_delete_others=False,
             )
+
+
+# ================================================================== #
+#  语录去重
+# ================================================================== #
+
+
+class TestDeduplicateGroupQuotes:
+    """测试 deduplicate_group_quotes 方法。"""
+
+    @pytest.mark.asyncio
+    async def test_deduplicate_group_quotes_success(
+        self,
+        quote_write_service: QuoteWriteService,
+        mock_quote_repo: AsyncMock,
+        mock_mapping_repo: AsyncMock,
+        tmp_path,
+    ) -> None:
+        """默认模式下应删除后出现的重复语录并保留较早记录。"""
+        db_path = tmp_path / "zikequote3.db"
+        sqlite3.connect(db_path).close()
+        quote_write_service._db_path = db_path
+
+        mock_quote_repo.get_text_only_quotes_for_dedup.return_value = [
+            _make_quote(quote_id="10000000001", author_id="12345", content="你好"),
+            _make_quote(quote_id="10000000002", author_id="23456", content="你好"),
+            _make_quote(quote_id="10000000003", author_id="34567", content="你好"),
+            _make_quote(quote_id="10000000004", author_id="45678", content="世界"),
+            _make_quote(quote_id="10000000005", author_id="56789", content="世界"),
+        ]
+        mock_quote_repo.delete_quote.return_value = True
+
+        result = await quote_write_service.deduplicate_group_quotes(
+            "99999",
+            operator_id="12345",
+            user_only=False,
+        )
+
+        mock_quote_repo.get_text_only_quotes_for_dedup.assert_awaited_once_with(
+            "99999",
+            author_id=None,
+        )
+        assert [
+            call.args[0] for call in mock_quote_repo.delete_quote.await_args_list
+        ] == ["10000000002", "10000000003", "10000000005"]
+        assert [
+            call.args[0] for call in mock_mapping_repo.delete_mappings_by_quote_id.await_args_list
+        ] == ["10000000002", "10000000003", "10000000005"]
+        assert result.scanned_count == 5
+        assert result.duplicate_groups == 2
+        assert result.deleted_count == 3
+        assert result.kept_count == 2
+        assert result.user_only is False
+        assert result.backup_path.endswith(".db")
+        assert Path(result.backup_path).exists()
+
+    @pytest.mark.asyncio
+    async def test_deduplicate_group_quotes_user_only(
+        self,
+        quote_write_service: QuoteWriteService,
+        mock_quote_repo: AsyncMock,
+        mock_mapping_repo: AsyncMock,
+        tmp_path,
+    ) -> None:
+        """`user_only` 模式应仅处理当前用户的重复语录。"""
+        db_path = tmp_path / "zikequote3.db"
+        sqlite3.connect(db_path).close()
+        quote_write_service._db_path = db_path
+
+        mock_quote_repo.get_text_only_quotes_for_dedup.return_value = [
+            _make_quote(quote_id="10000000001", author_id="12345", content="摸鱼"),
+            _make_quote(quote_id="10000000002", author_id="12345", content="摸鱼"),
+            _make_quote(quote_id="10000000003", author_id="12345", content="下班"),
+        ]
+        mock_quote_repo.delete_quote.return_value = True
+
+        result = await quote_write_service.deduplicate_group_quotes(
+            "99999",
+            operator_id="12345",
+            user_only=True,
+        )
+
+        mock_quote_repo.get_text_only_quotes_for_dedup.assert_awaited_once_with(
+            "99999",
+            author_id="12345",
+        )
+        mock_quote_repo.delete_quote.assert_awaited_once_with("10000000002")
+        mock_mapping_repo.delete_mappings_by_quote_id.assert_awaited_once_with(
+            "10000000002"
+        )
+        assert result.scanned_count == 3
+        assert result.duplicate_groups == 1
+        assert result.deleted_count == 1
+        assert result.kept_count == 1
+        assert result.user_only is True
+        assert Path(result.backup_path).exists()
 
 
 # ================================================================== #

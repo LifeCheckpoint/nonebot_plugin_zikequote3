@@ -7,6 +7,8 @@ dishka 自动解析服务间的依赖链（如 QuoteWriteService 依赖 UserServ
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from dishka import Provider, Scope, provide
 
 from ...config import ConfigSchema
@@ -56,9 +58,14 @@ class ServiceProvider(Provider):
 
     scope = Scope.REQUEST
 
-    def __init__(self, default_config: ConfigSchema | None = None) -> None:
+    def __init__(
+        self,
+        default_config: ConfigSchema | None = None,
+        db_path: str | Path | None = None,
+    ) -> None:
         super().__init__()
         self._default_config = default_config
+        self._db_path = db_path
 
     # ---- 无服务间依赖的 Service ---- #
 
@@ -256,6 +263,7 @@ class ServiceProvider(Provider):
             config_service=config_service,
             group_repo=group_repo,
             vector_search_svc=vector_search_svc,
+            db_path=self._db_path,
         )
 
     @provide

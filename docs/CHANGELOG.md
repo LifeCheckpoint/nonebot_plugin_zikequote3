@@ -11,6 +11,18 @@ All notable changes to this project will be documented in this file.
 > - 定期数据备份功能
 > - 后端管理功能
 
+## \[0.5.0beta3\] - 2026-04-24
+
+### Added
+
+- 添加语录去重命令
+
+### Changed
+
+- 默认模型切换到最新的 deepseek-v4-flash
+- 优化 Rank 移动端排版，图片的尺寸和头像阈值
+- 语录消息回复进一步模板化
+
 ## \[0.5.0beta2\] - 2026-04-08
 
 ### Changed

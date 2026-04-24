@@ -54,7 +54,7 @@ def create_container(
         DatabaseProvider(db_path),
         InfraProvider(image_store_path, render_device_factor=render_device_factor),
         RepositoryProvider(),
-        ServiceProvider(default_config=default_config),
+        ServiceProvider(default_config=default_config, db_path=db_path),
         # 始终注册 VectorProvider；由其返回类型稳定的可选能力抽象
         VectorProvider(embedding_config, llm_config, vector_db_path),
     ]

@@ -8,6 +8,7 @@ from .add_quote_cmd import *
 from .add_quote_comment_cmd import *
 from .collecting_listener_cmd import *
 from .config_cmd import *
+from .deduplicate_quotes_cmd import *
 from .get_privacy_cmd import *
 from .get_quote_list_cmd import *
 from .recent_quotes_cmd import *

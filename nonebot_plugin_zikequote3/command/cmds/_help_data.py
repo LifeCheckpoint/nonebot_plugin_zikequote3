@@ -144,6 +144,17 @@ def build_default_help_data() -> TemplateHelpData:
                         ],
                     ),
                     HelpCommandItem(
+                        name="/语录去重",
+                        aliases=[],
+                        description="清理当前群重复的纯文本语录，默认作用于全群，可用 --user_only 仅处理自己的语录",
+                        usage="/语录去重 [--user_only]",
+                        examples=[
+                            "/语录去重",
+                            "/语录去重 --user_only",
+                        ],
+                        permission="默认需要删除他人语录权限；使用 --user_only 时需要删除自己语录权限",
+                    ),
+                    HelpCommandItem(
                         name="/删语录图",
                         aliases=["删语录图片", "移除语录图"],
                         description="移除语录附带的图片",

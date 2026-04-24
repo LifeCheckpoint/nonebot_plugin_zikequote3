@@ -142,6 +142,15 @@ matcher_remove_quote = on_command(
 # 因此此处不再绑定粗粒度 delete 节点。
 
 
+cmdname_quote_deduplicate = ("语录去重",)
+matcher_quote_deduplicate = on_command(
+    cmdname_quote_deduplicate[0],
+    aliases=set(cmdname_quote_deduplicate[1:]),
+    priority=10, block=True,
+)
+# 去重权限需要在命令处理阶段按 --user_only 决定是 self / others 路径。
+
+
 cmdname_remove_quote_image = (
     "删语录图", "删语录图片", "删语录图像", "语录删图", "语录删图片", "语录删图像",
     "删除语录图", "删除语录图片", "删除语录图像", "语录删除图", "语录删除图片", "语录删除图像",

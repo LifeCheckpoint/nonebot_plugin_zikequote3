@@ -11,8 +11,12 @@ QuoteWriteService —— 语录写入领域服务。
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from datetime import datetime
 from nonebot import logger
+from pathlib import Path
 import random
+import sqlite3
 from typing import Optional
 
 from ..database.models.quotes import Quote
@@ -43,6 +47,18 @@ def _generate_quote_id() -> str:
     """
     return str(random.randint(10**10, 10**11 - 1))
 
+
+@dataclass(slots=True)
+class QuoteDeduplicateResult:
+    """语录去重结果。"""
+
+    backup_path: str
+    scanned_count: int
+    duplicate_groups: int
+    deleted_count: int
+    kept_count: int
+    user_only: bool
+
 class QuoteWriteService:
     """
     语录写入领域服务，通过构造函数注入 Repository 依赖。
@@ -66,6 +82,7 @@ class QuoteWriteService:
         config_service: ConfigService,
         group_repo: GroupRepository | None = None,
         vector_search_svc: VectorSearchCapability | None = None,
+        db_path: str | Path | None = None,
     ) -> None:
         self._quote_repo = quote_repo
         self._image_repo = image_repo
@@ -76,6 +93,7 @@ class QuoteWriteService:
         self._vector_search_svc = vector_search_svc or UnavailableVectorSearchService(
             "未提供向量搜索能力"
         )
+        self._db_path = db_path
 
     # ------------------------------------------------------------------ #
     #  添加语录
@@ -387,6 +405,114 @@ class QuoteWriteService:
     # ------------------------------------------------------------------ #
     #  去重检查
     # ------------------------------------------------------------------ #
+
+    async def deduplicate_group_quotes(
+        self,
+        group_id: str,
+        *,
+        operator_id: str,
+        user_only: bool = False,
+    ) -> QuoteDeduplicateResult:
+        """去除群组内重复的纯文本语录。
+
+        去重规则：
+        - 仅处理无图片语录
+        - 仅处理内容非空的语录
+        - 按文本内容判定重复
+        - 保留创建时间更早的那一条
+
+        :param group_id: 群组 ID。
+        :type group_id: str
+        :param operator_id: 执行去重的操作者 ID。
+        :type operator_id: str
+        :param user_only: 是否仅处理操作者本人的语录。
+        :type user_only: bool
+        :returns: 去重结果摘要。
+        :rtype: QuoteDeduplicateResult
+        :raises ValidationException: ``user_only=True`` 时缺少操作者上下文。
+        :raises DatabaseOperationError: 数据库备份或删除失败。
+        """
+        if user_only and not operator_id:
+            raise ValidationException("个人去重模式缺少操作者上下文")
+
+        backup_path = self._backup_database()
+        author_id = operator_id if user_only else None
+        quotes = await self._quote_repo.get_text_only_quotes_for_dedup(
+            group_id,
+            author_id=author_id,
+        )
+
+        first_quote_by_content: dict[str, Quote] = {}
+        duplicate_contents: set[str] = set()
+        duplicate_quotes: list[Quote] = []
+
+        for quote in quotes:
+            content = (quote.content or "").strip()
+            if content not in first_quote_by_content:
+                first_quote_by_content[content] = quote
+                continue
+            duplicate_contents.add(content)
+            duplicate_quotes.append(quote)
+
+        for duplicate in duplicate_quotes:
+            deleted = await self._quote_repo.delete_quote(duplicate.quote_id)
+            if not deleted:
+                raise DatabaseOperationError(
+                    f"删除重复语录失败: {duplicate.quote_id}"
+                )
+            await self._mapping_repo.delete_mappings_by_quote_id(duplicate.quote_id)
+            await self._try_remove_quote(duplicate.quote_id, duplicate.group_id)
+
+        result = QuoteDeduplicateResult(
+            backup_path=str(backup_path),
+            scanned_count=len(quotes),
+            duplicate_groups=len(duplicate_contents),
+            deleted_count=len(duplicate_quotes),
+            kept_count=len(duplicate_contents),
+            user_only=user_only,
+        )
+        logger.info(
+            "语录去重完成: group_id={}, operator_id={}, user_only={}, scanned_count={}, duplicate_groups={}, deleted_count={}, backup_path={}",
+            group_id,
+            operator_id,
+            user_only,
+            result.scanned_count,
+            result.duplicate_groups,
+            result.deleted_count,
+            result.backup_path,
+        )
+        return result
+
+    def _backup_database(self) -> Path:
+        """在执行去重前创建数据库备份文件。"""
+        if self._db_path is None or str(self._db_path) == ":memory:":
+            raise DatabaseOperationError("当前数据库不支持备份操作")
+
+        db_path = Path(self._db_path)
+        if not db_path.exists():
+            raise DatabaseOperationError(f"数据库文件不存在: {db_path}")
+
+        backup_dir = db_path.parent / "backups"
+        backup_dir.mkdir(parents=True, exist_ok=True)
+        backup_name = (
+            f"{db_path.stem}_dedup_"
+            f"{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
+            f"{db_path.suffix}"
+        )
+        backup_path = backup_dir / backup_name
+        try:
+            source = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+            target = sqlite3.connect(str(backup_path))
+            with source, target:
+                source.backup(target)
+        except sqlite3.Error as e:
+            raise DatabaseOperationError(f"数据库备份失败: {e}") from e
+        finally:
+            if "source" in locals():
+                source.close()
+            if "target" in locals():
+                target.close()
+        return backup_path
 
     async def check_quote_exists(self, author_id: str, content: str) -> bool:
         """

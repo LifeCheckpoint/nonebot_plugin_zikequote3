@@ -35,7 +35,7 @@ enable_comment_without_prefix = true # 允许不使用“/评”直接进行评�
 # 模型配置，其它端点调整工作需到 llm_services/client.py 进行修改
 base_url = "https://openrouter.ai/api/v1"
 api_key_path = "llm_services/api_key" # API Key 文件路径，相对插件根目录或绝对路径
-model = "deepseek/deepseek-v3.2-exp"
+model = "deepseek/deepseek-v4-flash"
 temperature = 0.2
 max_retries = 3 # 请求失败重试次数
 

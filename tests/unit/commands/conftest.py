@@ -125,6 +125,7 @@ _ALL_MATCHER_NAMES = [
     "matcher_add_quote",
     "matcher_add_quote_image",
     "matcher_remove_quote",
+    "matcher_quote_deduplicate",
     "matcher_remove_quote_image",
     "matcher_add_quote_comment",
     "matcher_add_quote_comment_no_prefix",

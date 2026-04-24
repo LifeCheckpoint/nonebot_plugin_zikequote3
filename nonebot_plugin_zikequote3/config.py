@@ -83,7 +83,7 @@ class LLMConfig(BaseModel):
 
     base_url: str = "https://openrouter.ai/api/v1"
     api_key_path: str = "llm_services/api_key"
-    model: str = "deepseek/deepseek-v3.2-exp"
+    model: str = "deepseek/deepseek-v4-flash"
     temperature: float = 0.2
     max_retries: int = 3
 

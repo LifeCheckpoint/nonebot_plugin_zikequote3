@@ -223,6 +223,43 @@ class QuoteRepository(BaseRepository[QuoteModel, QuoteCreate, Quote]):
         result = await self._session.execute(stmt)
         return [row.to_dto() for row in result.scalars().all()]
 
+    async def get_text_only_quotes_for_dedup(
+        self,
+        group_id: str,
+        *,
+        author_id: Optional[str] = None,
+    ) -> Sequence[Quote]:
+        """获取用于去重的纯文本语录候选集。
+
+        仅返回满足以下条件的语录：
+        - 属于指定群组
+        - 无关联图片
+        - 文本内容非空且去除首尾空白后非空
+        - 按创建时间升序排列，以便保留较早语录
+
+        :param group_id: 群组 ID。
+        :type group_id: str
+        :param author_id: 可选的作者 ID；提供时仅返回该作者的语录。
+        :type author_id: Optional[str]
+        :returns: 满足条件的语录 DTO 序列。
+        :rtype: Sequence[Quote]
+        """
+        stmt = (
+            select(QuoteModel)
+            .where(
+                QuoteModel.group_id == group_id,
+                QuoteModel.image_content_uuid.is_(None),
+                QuoteModel.content.is_not(None),
+                func.trim(QuoteModel.content) != "",
+            )
+            .order_by(QuoteModel.time_stamp.asc(), QuoteModel.quote_id.asc())
+        )
+        if author_id is not None:
+            stmt = stmt.where(QuoteModel.author_id == author_id)
+
+        result = await self._session.execute(stmt)
+        return [row.to_dto() for row in result.scalars().all()]
+
     async def search_quotes_by_content(
         self,
         keyword: str,
