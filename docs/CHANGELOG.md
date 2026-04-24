@@ -23,6 +23,10 @@ All notable changes to this project will be documented in this file.
 - 优化 Rank 移动端排版，图片的尺寸和头像阈值
 - 语录消息回复进一步模板化
 
+### Fixed
+
+- 修复由于混淆思考与输出导致语录收集失败的问题
+
 ## \[0.5.0beta2\] - 2026-04-08
 
 ### Changed
