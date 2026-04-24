@@ -91,13 +91,17 @@ async def send_llm_request(
         model_settings=ModelSettings(temperature=temperature),
     )
 
-    if not model_response.parts or model_response.parts[0] is None:
+    if not model_response.parts:
         raise RuntimeError("模型返回为空")
 
-    if not isinstance(model_response.parts[0].content, str):  # type: ignore
-        raise RuntimeError("模型返回格式错误")
+    for part in model_response.parts:
+        if getattr(part, "part_kind", None) == "text":
+            content = getattr(part, "content", None)
+            if not isinstance(content, str):
+                raise RuntimeError("模型返回文本格式错误")
+            return content, model_response.usage
 
-    return model_response.parts[0].content, model_response.usage  # type: ignore
+    raise RuntimeError("模型未返回文本内容")
 
 
 T = TypeVar('T', bound=BaseModel)
