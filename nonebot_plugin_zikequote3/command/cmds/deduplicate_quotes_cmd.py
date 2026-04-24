@@ -61,14 +61,19 @@ async def handle_quote_deduplicate(
             user_only=user_only,
         )
 
-    scope_text = "仅当前用户" if result.user_only else "当前群全部成员"
-    summary = (
-        "语录去重完成\n"
-        f"作用范围：{scope_text}\n"
-        f"数据库备份：{result.backup_path}\n"
-        f"检查语录：{result.scanned_count} 条\n"
-        f"重复内容组：{result.duplicate_groups} 组\n"
-        f"删除重复语录：{result.deleted_count} 条\n"
-        f"保留较早语录：{result.kept_count} 条"
-    )
+    scope_text = "你自己的语录" if result.user_only else "当前群全部成员的语录"
+    if result.deleted_count == 0:
+        summary = (
+            "语录去重完成啦~\n"
+            f"这次检查的是{scope_text}哦\n"
+            f"我先帮你备份好数据库啦，"
+            f"一共检查了 {result.scanned_count} 条语录，不过暂时没有发现可清理的重复内容喵~"
+        )
+    else:
+        summary = (
+            "语录去重完成啦~\n"
+            f"这次检查的是{scope_text}哦\n"
+            f"我先帮你备份好数据库啦，"
+            f"一共检查了 {result.scanned_count} 条语录，发现 {result.duplicate_groups} 组重复内容\n"
+        )
     await matcher_quote_deduplicate.finish(summary)
