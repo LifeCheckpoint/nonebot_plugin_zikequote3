@@ -11,6 +11,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
@@ -53,6 +54,9 @@ class QuoteModel(Base):
             "(content IS NOT NULL AND content != '') OR image_content_uuid IS NOT NULL",
             name="ck_quotes_content_or_image_present",
         ),
+        Index("ix_quotes_group_id", "group_id"),
+        Index("ix_quotes_author_id", "author_id"),
+        Index("ix_quotes_total_show_time", "total_show_time"),
     )
 
     quote_id: Mapped[str] = mapped_column(String, primary_key=True)

@@ -7,7 +7,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, String, Text, func
+from sqlalchemy import DateTime, ForeignKey, Index, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nonebot_plugin_zikequote3.database.sa.base import Base
@@ -33,6 +33,10 @@ class ReviewModel(Base):
     """
 
     __tablename__ = "reviews"
+    __table_args__ = (
+        Index("ix_reviews_quote_id", "quote_id"),
+        Index("ix_reviews_author_id", "author_id"),
+    )
 
     review_id: Mapped[str] = mapped_column(String, primary_key=True)
     time_stamp: Mapped[datetime] = mapped_column(

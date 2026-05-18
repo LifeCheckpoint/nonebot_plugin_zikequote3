@@ -7,7 +7,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import DateTime, String, func
+from sqlalchemy import DateTime, Index, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from nonebot_plugin_zikequote3.database.sa.base import Base
@@ -32,6 +32,9 @@ class ImageModel(Base):
     """
 
     __tablename__ = "images"
+    __table_args__ = (
+        Index("ix_images_checksum_sha256", "checksum_sha256"),
+    )
 
     uuid: Mapped[str] = mapped_column(String, primary_key=True)
     original_filename: Mapped[Optional[str]] = mapped_column(

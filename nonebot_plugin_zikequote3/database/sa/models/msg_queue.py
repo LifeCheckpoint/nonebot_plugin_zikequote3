@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, Text, func
+from sqlalchemy import DateTime, ForeignKey, Index, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from nonebot_plugin_zikequote3.database.sa.base import Base
@@ -29,6 +29,11 @@ class MsgQueueModel(Base):
     """
 
     __tablename__ = "msgs_queue"
+    __table_args__ = (
+        Index("ix_msgs_queue_group_id", "group_id"),
+        Index("ix_msgs_queue_qq_id", "qq_id"),
+        Index("ix_msgs_queue_time_stamp", "time_stamp"),
+    )
 
     msg_id: Mapped[str] = mapped_column(String, primary_key=True)
     group_id: Mapped[str] = mapped_column(
