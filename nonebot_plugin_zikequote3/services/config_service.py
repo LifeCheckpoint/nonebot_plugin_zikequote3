@@ -10,6 +10,7 @@ ConfigService —— 群组配置领域服务。
 
 from __future__ import annotations
 
+import asyncio
 from ast import literal_eval
 from dataclasses import dataclass
 from typing import Any, Literal, Optional, Sequence
@@ -98,6 +99,7 @@ class ConfigService:
         self._group_config_repo = group_config_repo
         self._group_repo = group_repo
         self._default_config = (default_config or ConfigSchema()).model_copy(deep=True)
+        self._config_locks: dict[str, asyncio.Lock] = {}
 
     def _copy_default_config(self) -> ConfigSchema:
         """返回启动期全局配置的深拷贝。"""
@@ -496,32 +498,34 @@ class ConfigService:
         if schema_str in self._get_nonreloadable_items():
             self._raise_nonreloadable_error(schema_str)
 
-        toml_str = await self._group_config_repo.get_toml_config_by_group_id(group_id)
-        if toml_str:
-            try:
-                doc = tomlkit.parse(toml_str)
-            except TOMLKitError as exc:
-                raise ValidationException(
-                    "现有群组配置 TOML 配置格式无效，请先修复或删除后再修改"
-                ) from exc
-            self._ensure_group_doc_structure(doc, reject_nonreloadable=False)
-        else:
-            doc = tomlkit.document()
+        lock = self._config_locks.setdefault(group_id, asyncio.Lock())
+        async with lock:
+            toml_str = await self._group_config_repo.get_toml_config_by_group_id(group_id)
+            if toml_str:
+                try:
+                    doc = tomlkit.parse(toml_str)
+                except TOMLKitError as exc:
+                    raise ValidationException(
+                        "现有群组配置 TOML 配置格式无效，请先修复或删除后再修改"
+                    ) from exc
+                self._ensure_group_doc_structure(doc, reject_nonreloadable=False)
+            else:
+                doc = tomlkit.document()
 
-        if section not in doc:
-            doc[section] = tomlkit.table()
-        doc[section][key] = new_value  # type: ignore[index]
+            if section not in doc:
+                doc[section] = tomlkit.table()
+            doc[section][key] = new_value  # type: ignore[index]
 
-        self._validate_effective_config(doc, context=f"配置项 '{schema_str}' ")
-        normalized_toml = tomlkit.dumps(self._normalize_group_doc(doc))
+            self._validate_effective_config(doc, context=f"配置项 '{schema_str}' ")
+            normalized_toml = tomlkit.dumps(self._normalize_group_doc(doc))
 
-        await self._group_repo.ensure_group_exists(group_id)
-        await self._group_config_repo.update_or_create_group_config(
-            group_id, normalized_toml
-        )
-        logger.info(
-            "群组 {} 配置项 '{}' 已更新为 {!r}", group_id, schema_str, new_value
-        )
+            await self._group_repo.ensure_group_exists(group_id)
+            await self._group_config_repo.update_or_create_group_config(
+                group_id, normalized_toml
+            )
+            logger.info(
+                "群组 {} 配置项 '{}' 已更新为 {!r}", group_id, schema_str, new_value
+            )
 
     async def get_parsed_config_result(self, group_id: str) -> ParsedConfigResult:
         """
