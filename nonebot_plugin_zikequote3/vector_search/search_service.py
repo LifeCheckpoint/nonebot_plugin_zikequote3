@@ -139,8 +139,8 @@ class VectorSearchService(VectorSearchCapability):
                 await self._store.delete_by_group(group_id)
             else:
                 await self._store.drop_all()
-                await self._store.ensure_table(self._embedding.dimensions)
-                await self._store.set_meta(self._embedding.model_name, self._embedding.dimensions)
+            await self._store.ensure_table(self._embedding.dimensions)
+            await self._store.set_meta(self._embedding.model_name, self._embedding.dimensions)
 
             # 获取所有语录（按群或全部）
             if group_id:
