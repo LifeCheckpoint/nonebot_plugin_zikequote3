@@ -154,7 +154,7 @@ async def handle_get_quote_list(
         hitokoto_text = None
         try:
             from ...utils.hitokoto import get_hitokoto
-            content, author = get_hitokoto()
+            content, author = await get_hitokoto()
             if content and author:
                 hitokoto_text = f"「{content}」 ——{author}"
             elif content:

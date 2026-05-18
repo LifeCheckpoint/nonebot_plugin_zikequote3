@@ -207,7 +207,7 @@ async def _do_normal_search(
             f"共 {total_found} 条 (显示 {len(quote_boxes)} 条)",
         ])
 
-        hitokoto_text = _try_get_hitokoto(hitokoto_url)
+        hitokoto_text = await _try_get_hitokoto(hitokoto_url)
 
         html = render_list(TemplateQuoteListData(
             title=title_text,
@@ -218,14 +218,14 @@ async def _do_normal_search(
         img = await html_render_svc.render(html, width=LISTING.width, height=LISTING.height)
         await matcher.finish(MsgSeg.image(img))
 
-def _try_get_hitokoto(hitokoto_url: str) -> Optional[str]:
+async def _try_get_hitokoto(hitokoto_url: str) -> Optional[str]:
     """尝试根据运行时配置获取一言，失败时返回 None。"""
     if not hitokoto_url.strip():
         return None
 
     try:
         from ...utils.hitokoto import get_hitokoto
-        content, author = get_hitokoto(hitokoto_url=hitokoto_url)
+        content, author = await get_hitokoto(hitokoto_url=hitokoto_url)
         if content and author:
             return f"「{content}」 ——{author}"
         if content:
@@ -359,7 +359,7 @@ async def _do_fuzzy_search(
         desc_parts.append(f"共 {len(quote_boxes)} 条")
         desc_text = " | ".join(desc_parts)
 
-        hitokoto_text = _try_get_hitokoto(cfg.showcase.hitokoto_url)
+        hitokoto_text = await _try_get_hitokoto(cfg.showcase.hitokoto_url)
 
         html = render_list(TemplateQuoteListData(
             title=title_text,
