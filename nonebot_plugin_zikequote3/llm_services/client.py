@@ -56,6 +56,11 @@ def create_model(
         else (resolved_plugin_root / resolved_api_key_path)
     ).read_text(encoding="utf-8").strip()
 
+    if not api_key:
+        raise ValueError(
+            f"API key file is empty or contains only whitespace: {resolved_api_key_path}"
+        )
+
     client = AsyncOpenAI(
         max_retries=llm_config.max_retries,
         base_url=llm_config.base_url,
