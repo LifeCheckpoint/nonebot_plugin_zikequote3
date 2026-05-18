@@ -7,12 +7,15 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import re
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 import lancedb
 import pyarrow as pa
+
+_logger = logging.getLogger(__name__)
 
 # quote_id 允许的字符：数字、字母、下划线、连字符
 _SAFE_ID_RE = re.compile(r"^[\w-]+$")
@@ -154,8 +157,7 @@ class VectorStore:
         try:
             await table.delete(self._safe_quote_filter(quote_ids))
         except Exception:
-            # 表为空时 delete 可能抛异常，忽略即可
-            pass
+            _logger.debug("Table delete raised (may be expected for empty partition)", exc_info=True)
         await table.add(records)
 
     async def delete(self, quote_ids: List[str]) -> None:
@@ -278,7 +280,7 @@ class VectorStore:
         try:
             await table.delete("key IS NOT NULL")
         except Exception:
-            pass
+            _logger.debug("Meta table delete raised (may be expected for empty table)", exc_info=True)
         now = datetime.now(timezone.utc).isoformat()
         await table.add(
             [

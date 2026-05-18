@@ -114,7 +114,14 @@ class EmbeddingClient:
         for attempt in range(self._max_retries + 1):
             try:
                 response = await self._client.embeddings.create(**kwargs)
-                return [item.embedding for item in response.data]
+                embeddings = [item.embedding for item in response.data]
+                for i, vec in enumerate(embeddings):
+                    if len(vec) != self._config.dimensions:
+                        raise ValueError(
+                            f"Embedding dimension mismatch at index {i}: got {len(vec)}, "
+                            f"expected {self._config.dimensions} (model={self._config.model})"
+                        )
+                return embeddings
             except Exception as exc:
                 last_exc = exc
                 if attempt < self._max_retries:

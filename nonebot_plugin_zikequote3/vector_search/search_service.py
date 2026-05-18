@@ -97,9 +97,6 @@ class VectorSearchService(VectorSearchCapability):
         """
         if not quote.content:
             return
-        if self._store.reindex_lock.locked():
-            logger.info("正在重建索引，跳过 index_quote(quote_id={})", quote.quote_id)
-            return
         async with self._store.reindex_lock:
             vector = await self._embedding.embed_query(quote.content)
             await self._store.upsert([{
@@ -117,9 +114,6 @@ class VectorSearchService(VectorSearchCapability):
         :param quote_id: 待删除的语录 ID。
         :type quote_id: str
         """
-        if self._store.reindex_lock.locked():
-            logger.info("正在重建索引，跳过 remove_quote(quote_id={})", quote_id)
-            return
         async with self._store.reindex_lock:
             await self._store.delete([quote_id])
 
@@ -227,7 +221,8 @@ class VectorSearchService(VectorSearchCapability):
             # 验证 store 连接正常（调用 count 会触发 _get_db 检查）
             await self._store.count()
             return True
-        except Exception:
+        except Exception as exc:
+            logger.warning("VectorSearchService.is_available 检查失败: {}", exc)
             return False
 
     async def get_index_count(self) -> int:
