@@ -41,12 +41,6 @@ async def handle_update_quote_force(
     parsed_cfg = await config_svc.get_parsed_config(group_id)
     allow_duplicate = parsed_cfg.collecting.enable_duplicate
 
-    # 检查是否已有收集任务在进行中
-    if collection_svc.is_collecting(group_id):
-        await matcher_update_quote_force.finish(
-            "当前已有更新任务在进行中，请稍后再试~"
-        )
-
     async with command_error_handler(
         matcher_update_quote_force, "语录强制更新"
     ):

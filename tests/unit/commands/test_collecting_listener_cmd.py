@@ -236,22 +236,30 @@ class TestHandleCollectingListenerEnqueue:
 class TestHandleCollectingListenerCollection:
     """收集监听器 —— 收集执行阶段。"""
 
-    async def test_already_collecting_skip(
+    async def test_lock_conflict_handled_gracefully(
         self,
         patch_container,
         mock_bot: MagicMock,
     ) -> None:
+        """收集锁冲突时，_run_with_lock 抛出 CollectionLockError，被 silent_error_handler 捕获。"""
+        from nonebot_plugin_zikequote3.services.quote_collection_service import CollectionLockError
+
         svcs = _build_services()
         svcs["collection_svc"].should_trigger_collection = AsyncMock(return_value=True)
-        svcs["collection_svc"].is_collecting = MagicMock(return_value=True)
+        svcs["collection_svc"].is_collecting = MagicMock(return_value=False)
+        svcs["collection_svc"].collect_and_finalize = AsyncMock(
+            side_effect=CollectionLockError("群 123 正在收集中")
+        )
         _patch_services(patch_container, svcs)
 
-        await handle_collecting_listener(
-            event=_make_event(plaintext="正常消息"),
-            bot=mock_bot,
-        )
+        # silent_error_handler 捕获 CollectionLockError 后抛出 FinishedException
+        with pytest.raises(FinishedException):
+            await handle_collecting_listener(
+                event=_make_event(plaintext="正常消息"),
+                bot=mock_bot,
+            )
 
-        svcs["collection_svc"].collect_and_finalize.assert_not_awaited()
+        svcs["collection_svc"].collect_and_finalize.assert_awaited_once()
         svcs["collection_svc"].collect_and_save.assert_not_awaited()
 
     async def test_collect_success_uses_unified_finalize_boundary(

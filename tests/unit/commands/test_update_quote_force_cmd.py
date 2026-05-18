@@ -85,13 +85,19 @@ class TestHandleUpdateQuoteForce:
         finish_calls = matcher_update_quote_force.finish.call_args_list
         assert any("3" in str(c) for c in finish_calls)
 
-    async def test_already_collecting(
+    async def test_lock_conflict_handled_gracefully(
         self,
         patch_container,
         mock_group_event: MagicMock,
     ) -> None:
+        """强制更新时锁冲突由 _run_with_lock 抛出，被 command_error_handler 处理。"""
+        from nonebot_plugin_zikequote3.services.quote_collection_service import CollectionLockError
+
         mock_collection_svc = AsyncMock(spec=QuoteCollectionService)
-        mock_collection_svc.is_collecting = MagicMock(return_value=True)
+        mock_collection_svc.is_collecting = MagicMock(return_value=False)
+        mock_collection_svc.collect_and_finalize = AsyncMock(
+            side_effect=CollectionLockError("群 123 正在收集中")
+        )
 
         mock_config_svc = AsyncMock(spec=ConfigService)
         mock_config_svc.get_parsed_config = AsyncMock(return_value=_make_config(False))
@@ -101,15 +107,14 @@ class TestHandleUpdateQuoteForce:
             ConfigService: mock_config_svc,
         })
 
+        # command_error_handler 捕获 CollectionLockError 并调用 finish
         with pytest.raises(FinishedException):
             await handle_update_quote_force(
                 event=mock_group_event,
                 state={},
             )
 
-        mock_collection_svc.collect_and_finalize.assert_not_awaited()
-        finish_calls = matcher_update_quote_force.finish.call_args_list
-        assert any("已有" in str(c) for c in finish_calls)
+        mock_collection_svc.collect_and_finalize.assert_awaited_once()
 
     async def test_collect_error(
         self,

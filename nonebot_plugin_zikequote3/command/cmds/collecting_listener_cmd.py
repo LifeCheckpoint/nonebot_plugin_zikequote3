@@ -112,13 +112,6 @@ async def handle_collecting_listener(
     if not is_threshold:
         return
 
-    # 异步锁，防止多次触发
-    if collection_svc.is_collecting(group_id):
-        logger.info(
-            "群 {} 的 LLM 收录任务已在进行中，跳过本次触发", group_id,
-        )
-        return
-
     # 执行收集闭环（保存语录 → AI 评论 → 清理队列）
     async with silent_error_handler("LLM 收集闭环"):
         collected = await collection_svc.collect_and_finalize(
