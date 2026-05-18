@@ -10,7 +10,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Optional, Sequence
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, insert, select, update as sa_update
 
 from ..models.msgs_queue import MsgQueue, MsgQueueCreate
 from ..models.queue_group_message_counts import (
@@ -236,15 +236,19 @@ class MsgQueueRepository(BaseRepository[MsgQueueModel, MsgQueueCreate, MsgQueue]
         :returns: 更新/创建后的计数 DTO。
         :rtype: QueueGroupMessageCount
         """
-        instance = await self._session.get(QueueGroupMessageCountModel, group_id)
-        if instance:
-            instance.message_count += delta
-        else:
-            instance = QueueGroupMessageCountModel(
+        stmt = (
+            sa_update(QueueGroupMessageCountModel)
+            .where(QueueGroupMessageCountModel.group_id == group_id)
+            .values(message_count=QueueGroupMessageCountModel.message_count + delta)
+        )
+        result = await self._session.execute(stmt)
+        if result.rowcount == 0:
+            stmt = insert(QueueGroupMessageCountModel).values(
                 group_id=group_id, message_count=delta
             )
-            self._session.add(instance)
+            await self._session.execute(stmt)
         await self._session.flush()
+        instance = await self._session.get(QueueGroupMessageCountModel, group_id)
         return instance.to_dto()
 
     async def reset_queue_count(self, group_id: str) -> bool:
