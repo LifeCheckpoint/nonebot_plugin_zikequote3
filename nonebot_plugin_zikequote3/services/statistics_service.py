@@ -188,33 +188,28 @@ class StatisticsService:
             total_found: 匹配总数（截断前）
         :rtype: Tuple[Sequence[Quote], int]
         """
-        # 获取群组全部语录
-        all_quotes = await self._quote_repo.get_quotes_by_group(group_id)
-
-        # 过滤有内容的语录
-        quotes = [q for q in all_quotes if q.content]
-
-        # 关键词匹配
         if use_regex:
+            all_quotes = await self._quote_repo.get_quotes_by_group(group_id)
+            quotes = [q for q in all_quotes if q.content]
             try:
                 pattern = re.compile(keyword)
             except re.error as e:
                 raise ValidationException(f"无效的正则表达式: {e}") from e
             quotes = [q for q in quotes if q.content and pattern.search(q.content)]
+            if author_id:
+                quotes = [q for q in quotes if q.author_id == author_id]
         else:
-            quotes = [q for q in quotes if q.content and keyword in q.content]
+            quotes = list(
+                await self._quote_repo.search_quotes_ilike(
+                    keyword=keyword, group_id=group_id, author_id=author_id
+                )
+            )
 
-        # 按作者过滤
-        if author_id:
-            quotes = [q for q in quotes if q.author_id == author_id]
-
-        # 排除纯图片语录
         if not include_image_only:
             quotes = [q for q in quotes if not q.image_content_uuid]
 
         total_found = len(quotes)
 
-        # 截断
         if max_results is not None:
             quotes = quotes[:max_results]
 
@@ -254,14 +249,14 @@ class StatisticsService:
         :rtype: list[dict[str, Any]]
         """
         members = await self._group_member_repo.get_members_by_group(group_id)
+        counts_by_author = await self._quote_repo.count_quotes_group_by_author(group_id)
         result: list[dict[str, Any]] = []
 
         for member in members:
-            count = await self._quote_repo.count_quotes_by_group_and_author(
-                group_id, member.qq_id
-            )
+            qq_id = member.qq_id
+            count = counts_by_author.get(qq_id, 0)
             if count > 0:
-                result.append({"qq_id": member.qq_id, "quote_count": count})
+                result.append({"qq_id": qq_id, "quote_count": count})
 
         result.sort(key=lambda x: x["quote_count"], reverse=True)
         return result

@@ -474,6 +474,50 @@ class QuoteRepository(BaseRepository[QuoteModel, QuoteCreate, Quote]):
             "avg_shows": round(float(row.avg_shows), 2),
         }
 
+    async def count_quotes_group_by_author(self, group_id: str) -> dict[str, int]:
+        """按作者分组统计群组内语录数量（仅返回 count > 0 的作者）。
+
+        :param group_id: 群组 ID。
+        :type group_id: str
+        :returns: ``{author_id: count}`` 字典。
+        :rtype: dict[str, int]
+        """
+        stmt = (
+            select(QuoteModel.author_id, func.count(QuoteModel.quote_id))
+            .where(QuoteModel.group_id == group_id)
+            .group_by(QuoteModel.author_id)
+            .having(func.count(QuoteModel.quote_id) > 0)
+        )
+        result = await self._session.execute(stmt)
+        return {row[0]: row[1] for row in result.all()}
+
+    async def search_quotes_ilike(
+        self,
+        keyword: str,
+        group_id: str,
+        *,
+        author_id: Optional[str] = None,
+    ) -> Sequence[Quote]:
+        """按关键词 + 群组搜索语录（DB 层 ILIKE，避免全表扫描）。
+
+        :param keyword: 搜索关键词。
+        :type keyword: str
+        :param group_id: 群组 ID。
+        :type group_id: str
+        :param author_id: 可选作者过滤。
+        :type author_id: Optional[str]
+        :returns: 匹配的语录 DTO 序列。
+        :rtype: Sequence[Quote]
+        """
+        stmt = select(QuoteModel).where(
+            QuoteModel.group_id == group_id,
+            QuoteModel.content.ilike(f"%{keyword}%"),
+        )
+        if author_id:
+            stmt = stmt.where(QuoteModel.author_id == author_id)
+        result = await self._session.execute(stmt)
+        return [row[0].to_dto() for row in result.all()]
+
     async def get_author_ranking(
         self, group_id: str, *, limit: int = 10
     ) -> Sequence[Tuple[str, int]]:

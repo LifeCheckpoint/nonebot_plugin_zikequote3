@@ -11,6 +11,7 @@ QuoteWriteService —— 语录写入领域服务。
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 from nonebot import logger
@@ -58,6 +59,16 @@ class QuoteDeduplicateResult:
     deleted_count: int
     kept_count: int
     user_only: bool
+
+def _do_backup(source_path: Path, target_path: Path) -> None:
+    source = sqlite3.connect(f"file:{source_path}?mode=ro", uri=True)
+    target = sqlite3.connect(str(target_path))
+    try:
+        source.backup(target)
+    finally:
+        source.close()
+        target.close()
+
 
 class QuoteWriteService:
     """
@@ -435,7 +446,7 @@ class QuoteWriteService:
         if user_only and not operator_id:
             raise ValidationException("个人去重模式缺少操作者上下文")
 
-        backup_path = self._backup_database()
+        backup_path = await self._backup_database()
         author_id = operator_id if user_only else None
         quotes = await self._quote_repo.get_text_only_quotes_for_dedup(
             group_id,
@@ -483,7 +494,7 @@ class QuoteWriteService:
         )
         return result
 
-    def _backup_database(self) -> Path:
+    async def _backup_database(self) -> Path:
         """在执行去重前创建数据库备份文件。"""
         if self._db_path is None or str(self._db_path) == ":memory:":
             raise DatabaseOperationError("当前数据库不支持备份操作")
@@ -501,17 +512,12 @@ class QuoteWriteService:
         )
         backup_path = backup_dir / backup_name
         try:
-            source = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-            target = sqlite3.connect(str(backup_path))
-            with source, target:
-                source.backup(target)
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(
+                None, lambda: _do_backup(db_path, backup_path)
+            )
         except sqlite3.Error as e:
             raise DatabaseOperationError(f"数据库备份失败: {e}") from e
-        finally:
-            if "source" in locals():
-                source.close()
-            if "target" in locals():
-                target.close()
         return backup_path
 
     async def check_quote_exists(self, author_id: str, content: str) -> bool:
