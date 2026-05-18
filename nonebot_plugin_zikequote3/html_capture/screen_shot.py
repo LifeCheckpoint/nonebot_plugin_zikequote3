@@ -58,7 +58,7 @@ async def _html_img_render(
     # 截图
     try:
         async with get_new_page(device_scale_factor=device_scale_factor, viewport={"width": width, "height": height}) as page:
-            await page.goto("file://" + str(temp_html.absolute()), wait_until="networkidle", timeout=timeout)
+            await page.goto(temp_html.absolute().as_uri(), wait_until="networkidle", timeout=timeout)
             await page.wait_for_timeout(wait)
             img_bytes = await page.screenshot(timeout=timeout, full_page=True, path=temp_image, **page_screenshot_kwargs)
     except Exception as e:

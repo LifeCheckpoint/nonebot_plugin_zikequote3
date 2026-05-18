@@ -133,10 +133,10 @@ def render_rank(data: TemplateRankingData) -> str:
 
     return render_template(
         "htmls/rank.html.jinja2",
-        echarts_js=str(echarts_js),
-        rank_css=str(rank_css),
-        rank_js=str(rank_js),
-        color_thief_js=str(color_thief_js),
+        echarts_js=echarts_js.as_uri(),
+        rank_css=rank_css.as_uri(),
+        rank_js=rank_js.as_uri(),
+        color_thief_js=color_thief_js.as_uri(),
 
         group_name=data.group_name,
         date_time=data.date_time,
