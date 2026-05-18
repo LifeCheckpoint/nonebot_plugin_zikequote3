@@ -24,6 +24,8 @@ import functools
 import inspect
 from typing import Any, Callable, Coroutine, TypeVar
 
+from nonebot import logger
+
 from .nonebot_integration import get_container
 
 T = TypeVar("T")
@@ -80,7 +82,12 @@ def _resolve_annotation(annotation: Any, globalns: dict[str, Any]) -> Any:
         return annotation
     try:
         return eval(annotation, globalns)  # noqa: S307
-    except Exception:  # noqa: BLE001
+    except Exception:
+        logger.opt(exception=True).warning(
+            "ForwardRef 注解 '{}' 解析失败，将保留为字符串。"
+            "如果后续出现 NameError，请检查类型导入是否正确。",
+            annotation,
+        )
         return annotation
 
 

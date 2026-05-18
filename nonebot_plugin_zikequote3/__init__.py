@@ -128,7 +128,7 @@ async def _check_vector_index_consistency(container: AsyncContainer) -> None:
                 else:
                     logger.info("向量索引为空，请执行 /重建语录索引 建立索引")
     except Exception as e:
-        logger.warning("向量索引一致性检查失败: {}", e)
+        logger.opt(exception=e).warning("向量索引一致性检查失败: {}", e)
 
 
 # ---------------------------------------------------------------------------
