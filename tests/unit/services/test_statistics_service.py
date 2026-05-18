@@ -147,7 +147,7 @@ class TestSearchQuotes:
         ]
         quotes[0].content = "hello world"
         quotes[1].content = "goodbye"
-        mock_quote_repo.get_quotes_by_group.return_value = quotes
+        mock_quote_repo.search_quotes_ilike = AsyncMock(return_value=[quotes[0]])
 
         result, total = await statistics_service.search_quotes("hello", "g1")
         assert total == 1
@@ -179,7 +179,7 @@ class TestSearchQuotes:
         quotes = [_make_quote(str(i)) for i in range(10)]
         for q in quotes:
             q.content = "match"
-        mock_quote_repo.get_quotes_by_group.return_value = quotes
+        mock_quote_repo.search_quotes_ilike = AsyncMock(return_value=quotes)
 
         result, total = await statistics_service.search_quotes(
             "match", "g1", max_results=3
@@ -194,7 +194,7 @@ class TestSearchQuotes:
         q2 = _make_quote("2", author="bbb")
         q1.content = "match"
         q2.content = "match"
-        mock_quote_repo.get_quotes_by_group.return_value = [q1, q2]
+        mock_quote_repo.search_quotes_ilike = AsyncMock(return_value=[q1])
 
         result, total = await statistics_service.search_quotes(
             "match", "g1", author_id="aaa"

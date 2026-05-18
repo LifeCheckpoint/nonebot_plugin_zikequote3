@@ -198,9 +198,10 @@ class TestAlembicUpgrade:
 class TestAlembicDowngrade:
     """验证 Alembic 降级行为。"""
 
-    async def test_downgrade_base_removes_all_user_tables(self, tmp_path: Path) -> None:
+    async def test_downgrade_base_removes_all_user_tables(self, tmp_path: Path, monkeypatch) -> None:
         db_path = tmp_path / "downgrade.db"
         engine = create_async_engine_factory(db_path)
+        monkeypatch.setenv("ALEMBIC_FORCE_DOWNGRADE", "1")
 
         try:
             async with engine.connect() as async_conn:

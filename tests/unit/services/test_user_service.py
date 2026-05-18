@@ -362,20 +362,13 @@ class TestFetchAvatar:
         mock_session = MagicMock()
         mock_session.get.return_value = mock_get_cm
 
-        # 外层 async context manager: aiohttp.ClientSession(...)
-        mock_client_cm = AsyncMock()
-        mock_client_cm.__aenter__.return_value = mock_session
+        # Inject shared session into UserService (fix for bug #11 shared session reuse)
+        user_service._session = mock_session
 
-        with patch(
-            "nonebot_plugin_zikequote3.services.user_service.aiohttp"
-        ) as mock_aiohttp:
-            mock_aiohttp.ClientTimeout = ClientTimeout
-            mock_aiohttp.ClientSession.return_value = mock_client_cm
+        result = await user_service.fetch_avatar("12345")
 
-            result = await user_service.fetch_avatar("12345")
-
-            assert result == b"avatar_data"
-            mock_resp.raise_for_status.assert_called_once()
+        assert result == b"avatar_data"
+        mock_resp.raise_for_status.assert_called_once()
 
 
 class TestGetAvatar:
