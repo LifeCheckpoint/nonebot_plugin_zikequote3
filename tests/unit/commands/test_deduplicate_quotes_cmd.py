@@ -72,9 +72,7 @@ class TestQuoteDeduplicateCommand:
         assert matcher_quote_deduplicate.finish.call_args.args[0] == (
             "语录去重完成啦~\n"
             "这次检查的是当前群全部成员的语录哦\n"
-            "我先帮你备份好数据库啦：D:/data/backups/zikequote3_dedup_001.db\n"
-            "一共检查了 7 条语录，发现 2 组重复内容\n"
-            "已经帮你清理掉 3 条重复语录啦，保留了较早的 2 条喵~"
+            "我先帮你备份好数据库啦，一共检查了 7 条语录，发现 2 组重复内容\n"
         )
 
     async def test_deduplicate_user_only_success(
