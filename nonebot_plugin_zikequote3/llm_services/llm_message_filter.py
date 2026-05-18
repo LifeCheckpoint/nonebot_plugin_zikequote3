@@ -8,6 +8,8 @@ LLM 消息筛选器 —— MessageFilter 协议的具体实现。
 
 from __future__ import annotations
 
+import time
+
 from nonebot import logger
 from typing import List, Optional, Sequence
 
@@ -46,6 +48,9 @@ class LLMMessageFilter:
 
     def __init__(self, config_service: ConfigService) -> None:
         self._config_service = config_service
+        self._last_failure_time: float = 0.0
+        self._consecutive_failures: int = 0
+        self._cooldown_seconds: float = 30.0
 
     async def filter_messages(
         self,
@@ -62,6 +67,15 @@ class LLMMessageFilter:
         if not messages:
             return []
 
+        if self._consecutive_failures > 3:
+            cooldown_remaining = self._cooldown_seconds - (time.time() - self._last_failure_time)
+            if cooldown_remaining > 0:
+                logger.warning(
+                    "LLM 筛选连续失败 {} 次, 冷却中 (剩余 {:.0f}s), 跳过本轮 (group={})",
+                    self._consecutive_failures, cooldown_remaining, group_id,
+                )
+                return []
+
         logger.info(
             "开始 LLM 筛选 (group={}): 队列中 {} 条消息",
             group_id, len(messages),
@@ -71,6 +85,15 @@ class LLMMessageFilter:
         llm_cfg: LLMConfig = cfg.llm
         at_least: int = cfg.collecting.at_least_selections
         at_most: int = cfg.collecting.at_most_selections
+
+        # Truncate message list to prevent exceeding model context window
+        MAX_PROMPT_MESSAGES = 200
+        if len(messages) > MAX_PROMPT_MESSAGES:
+            logger.debug(
+                "群 {} 的消息队列过长 ({}条), 截断至 {} 条",
+                group_id, len(messages), MAX_PROMPT_MESSAGES,
+            )
+            messages = messages[-MAX_PROMPT_MESSAGES:]
 
         # 构建提示词
         prompt = quote_pickup(
@@ -90,9 +113,11 @@ class LLMMessageFilter:
                 group_id, usage, response_text[:200],
             )
         except Exception:
+            self._consecutive_failures += 1
+            self._last_failure_time = time.time()
             logger.warning(
-                "LLM 筛选请求失败 (group={})，本轮不产出语录",
-                group_id, exc_info=True,
+                "LLM 筛选请求失败 (group={}, 连续失败 {})，本轮不产出语录",
+                group_id, self._consecutive_failures, exc_info=True,
             )
             return []
 
@@ -130,6 +155,7 @@ class LLMMessageFilter:
                 comment=item.comment,
             ))
 
+        self._consecutive_failures = 0
         logger.info(
             "LLM 筛选完成 (group={}): {}/{} 条入选",
             group_id, len(result), len(messages),

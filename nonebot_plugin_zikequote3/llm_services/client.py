@@ -3,6 +3,8 @@ LLM 客户端模块。
 
 提供 LLM 模型实例创建与请求发送的工具函数。
 """
+import httpx
+
 from ..config import LLMConfig
 from ..paths import PluginPath
 
@@ -65,6 +67,7 @@ def create_model(
         max_retries=llm_config.max_retries,
         base_url=llm_config.base_url,
         api_key=api_key,
+        timeout=httpx.Timeout(60.0, connect=10.0),
     )
 
     return OpenAIChatModel(
