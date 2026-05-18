@@ -55,7 +55,7 @@
 # 以下为聊天记录，格式为 (id) [name]: content
 
 {% for msg in message_history %}
-({{ msg.msg_id }}) [{{ msg.user_name }}]: {{ msg.content }}
+({{ msg.msg_id }}) [{{ msg.user_name }}]: {{ msg.content_escaped }}
 {% endfor %}
 
 </group_msgs>

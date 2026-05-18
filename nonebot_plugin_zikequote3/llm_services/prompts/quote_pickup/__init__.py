@@ -5,6 +5,7 @@
 """
 from .. import render_template
 from typing import List, Tuple
+from xml.sax.saxutils import escape as xml_escape
 
 
 def quote_pickup(
@@ -28,8 +29,9 @@ def quote_pickup(
     msg_dictlist = [
         {
             "msg_id": msg_id,
-            "user_name": user_name,
-            "content": content,
+            "user_name": user_name or "未知用户",
+            "content": content or "",
+            "content_escaped": xml_escape(content or ""),
         }
         for msg_id, user_name, content in message_history
     ]
