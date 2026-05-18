@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import base64
 from datetime import datetime
 from nonebot import logger
@@ -112,7 +113,8 @@ async def transform_quotes_to_template_boxes(
         if qd.image_content_uuid is not None and show_image:
             try:
                 img_path = image_store.get_path(qd.image_content_uuid)
-                image_uri = _to_data_uri(img_path.read_bytes())
+                data = await asyncio.to_thread(img_path.read_bytes)
+                image_uri = _to_data_uri(data)
             except Exception:
                 logger.warning(
                     "语录列表获取语录 {} 图片失败", qd.quote_id, exc_info=True,

@@ -342,7 +342,11 @@ async def _do_fuzzy_search(
         )
 
         # 在每条语录的文本前附加相似度分数
-        for box, score in zip(quote_boxes, scores):
+        assert len(quote_boxes) == len(scores), (
+            f"quote_boxes and scores length mismatch: "
+            f"{len(quote_boxes)} != {len(scores)}"
+        )
+        for box, score in zip(quote_boxes, scores, strict=True):
             if box.quote_text:
                 box.quote_text = f"[{score:.2f}] {box.quote_text}"
 

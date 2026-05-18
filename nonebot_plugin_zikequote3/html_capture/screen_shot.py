@@ -63,11 +63,14 @@ async def _html_img_render(
             img_bytes = await page.screenshot(timeout=timeout, full_page=True, path=temp_image, **page_screenshot_kwargs)
     except Exception as e:
         logger.error(f"渲染 HTML 截图失败: {temp_html}")
+        if clean_up:
+            temp_html.unlink(missing_ok=True)
+            temp_image.unlink(missing_ok=True)
         raise
-
-    # 清理临时文件
-    if clean_up:
-        temp_html.unlink(missing_ok=True)
-        temp_image.unlink(missing_ok=True)
+    else:
+        # 清理临时文件
+        if clean_up:
+            temp_html.unlink(missing_ok=True)
+            temp_image.unlink(missing_ok=True)
 
     return img_bytes
