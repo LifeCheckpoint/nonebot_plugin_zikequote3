@@ -137,3 +137,6 @@ class EmbeddingClient:
         """
         vectors = await self.embed_texts([text])
         return vectors[0]
+
+    async def close(self) -> None:
+        await self._client.close()

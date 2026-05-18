@@ -300,3 +300,7 @@ class VectorStore:
             return 0
         table = await db.open_table(self.QUOTE_TABLE)
         return await table.count_rows()
+
+    async def close(self) -> None:
+        if self._db is not None:
+            await self._db.close()

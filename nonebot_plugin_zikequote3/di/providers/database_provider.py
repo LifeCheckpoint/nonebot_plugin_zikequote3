@@ -30,14 +30,10 @@ class DatabaseProvider(Provider):
         self._db_path = db_path
 
     @provide(scope=Scope.APP)
-    def provide_engine(self) -> AsyncEngine:
-        """
-        创建 APP 级别的 AsyncEngine 单例。
-
-        :returns: 异步数据库引擎
-        :rtype: AsyncEngine
-        """
-        return create_async_engine_factory(self._db_path)
+    async def provide_engine(self) -> AsyncIterator[AsyncEngine]:
+        engine = create_async_engine_factory(self._db_path)
+        yield engine
+        await engine.dispose()
 
     @provide(scope=Scope.APP)
     def provide_session_factory(

@@ -7,6 +7,7 @@ Embedding 的连接参数统一来自启动期全局配置；群级运行时仅�
 """
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from nonebot import logger
 from pathlib import Path
@@ -50,49 +51,61 @@ class VectorProvider(Provider):
         self._vector_db_path = str(vector_db_path) if vector_db_path else ""
 
     @provide(scope=Scope.APP)
-    async def provide_vector_runtime(self) -> _VectorRuntime:
+    async def provide_vector_runtime(self) -> AsyncIterator[_VectorRuntime]:
         """构造向量基础设施，并返回稳定的运行时快照。"""
-        if not self._embedding_config or not self._llm_config:
-            return _VectorRuntime(
-                status=VectorCapabilityStatus.unavailable_status(
-                    "向量搜索基础设施未就绪，请检查启动期全局 Embedding 配置（model、base_url、api_key_path）"
-                )
-            )
-
-        if not self._vector_db_path:
-            return _VectorRuntime(
-                status=VectorCapabilityStatus.unavailable_status(
-                    "向量索引存储路径未配置，无法启用向量搜索基础设施"
-                )
-            )
-
+        embedding_client = None
+        vector_store = None
         try:
-            embedding_client = EmbeddingClient(self._embedding_config, self._llm_config)
-        except Exception as exc:
-            logger.warning("EmbeddingClient 创建失败: {}", exc)
-            return _VectorRuntime(
-                status=VectorCapabilityStatus.unavailable_status(
-                    "向量搜索基础设施未就绪，请检查启动期全局 Embedding 配置（model、base_url、api_key_path）"
+            if not self._embedding_config or not self._llm_config:
+                yield _VectorRuntime(
+                    status=VectorCapabilityStatus.unavailable_status(
+                        "向量搜索基础设施未就绪，请检查启动期全局 Embedding 配置（model、base_url、api_key_path）"
+                    )
                 )
-            )
+                return
 
-        try:
-            vector_store = VectorStore()
-            await vector_store.connect(self._vector_db_path)
-            await vector_store.ensure_table(self._embedding_config.dimensions)
-        except Exception as exc:
-            logger.warning("VectorStore 创建失败: {}", exc)
-            return _VectorRuntime(
-                status=VectorCapabilityStatus.unavailable_status(
-                    "向量搜索基础设施未就绪，请检查启动期全局 Embedding 配置（model、base_url、api_key_path）"
+            if not self._vector_db_path:
+                yield _VectorRuntime(
+                    status=VectorCapabilityStatus.unavailable_status(
+                        "向量索引存储路径未配置，无法启用向量搜索基础设施"
+                    )
                 )
-            )
+                return
 
-        return _VectorRuntime(
-            status=VectorCapabilityStatus.available_status(),
-            embedding_client=embedding_client,
-            vector_store=vector_store,
-        )
+            try:
+                embedding_client = EmbeddingClient(self._embedding_config, self._llm_config)
+            except Exception as exc:
+                logger.warning("EmbeddingClient 创建失败: {}", exc)
+                yield _VectorRuntime(
+                    status=VectorCapabilityStatus.unavailable_status(
+                        "向量搜索基础设施未就绪，请检查启动期全局 Embedding 配置（model、base_url、api_key_path）"
+                    )
+                )
+                return
+
+            try:
+                vector_store = VectorStore()
+                await vector_store.connect(self._vector_db_path)
+                await vector_store.ensure_table(self._embedding_config.dimensions)
+            except Exception as exc:
+                logger.warning("VectorStore 创建失败: {}", exc)
+                yield _VectorRuntime(
+                    status=VectorCapabilityStatus.unavailable_status(
+                        "向量搜索基础设施未就绪，请检查启动期全局 Embedding 配置（model、base_url、api_key_path）"
+                    )
+                )
+                return
+
+            yield _VectorRuntime(
+                status=VectorCapabilityStatus.available_status(),
+                embedding_client=embedding_client,
+                vector_store=vector_store,
+            )
+        finally:
+            if embedding_client:
+                await embedding_client.close()
+            if vector_store:
+                await vector_store.close()
 
     @provide(scope=Scope.REQUEST)
     def provide_vector_search_capability(
