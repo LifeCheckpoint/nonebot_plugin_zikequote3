@@ -411,9 +411,10 @@ class QuoteReadService:
         :returns: 语录 ID 到归一化权重的映射
         :rtype: dict[str, float]
         """
+        epsilon = 1e-8
         min_c = min(q.total_show_time for q in quotes)
         wi0 = {
-            q.quote_id: (1.0 / (q.total_show_time - min_c + a_)) ** lambda_
+            q.quote_id: (1.0 / max(q.total_show_time - min_c + a_, epsilon)) ** lambda_
             for q in quotes
         }
         total = sum(wi0.values())
@@ -443,10 +444,12 @@ class QuoteReadService:
         :returns: 语录 ID 到归一化权重的映射
         :rtype: dict[str, float]
         """
+        epsilon = 1e-8
+        log_a_ = max(log_a_, epsilon)
         min_c = min(q.total_show_time for q in quotes)
         wi0 = {
             q.quote_id: (
-                1.0 / (math.log(q.total_show_time - min_c + log_a_) + a_)
+                1.0 / (math.log(max(q.total_show_time - min_c + log_a_, epsilon)) + a_)
             ) ** lambda_
             for q in quotes
         }

@@ -221,12 +221,16 @@ class QuoteCollectionService:
         # 确保用户存在
         await self._user_service.get_or_create_user(user_id)
 
+        content = content.strip()
+        if not content:
+            return
+
         # 入队
         await self._msg_queue_repo.create_msg(
             msg_id=msg_id,
             group_id=group_id,
             qq_id=user_id,
-            content=content.strip(),
+            content=content,
         )
         logger.debug(
             "消息已入队: group={}, msg_id={}, user={}",

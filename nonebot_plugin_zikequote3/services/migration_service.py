@@ -11,6 +11,7 @@ MigrationService —— 群组数据迁移领域服务。
 
 from __future__ import annotations
 
+import asyncio
 import itertools
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -615,6 +616,8 @@ class MigrationService:
                     raise OperationError(
                         f"迁移群名片失败: qq_id={nickname.qq_id}, group_id={target}, name={nickname.name}"
                     ) from exc
+                except asyncio.CancelledError:
+                    raise
                 except Exception as exc:  # pragma: no cover - 精确错误路径由单测覆盖
                     raise OperationError(
                         f"迁移群名片失败: qq_id={nickname.qq_id}, group_id={target}, name={nickname.name}"

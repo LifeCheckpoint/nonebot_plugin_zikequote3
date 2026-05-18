@@ -19,6 +19,7 @@ from ..exceptions import (
     PermissionDeniedError,
     QuoteNotFoundError,
     ResourceNotFoundError,
+    ValidationException,
 )
 from .user_service import UserService
 
@@ -87,11 +88,14 @@ class ReviewService:
         await self._ensure_review_author_exists(author_id)
 
         review_id = _generate_review_id()
+        content_clean = content.strip()
+        if not content_clean:
+            raise ValidationException("评论内容不能为空")
         await self._review_repo.create_review(
             review_id=review_id,
             author_id=author_id,
             quote_id=quote_id,
-            content=content.strip(),
+            content=content_clean,
         )
         logger.info(
             "评论已添加: review_id={}, quote_id={}, author={}",

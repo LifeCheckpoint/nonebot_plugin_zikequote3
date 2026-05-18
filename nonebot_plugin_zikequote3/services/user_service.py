@@ -12,6 +12,7 @@ UserService —— 用户领域服务。
 
 from __future__ import annotations
 
+import asyncio
 from nonebot import logger
 from typing import Optional, Sequence
 
@@ -53,6 +54,7 @@ class UserService:
         self._user_nickname_repo = user_nickname_repo
         self._group_nickname_repo = group_nickname_repo
         self._group_member_repo = group_member_repo
+        self._session: aiohttp.ClientSession | None = None
 
     # ------------------------------------------------------------------ #
     #  用户基础操作
@@ -331,11 +333,12 @@ class UserService:
         :rtype: bytes
         :raises aiohttp.ClientError: 网络请求失败时
         """
+        if self._session is None:
+            self._session = aiohttp.ClientSession(timeout=ClientTimeout(total=10))
         url = f"https://q.qlogo.cn/headimg_dl?dst_uin={qq_id}&spec=640&img_type=jpg"
-        async with aiohttp.ClientSession(timeout=ClientTimeout(total=10)) as session:
-            async with session.get(url) as resp:
-                resp.raise_for_status()
-                return await resp.read()
+        async with self._session.get(url) as resp:
+            resp.raise_for_status()
+            return await resp.read()
 
     async def update_avatar(self, qq_id: str) -> None:
         """
@@ -361,8 +364,16 @@ class UserService:
             return user.avatar
         try:
             avatar_bytes = await self.fetch_avatar(qq_id)
+        except asyncio.CancelledError:
+            raise
         except Exception:
             logger.warning("获取用户 {} 头像失败", qq_id, exc_info=True)
             return None
         await self._user_repo.update_user(qq_id, avatar=avatar_bytes)
         return avatar_bytes
+
+    async def close(self) -> None:
+        """关闭共享的 HTTP 会话。"""
+        if self._session:
+            await self._session.close()
+            self._session = None
