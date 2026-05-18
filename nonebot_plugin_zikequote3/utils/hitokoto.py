@@ -6,6 +6,7 @@
 
 import httpx
 from typing import Optional, Tuple
+from nonebot import logger
 
 _DEFAULT_HITOKOTO_URL = "https://v1.hitokoto.cn"
 
@@ -23,5 +24,7 @@ async def get_hitokoto(
             response.raise_for_status()
             data = response.json()
             return data.get("hitokoto"), data.get("from_who")
-    except Exception:
+    except Exception as exc:
+        # asyncio.CancelledError is BaseException in Python 3.12+, not caught here
+        logger.debug("获取一言失败: {}", exc)
         return None, None

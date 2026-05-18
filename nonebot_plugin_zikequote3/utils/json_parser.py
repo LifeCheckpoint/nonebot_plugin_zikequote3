@@ -12,6 +12,13 @@ from pydantic import BaseModel
 T = TypeVar('T', bound=BaseModel)
 
 
+def _extract_json_from_code_block(json_str: str) -> str:
+    match = re.search(r'```(?:json|JSON|Json)?\s*\n?(.*?)\n?\s*```', json_str, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+    return json_str
+
+
 def _strip_json_comments(text: str) -> str:
     """
     去除 JSON 中的行尾注释（// 和 #），不处理字符串内的情况。
@@ -26,7 +33,7 @@ def _strip_json_comments(text: str) -> str:
     for line in lines:
         # 简单处理：去除不在引号内的行尾注释
         # 匹配：在引号外的 // 或 # 开头的注释
-        cleaned_line = re.sub(r'(?<=[,\]\}\d])\s*(?://|#).*$', '', line)
+        cleaned_line = re.sub(r'(?<=["el,\]\}\d])\s*(?://|#).*$', '', line)  # handles true, false, null, strings
         cleaned.append(cleaned_line)
     return '\n'.join(cleaned)
 
@@ -49,14 +56,7 @@ def llm_json_parse_model(model_type: Type[T], json_str: str) -> T:
     """
     json_str = json_str.strip()
     
-    # 清理可能的代码块标记
-    code_block_markers = [
-        "```json", "```Json", "```JSON", "```"
-    ]
-    for marker in code_block_markers:
-        if json_str.startswith(marker) and json_str.endswith("```"):
-            json_str = json_str[len(marker):-3].strip()
-            break
+    json_str = _extract_json_from_code_block(json_str)
     
     # 空字符串检查
     if not json_str:
