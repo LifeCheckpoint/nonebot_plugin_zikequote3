@@ -436,15 +436,17 @@ class ConfigService:
         except TOMLKitError as exc:
             raise ValidationException("TOML 配置格式无效") from exc
 
-        self._ensure_group_doc_structure(doc, reject_nonreloadable=True)
-        self._validate_effective_config(doc, context="群组配置")
-        normalized_toml = tomlkit.dumps(self._normalize_group_doc(doc))
+        lock = self._config_locks.setdefault(group_id, asyncio.Lock())
+        async with lock:
+            self._ensure_group_doc_structure(doc, reject_nonreloadable=True)
+            self._validate_effective_config(doc, context="群组配置")
+            normalized_toml = tomlkit.dumps(self._normalize_group_doc(doc))
 
-        result = await self._group_config_repo.update_or_create_group_config(
-            group_id, normalized_toml
-        )
-        logger.info("群组 {} 配置已更新", group_id)
-        return result
+            result = await self._group_config_repo.update_or_create_group_config(
+                group_id, normalized_toml
+            )
+            logger.info("群组 {} 配置已更新", group_id)
+            return result
 
     async def delete_group_config(self, group_id: str) -> None:
         """

@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import List, Literal
 
 import tomlkit
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, model_validator
 from tomlkit.exceptions import TOMLKitError
 
 
@@ -51,6 +51,19 @@ class CollectingConfig(BaseModel):
     img_max_sidelength: int = 3840
     img_max_size_mb: float = 5
     update_personal_info_probability: float = 0.05
+
+    @model_validator(mode="after")
+    def _validate_selection_range(self):
+        if self.at_least_selections < 0:
+            raise ValueError(f"at_least_selections must be >= 0, got {self.at_least_selections}")
+        if self.at_most_selections < 0:
+            raise ValueError(f"at_most_selections must be >= 0, got {self.at_most_selections}")
+        if self.at_least_selections > self.at_most_selections:
+            raise ValueError(
+                f"at_least_selections ({self.at_least_selections}) must be <= "
+                f"at_most_selections ({self.at_most_selections})"
+            )
+        return self
 
 
 class FetchingConfig(BaseModel):
