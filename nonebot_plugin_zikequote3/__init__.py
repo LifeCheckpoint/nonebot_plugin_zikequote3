@@ -42,7 +42,7 @@ __plugin_meta__ = PluginMetadata(
     supported_adapters={"~onebot.v11"},
     extra={
         "author": "LifeCheckpoint",
-        "version": "0.5.0",
+        "version": "0.5.1",
     },
 )
 

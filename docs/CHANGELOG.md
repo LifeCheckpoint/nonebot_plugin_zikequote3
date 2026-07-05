@@ -11,6 +11,16 @@ All notable changes to this project will be documented in this file.
 > - 定期数据备份功能
 > - 后端管理功能
 
+## \[0.5.1\] - 2026-07-05
+
+### Changed
+
+- 简化了一些依赖
+
+### Removed
+
+- 删除 sentry 相关依赖和配置，预期应在 Nonebot 层集成
+
 ## \[0.5.0\] - 2026-05-18
 
 ### Added
