@@ -164,6 +164,13 @@ class TestContainerCompleteness:
 class TestConfigLoadingBoundary:
     """验证启动期配置文件读取边界。"""
 
+    def test_config_path_uses_prefixed_nonebot_config_name(self) -> None:
+        from nonebot_plugin_zikequote3.config import ConfigPath
+
+        fields = ConfigPath.model_fields
+        assert "zikequote3_config_toml" in fields
+        assert "config_toml" not in fields
+
     def test_load_config_from_path_missing_file_is_diagnostic(self, tmp_path: Path) -> None:
         missing_path = tmp_path / "missing.toml"
 

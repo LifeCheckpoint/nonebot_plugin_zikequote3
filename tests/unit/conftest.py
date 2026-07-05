@@ -45,8 +45,8 @@ if "nonebot_plugin_zikequote3.vector_search" not in sys.modules:
 # stub nonebot_plugin_localstore 以避免 paths.py 触发 nonebot 初始化
 if "nonebot_plugin_localstore" not in sys.modules:
     _stub_store = types.ModuleType("nonebot_plugin_localstore")
-    setattr(_stub_store, "get_data_dir", lambda name: Path(f"/tmp/{name}/data"))
-    setattr(_stub_store, "get_cache_dir", lambda name: Path(f"/tmp/{name}/cache"))
+    setattr(_stub_store, "get_plugin_data_dir", lambda: Path("/tmp/zikequote3/data"))
+    setattr(_stub_store, "get_plugin_cache_dir", lambda: Path("/tmp/zikequote3/cache"))
     sys.modules["nonebot_plugin_localstore"] = _stub_store
 
 # ---------------------------------------------------------------------------

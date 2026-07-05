@@ -3,12 +3,12 @@ _error_handlers 命令层异常映射单元测试。
 
 覆盖：
 - [`handle_command_error()`](nonebot_plugin_zikequote3/command/cmds/_error_handlers.py:30)：领域异常映射到稳定用户提示
-- [`handle_command_error()`](nonebot_plugin_zikequote3/command/cmds/_error_handlers.py:30)：未知异常仍走内部错误分支并上报 Sentry
+- [`handle_command_error()`](nonebot_plugin_zikequote3/command/cmds/_error_handlers.py:30)：未知异常仍走内部错误分支并记录日志
 """
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from nonebot.exception import FinishedException
@@ -76,16 +76,12 @@ class TestHandleCommandError:
         assert matcher.finish.call_args.args[0] == general.operation_error("当前群组语录数为 0")
 
     async def test_unexpected_error(self) -> None:
-        """未知异常应继续走内部错误分支并触发 Sentry 上报。"""
+        """未知异常应继续走内部错误分支并返回通用错误提示。"""
         matcher = _make_matcher()
         error = RuntimeError("database crashed")
 
-        with patch(
-            "nonebot_plugin_zikequote3.command.cmds._error_handlers.sentry_sdk.capture_exception"
-        ) as mock_capture:
-            with pytest.raises(FinishedException):
-                await handle_command_error(matcher, error)
+        with pytest.raises(FinishedException):
+            await handle_command_error(matcher, error)
 
-        mock_capture.assert_called_once_with(error)
         assert matcher.finish.await_count == 1
         assert matcher.finish.call_args.args[0] == general.unexpected_error("database crashed")

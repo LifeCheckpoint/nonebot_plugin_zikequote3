@@ -77,7 +77,7 @@ poetry add nonebot-plugin-zikequote3
    htmlrender_browser_channel=msedge
    ```
 
-4. **Sentry（可选）**：创建文件 `utils/sentry_dsn` 写入 DSN 即可启用错误追踪。
+4. **错误追踪（可选）**：如需接入 Sentry，请使用官方 Sentry 插件统一配置。
 
 ## 🔧 配置
 
@@ -85,7 +85,7 @@ poetry add nonebot-plugin-zikequote3
 
 | 配置项 | 类型 | 默认值 | 说明 |
 |--------|------|--------|------|
-| `config_toml` | `str` | 插件目录下的 `config.toml` | TOML 配置文件路径 |
+| `zikequote3_config_toml` | `str` | 插件目录下的 `config.toml` | TOML 配置文件路径 |
 
 ### 群组配置（config.toml）
 

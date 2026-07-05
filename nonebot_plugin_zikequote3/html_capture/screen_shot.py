@@ -6,7 +6,6 @@ HTML 截图模块。
 from ..paths import PluginPath
 from nonebot import logger
 from nonebot_plugin_htmlrender import get_new_page
-import nonebot_plugin_localstore as store
 import uuid
 
 async def _html_img_render(

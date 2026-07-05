@@ -1,7 +1,7 @@
 """
-异常捕获与上报工具。
+异常捕获工具。
 
-提供同步/异步上下文管理器，用于统一捕获异常、记录日志并上报 Sentry。
+提供同步/异步上下文管理器，用于统一捕获异常并记录日志。
 """
 
 from asyncio import CancelledError
@@ -10,7 +10,6 @@ from nonebot import logger
 from nonebot.exception import FinishedException
 from nonebot.matcher import Matcher
 from typing import Literal
-import sentry_sdk
 
 
 @contextmanager
@@ -18,7 +17,7 @@ def service_exception(error_message: str = "", raise_again: bool = True):
     """
     用于捕获服务层同步上下文中的异常的上下文管理器。
 
-    记录日志、上报 Sentry，根据参数决定是否重新抛出。
+    记录日志，根据参数决定是否重新抛出。
 
     :param error_message: 错误信息前缀
     :type error_message: str
@@ -35,9 +34,7 @@ def service_exception(error_message: str = "", raise_again: bool = True):
             logger.error(f"服务操作异常: {e}", stack_info=True)
         else:
             logger.error(f"服务操作异常 / {error_message}: {e}", stack_info=True)
-            
-        sentry_sdk.capture_exception(e)
-        
+
         if raise_again:
             raise
 
@@ -47,7 +44,7 @@ def event_exception(error_message: str = "", operation: Literal["raise", "ignore
     """
     用于捕获事件处理同步上下文中的异常的上下文管理器。
 
-    记录日志、上报 Sentry，根据参数决定后续行为。
+    记录日志，根据参数决定后续行为。
 
     :param error_message: 错误信息前缀
     :type error_message: str
@@ -65,9 +62,7 @@ def event_exception(error_message: str = "", operation: Literal["raise", "ignore
             logger.error(f"事件操作异常: {e}", stack_info=True)
         else:
             logger.error(f"事件操作异常 / {error_message}: {e}", stack_info=True)
-            
-        sentry_sdk.capture_exception(e)
-        
+
         if operation == "raise":
             raise
         elif operation == "finish":
@@ -83,7 +78,7 @@ async def service_exception_a(error_message: str = "", raise_again: bool = True)
     """
     用于捕获服务层异步上下文中的异常的上下文管理器。
 
-    记录日志、上报 Sentry，根据参数决定是否重新抛出。
+    记录日志，根据参数决定是否重新抛出。
 
     :param error_message: 错误信息前缀
     :type error_message: str
@@ -100,9 +95,7 @@ async def service_exception_a(error_message: str = "", raise_again: bool = True)
             logger.error(f"服务操作异常: {e}", stack_info=True)
         else:
             logger.error(f"服务操作异常 / {error_message}: {e}", stack_info=True)
-            
-        sentry_sdk.capture_exception(e)
-        
+
         if raise_again:
             raise
 
@@ -112,7 +105,7 @@ async def event_exception_a(error_message: str = "", operation: Literal["raise",
     """
     用于捕获事件处理异步上下文中的异常的上下文管理器。
 
-    记录日志、上报 Sentry，根据参数决定后续行为。
+    记录日志，根据参数决定后续行为。
 
     :param error_message: 错误信息前缀
     :type error_message: str
@@ -130,9 +123,7 @@ async def event_exception_a(error_message: str = "", operation: Literal["raise",
             logger.error(f"事件操作异常: {e}", stack_info=True)
         else:
             logger.error(f"事件操作异常 / {error_message}: {e}", stack_info=True)
-            
-        sentry_sdk.capture_exception(e)
-        
+
         if operation == "raise":
             raise
         elif operation == "finish":

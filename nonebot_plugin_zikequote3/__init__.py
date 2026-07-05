@@ -66,13 +66,11 @@ async def _startup() -> None:
     from .di.nonebot_integration import setup_dishka
     from .paths import PluginPath
     from .services.config_service import ConfigService
-    from .utils.sentry_init import init_sentry
 
-    config_path = get_plugin_config(ConfigPath).config_toml
+    config_path = get_plugin_config(ConfigPath).zikequote3_config_toml
 
     try:
         default_cfg = load_config_from_path(config_path)
-        init_sentry(default_cfg.sentry.dsn_path)
 
         await migrate_database_to_head(PluginPath.data_db_path)
 

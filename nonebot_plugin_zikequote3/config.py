@@ -24,13 +24,13 @@ class ConfigPath(BaseModel):
     """
     NoneBot 环境变量级配置，指定 TOML 配置文件路径。
 
-    :param config_toml: 配置文件路径，默认为插件目录下的 ``config.toml``
-    :type config_toml: str
+    :param zikequote3_config_toml: 配置文件路径，默认为插件目录下的 ``config.toml``
+    :type zikequote3_config_toml: str
     """
 
-    config_toml: str = Field(
+    zikequote3_config_toml: str = Field(
         default_factory=lambda: str(Path(__file__).parent / "config.toml"),
-        description="配置文件路径",
+        description="ZikeQuote3 配置文件路径",
     )
 
 
@@ -146,12 +146,6 @@ class EmbeddingConfig(BaseModel):
     """默认相似度阈值，0 表示不过滤。"""
 
 
-class SentryConfig(BaseModel):
-    """Sentry 错误追踪相关配置。"""
-
-    dsn_path: str = "utils/sentry_dsn"
-
-
 class ConfigureConfig(BaseModel):
     """配置管理自身的元配置。"""
 
@@ -166,7 +160,6 @@ class ConfigureConfig(BaseModel):
             "embedding.max_retries",
             "embedding.default_top_n",
             "embedding.default_threshold",
-            "sentry.dsn_path",
             "configure.nonreloadable_items",
         ]
     )
@@ -188,7 +181,6 @@ class ConfigSchema(BaseModel):
     comment: CommentConfig = Field(default_factory=CommentConfig)
     llm: LLMConfig = Field(default_factory=LLMConfig)
     embedding: EmbeddingConfig = Field(default_factory=EmbeddingConfig)
-    sentry: SentryConfig = Field(default_factory=SentryConfig)
     configure: ConfigureConfig = Field(default_factory=ConfigureConfig)
 
 
